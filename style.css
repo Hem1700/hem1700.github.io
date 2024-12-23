@@ -1,22 +1,20 @@
-/* General Styling */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     line-height: 1.6;
+    background-color: #f4f4f4;
 }
 
 header {
     background: #333;
     color: #fff;
     padding: 10px 0;
-    text-align: center;
 }
 
 nav ul {
     list-style: none;
-    margin: 0;
-    padding: 0;
+    text-align: center;
 }
 
 nav ul li {
@@ -27,58 +25,19 @@ nav ul li {
 nav ul li a {
     color: #fff;
     text-decoration: none;
-}
-
-section {
-    padding: 20px;
-    margin: 20px;
-    border-bottom: 1px solid #ccc;
-}
-
-#home {
-    background: #f4f4f4;
-    padding: 50px 20px;
-    text-align: center;
-}
-
-#home h1 {
-    font-size: 2.5rem;
-    color: #333;
-}
-
-#about, #projects, #blog, #contact {
-    background: #fff;
+    font-weight: bold;
 }
 
 h2 {
     color: #333;
-}
-
-form input, form textarea {
-    display: block;
-    width: 100%;
-    margin-bottom: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-form button {
-    background: #333;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-form button:hover {
-    background: #555;
-}
-
-footer {
-    background: #333;
-    color: #fff;
     text-align: center;
-    padding: 10px 0;
+}
+
+.project, .blog-post {
+    margin: 20px auto;
+    width: 80%;
+    background: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
