@@ -558,3 +558,20 @@ p {
   display: block;
   line-height: 1.6; /* Improve line spacing for code */
 }
+
+.social-icons {
+  display: flex;
+  justify-content: center; /* Center the icons */
+  gap: 2rem; /* Add space between icons */
+  margin-top: 1.5rem; /* Add some space above the icons */
+}
+
+.social-icons a {
+  font-size: 1.5rem; /* Adjust the size of the icons */
+  color: var(--text-color); /* Use theme text color */
+  transition: color 0.3s; /* Smooth hover effect */
+}
+
+.social-icons a:hover {
+  color: var(--accent-color); /* Change to accent color on hover */
+}
