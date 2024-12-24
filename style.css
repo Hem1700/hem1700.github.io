@@ -3,7 +3,7 @@
   /* Light Theme Variables */
   --bg-body: #ffffff;
   --text-color: #333;
-  --accent-color: #0066cc;  /* for buttons or highlights */
+  --accent-color: #0066cc; /* for buttons or highlights */
   --section-bg: #f9f9f9;
   --card-bg: #ffffff;
   --border-color: #ddd;
@@ -31,7 +31,6 @@ html {
   font-family: sans-serif; /* Or "Hack", "Fira Code", etc. */
 }
 
-/* Apply theme variables */
 body {
   background-color: var(--bg-body);
   color: var(--text-color);
@@ -42,46 +41,16 @@ body {
 .container {
   width: 90%;
   max-width: 1200px;
-  margin-bottom: 20px;
   margin: 0 auto;
 }
-h3.title, h3.subtitle {
-  margin-bottom: 10px; /* Space below the <h3> tags */
-}
 
-p {
-  margin-top: 15px; /* Space above the <p> tag */
-  margin-bottom: 15px; /* Optional, adds space below the paragraph */
-}
-
-.experience-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Two columns */
-  gap: 20px; /* Space between grid items */
-  margin-top: 20px;
-}
-
-article {
-  background: #f4f4f4;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 15px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.title {
-  font-size: 1.2rem;
-  margin-bottom: 5px;
-}
-
-.subtitle {
-  font-size: 1rem;
+h3.title,
+h3.subtitle {
   margin-bottom: 10px;
 }
 
 p {
-  font-size: 0.9rem;
-  line-height: 1.5;
+  margin: 15px 0;
 }
 
 /* NAVBAR */
@@ -89,24 +58,29 @@ p {
   background-color: var(--card-bg);
   border-bottom: 1px solid var(--border-color);
 }
+
 .nav-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1rem 0;
 }
+
 .logo {
   font-size: 1.5rem;
   font-weight: bold;
 }
+
 .nav-links {
   list-style: none;
   display: flex;
   gap: 1rem;
 }
+
 .nav-links li {
   display: inline-block;
 }
+
 .nav-links a {
   text-decoration: none;
   color: var(--text-color);
@@ -114,11 +88,11 @@ p {
   border-radius: 5px;
   transition: background-color 0.2s;
 }
+
 .nav-links a:hover {
   background-color: var(--border-color);
 }
 
-/* Theme Toggle Button */
 .theme-toggle {
   padding: 0.5rem 1rem;
   background: var(--border-color);
@@ -128,9 +102,26 @@ p {
   cursor: pointer;
   transition: background-color 0.3s;
 }
+
 .theme-toggle:hover {
   background-color: var(--accent-color);
   color: #fff;
+}
+
+/* Responsive Navigation Menu */
+@media (max-width: 768px) {
+  .nav-container {
+    flex-direction: column;
+  }
+
+  .nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    text-align: center;
+    margin-top: 1rem;
+  }
 }
 
 /* Hero Section */
@@ -138,8 +129,8 @@ p {
   min-height: 95vh;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Centers vertically */
-  align-items: center; /* Centers horizontally */
+  justify-content: center;
+  align-items: center;
   text-align: center;
   position: relative;
 }
@@ -165,27 +156,24 @@ p {
 }
 
 .arrow-link:hover {
-  transform: translateY(10px); /* Smooth bounce effect */
+  transform: translateY(10px);
 }
 
-
-
 /* ABOUT SECTION */
-/* About Me Section */
 .about-container {
-  display: flex; /* Create two columns */
-  align-items: center; /* Align items vertically */
-  gap: 20px; /* Space between photo and content */
-  flex-wrap: wrap; /* Wrap items on smaller screens */
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .about-photo {
-  flex: 1; /* Photo takes equal space */
-  max-width: 300px; /* Limit photo width */
+  flex: 1;
+  max-width: 300px;
 }
 
 .about-content {
-  flex: 2; /* Content takes more space */
+  flex: 2;
   text-align: justify;
 }
 
@@ -199,33 +187,44 @@ p {
   font-size: 1rem;
 }
 
-/* Responsive Design for About Me Section */
-@media (max-width: 768px) {
-  .about-container {
-    flex-direction: column; /* Stack photo and content */
-    text-align: center; /* Center content on smaller screens */
-  }
-
-  .about-photo {
-    max-width: 100%; /* Full-width photo */
-  }
-}
-
 /* EXPERIENCE SECTION */
 .experience {
   padding: 4rem 0;
 }
+
 .experience h2 {
   text-align: center;
   margin-bottom: 2rem;
   font-size: 2rem;
 }
-.experience-list article {
-  background-color: var(--card-bg);
+
+.experience-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+article {
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 1rem;
   margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+p {
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 /* PROJECTS SECTION */
@@ -233,16 +232,19 @@ p {
   background-color: var(--section-bg);
   padding: 4rem 0;
 }
+
 .projects h2 {
   text-align: center;
   font-size: 2rem;
   margin-bottom: 2rem;
 }
+
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
 }
+
 .project-card {
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -250,58 +252,6 @@ p {
   border-radius: 5px;
   text-align: center;
 }
-
-/* CONTACT SECTION */
-.contact {
-  padding: 4rem 0;
-}
-.contact h2 {
-  text-align: center;
-  font-size: 2rem;
-  margin-bottom: 2rem;
-}
-.section-intro {
-  text-align: center;
-  max-width: 600px;
-  margin: 0 auto 3rem;
-}
-.contact-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  max-width: 600px;
-  margin: 0 auto;
-}
-.contact-form input,
-.contact-form textarea {
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-  font-family: inherit;
-}
-
-/* FOOTER */
-.footer {
-  background-color: var(--card-bg);
-  border-top: 1px solid var(--border-color);
-  text-align: center;
-  padding: 1rem 0;
-}
-.footer p {
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-/* MEDIA QUERIES */
-@media (max-width: 768px) {
-  .hero h1 {
-    font-size: 2rem;
-  }
-  .hero p {
-    font-size: 1rem;
-  }
-}
-
 
 /* CERTIFICATIONS SECTION */
 .certifications {
@@ -314,180 +264,119 @@ p {
   font-size: 2rem;
 }
 
-/* Single cert item container */
 .cert-item {
   border-bottom: 1px solid #ccc;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
 }
 
-/* The button that shows/hides content */
 .cert-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  background: none; /* or var(--card-bg) if using variables */
+  background: none;
   border: none;
   cursor: pointer;
   padding: 0.5rem 0;
   font-size: 1rem;
   text-align: left;
-  color: inherit; /* match your theme color */
+  color: inherit;
 }
 
 .cert-title:focus {
-  outline: 2px dashed #aaa; /* for accessibility, optional */
+  outline: 2px dashed #aaa;
 }
 
-/* The arrow icon */
 .arrow {
   font-size: 1.2rem;
   transition: transform 0.3s;
 }
 
-/* The content that expands/collapses */
 .cert-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease-out; /* the collapse/expand animation */
+  transition: max-height 0.3s ease-out;
   padding: 0 0.5rem;
   opacity: 0;
-  /* Optional: fade effect via transition of opacity, but requires JS toggling both max-height and opacity */
 }
 
-/* Active state: if JavaScript adds a class like .open */
 .cert-item.open .cert-content {
-  max-height: 200px; /* large enough to show the content comfortably */
+  max-height: 200px;
   opacity: 1;
   transition: max-height 0.3s ease-in, opacity 0.3s ease-in;
 }
 
-/* Rotate the arrow when open */
 .cert-item.open .arrow {
   transform: rotate(180deg);
 }
 
-/* Link styling for “View credentials” */
 .view-credentials {
-  color: #007acc; /* or accent color in your theme */
+  color: var(--accent-color);
   text-decoration: underline;
 }
+
 .view-credentials:hover {
-  color: #005999; /* darker on hover */
+  color: #005999;
 }
 
-
-.blog-welcome-section {
-  background-color: var(--section-bg);
-  text-align: center;
-  padding: 4rem 0;
-}
-
-.blog-welcome-section h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  color: var(--accent-color);
-}
-
-.blog-welcome-section .blog-subtitle {
-  font-size: 1.2rem;
-  line-height: 1.8;
-  margin-bottom: 2rem;
-}
-
-.social-icons a {
-  font-size: 1.5rem;
-  color: var(--text-color);
-  margin: 0 0.5rem;
-  transition: color 0.3s;
-}
-
-.social-icons a:hover {
-  color: var(--accent-color);
-}
-
-.blog-list-section {
-  background-color: var(--bg-body);
-  padding: 4rem 0;
-}
-
-.blog-card {
+/* FOOTER */
+.footer {
   background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  padding: 1rem 0;
 }
 
-.blog-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.blog-card-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.blog-title {
-  font-size: 1.8rem;
-  margin-bottom: 0.8rem;
-  color: var(--accent-color);
-}
-
-.blog-excerpt {
-  font-size: 1rem;
-  line-height: 1.6;
-  margin-bottom: 1rem;
-  color: var(--text-color);
-}
-
-.blog-meta {
+.footer p {
+  margin: 0;
   font-size: 0.9rem;
-  color: var(--text-color);
 }
 
-.blog-post-header {
-  background-color: var(--section-bg);
-  text-align: center;
-  padding: 4rem 0;
+/* MEDIA QUERIES */
+@media (max-width: 1024px) {
+  .experience-list {
+    grid-template-columns: 1fr;
+  }
 }
 
-.blog-post-title {
-  font-size: 2.5rem;
-  color: var(--accent-color);
-  margin-bottom: 1rem;
+@media (max-width: 768px) {
+  .about-container {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 1.8rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
 }
 
-.blog-post-date {
-  font-size: 1.1rem;
-  color: var(--text-color);
-  margin-bottom: 2rem;
-}
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
 
-.code-block {
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-  padding: 1rem;
-  margin: 1.5rem 0;
-  font-family: monospace;
-  color: var(--text-color);
-  overflow-x: auto;
-}
+  .hero h1 {
+    font-size: 1.5rem;
+  }
 
-.code-block code {
-  display: block;
-  white-space: pre-wrap;
-}
+  .hero p {
+    font-size: 0.9rem;
+  }
 
-.blog-image {
-  display: block;
-  margin: 2rem auto;
-  max-width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  .projects-grid {
+    gap: 0.5rem;
+  }
+
+  .project-card {
+    padding: 0.5rem;
+  }
 }
