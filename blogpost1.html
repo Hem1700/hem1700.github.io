@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog Post 1</title>
+
+  <!-- Link to the same style for light/dark mode -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="light"><!-- Default theme is 'light' -->
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <div class="logo">Hem Parekh's Hack-Space</div>
+      <ul class="nav-links">
+        <li><a href="index.html#home">Home</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#experience">Experience</a></li>
+        <li><a href="index.html#projects">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+        <!-- Blog page link -->
+        <li><a href="blog.html">Blog</a></li>
+      </ul>
+      <!-- Theme Toggle Button -->
+      <button class="theme-toggle" id="themeToggle">Dark Mode</button>
+    </div>
+  </nav>
+
+  <!-- SINGLE BLOG POST SECTION -->
+  <section class="blog-post-content">
+    <div class="container">
+      <h1>Blog Title One</h1>
+      <p class="post-date">Published on: January 1, 2024</p>
+
+      <img 
+        src="https://via.placeholder.com/800x400/eee/333?text=Blog+Image" 
+        alt="Blog Cover" 
+        class="blog-cover"
+      >
+
+      <div class="blog-text">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+          Curabitur auctor, nulla at hendrerit pharetra, lorem tellus tristique mauris, 
+          sed interdum urna ipsum in metus...
+        </p>
+        <p>
+          Continue writing your blog content here. You can break it into multiple paragraphs, 
+          include images, code snippets, etc.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2024 Hem Parekh | All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Link to JS for theme toggle -->
+  <script src="script.js"></script>
+</body>
+</html>

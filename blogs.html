@@ -1,35 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blogs | Hem Parekh</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Blog</title>
+
+  <!-- Link to the same main style (with CSS variables for light/dark) -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- (Optional) Icon Library like Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    integrity="sha512-P1gywDxRdjz+MfI5LZaLo19tA/HZ0m+HaY/fk06r8jyM2xBm27JmyyxI+4KE9ErA+H4bkMl7nzE5F2Tg9M1VDg=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
 </head>
-<body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="about.html">About</a></li>
-                <li><a href="projects.html">Projects</a></li>
-                <li><a href="blogs.html">Blogs</a></li>
-                <li><a href="contact.html">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
+<body class="light"><!-- Default theme is 'light' -->
 
-    <section id="blogs">
-        <h2>My Blogs</h2>
-        <ul>
-            <li><a href="blog1.html">Understanding POODLE and GOLDENNOODLE Attacks</a></li>
-            <li><a href="blog2.html">Breaking Down the ROBOT Attack</a></li>
-            <li><a href="blog3.html">Mitigating JWT Attack Vectors</a></li>
-        </ul>
-    </section>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <div class="logo">Hem Parekh's Hack-Space</div>
+      <ul class="nav-links">
+        <li><a href="index.html#home">Home</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#experience">Experience</a></li>
+        <li><a href="index.html#projects">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+        <!-- Keep blog link active -->
+        <li><a href="blog.html" class="active">Blog</a></li>
+      </ul>
+      <!-- Theme Toggle Button -->
+      <button class="theme-toggle" id="themeToggle">Dark Mode</button>
+    </div>
+  </nav>
 
-    <footer>
-        <p>&copy; 2024 Hem Parekh. All rights reserved.</p>
-    </footer>
+  <!-- BLOG WELCOME SECTION -->
+  <header class="blog-welcome-section">
+    <div class="container">
+      <h1>Hi there <span class="wave">👋</span>, welcome to my Blog</h1>
+      <p class="blog-subtitle">
+        This is where I talk about my projects and everything that I find interesting in Cybersecurity
+      </p>
+      <div class="social-icons">
+        <!-- Replace # with your actual social links -->
+        <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+        <a href="#" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#" target="_blank"><i class="fab fa-github"></i></a>
+        <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- BLOG LIST SECTION -->
+  <section class="blog-list-section">
+    <div class="container">
+      <!-- Example blog card 1 -->
+      <article class="blog-card">
+        <a href="blogpost1.html" class="blog-card-link">
+          <h2>Huntress CTF 2024 Writeup</h2>
+          <p class="blog-excerpt">
+            This is a writeup on how I managed to solve some of the challenges from the Huntress 2024 CTF Games
+          </p>
+          <p class="blog-meta">
+            <span>November 6, 2024</span> · 
+            <span>6 min</span> · 
+            <span>1252 words</span> · 
+            <span>Hem Parekh</span>
+          </p>
+        </a>
+      </article>
+
+      <!-- Blog card 2 -->
+      <article class="blog-card">
+        <a href="blogpost1.html" class="blog-card-link">
+          <h2>Nahamcon CTF 2024 Writeup</h2>
+          <p class="blog-excerpt">
+            This is a writeup on how I managed to solve some of the challenges from the Nahamcon 2024 CTF
+          </p>
+          <p class="blog-meta">
+            <span>May 24, 2024</span> · 
+            <span>3 min</span> · 
+            <span>561 words</span> · 
+            <span>Hem Parekh</span>
+          </p>
+        </a>
+      </article>
+
+      <!-- Add more blog cards as needed, each linking to its own blogpost page -->
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2024 Hem Parekh | All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Link to JS for theme toggle -->
+  <script src="script.js"></script>
 </body>
 </html>
