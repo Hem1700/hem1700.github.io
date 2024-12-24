@@ -134,7 +134,7 @@ p {
 
 /* HERO SECTION */
 .hero {
-  min-height: 80vh;
+  min-height: 95vh;
   display: flex;
   align-items: center;
   text-align: center;
@@ -278,3 +278,79 @@ p {
     font-size: 1rem;
   }
 }
+
+
+/* CERTIFICATIONS SECTION */
+.certifications {
+  padding: 4rem 0;
+}
+
+.certifications h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+/* Single cert item container */
+.cert-item {
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+}
+
+/* The button that shows/hides content */
+.cert-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none; /* or var(--card-bg) if using variables */
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  font-size: 1rem;
+  text-align: left;
+  color: inherit; /* match your theme color */
+}
+
+.cert-title:focus {
+  outline: 2px dashed #aaa; /* for accessibility, optional */
+}
+
+/* The arrow icon */
+.arrow {
+  font-size: 1.2rem;
+  transition: transform 0.3s;
+}
+
+/* The content that expands/collapses */
+.cert-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out; /* the collapse/expand animation */
+  padding: 0 0.5rem;
+  opacity: 0;
+  /* Optional: fade effect via transition of opacity, but requires JS toggling both max-height and opacity */
+}
+
+/* Active state: if JavaScript adds a class like .open */
+.cert-item.open .cert-content {
+  max-height: 200px; /* large enough to show the content comfortably */
+  opacity: 1;
+  transition: max-height 0.3s ease-in, opacity 0.3s ease-in;
+}
+
+/* Rotate the arrow when open */
+.cert-item.open .arrow {
+  transform: rotate(180deg);
+}
+
+/* Link styling for “View credentials” */
+.view-credentials {
+  color: #007acc; /* or accent color in your theme */
+  text-decoration: underline;
+}
+.view-credentials:hover {
+  color: #005999; /* darker on hover */
+}
+

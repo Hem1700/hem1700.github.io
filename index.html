@@ -18,7 +18,9 @@
         <li><a href="#about">About</a></li>
         <li><a href="#experience">Experience</a></li>
         <li><a href="#projects">Projects</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <!-- NEW: Certs link in navbar -->
+        <li><a href="#certs">Certs</a></li>
+        <li><a href="https://drive.google.com/file/d/1BRxonjNM5WJzCqTOZ17f90XlAgOyrr9L/view?usp=sharing">Resume</a></li>
         <!-- Blog link example -->
         <li><a href="blogs.html">Blog</a></li>
       </ul>
@@ -32,9 +34,12 @@
     <div class="hero-content container">
       <h1>Hello, I'm <span class="highlight">Hem Parekh</span>.</h1>
       <!-- Inline CSS to center the image -->
-      <img src="images/heading_image.webp" style="display: block; margin: 0 auto; max-width: 300px; height: auto;">
-      <p>I’m a Security Engineer & Pen Tester, enthusiastic about building robust software and hunting vulnerabilities.</p>
-      <a href="#projects" class="btn">View My Work</a>
+      <img 
+        src="images/heading_image.webp" 
+        style="display: block; margin: 0 auto; max-width: 300px; height: auto;"
+        alt="Heading Image"
+      >
+      <p>I’m a Security Engineer &amp; Pen Tester, enthusiastic about building robust software and hunting vulnerabilities.</p>
     </div>
   </header>
 
@@ -43,7 +48,10 @@
     <div class="container">
       <h2>ABOUT ME</h2>
       <p class="about-intro">
-        I’m Hem Parekh, a Security Engineer and Pen Tester who thrives on building robust software and unearthing vulnerabilities. I blend engineering expertise with a hacker’s curiosity to design secure solutions. Outside of code and exploits, I enjoy blogging about my discoveries and advocating for a safer digital world.
+        I’m Hem Parekh, a Security Engineer and Pen Tester who thrives on building robust software 
+        and unearthing vulnerabilities. I blend engineering expertise with a hacker’s curiosity to design 
+        secure solutions. Outside of code and exploits, I enjoy blogging about my discoveries and advocating 
+        for a safer digital world.
       </p>
     </div>
   </section>
@@ -57,28 +65,44 @@
           <h3 class="title">Cybersecurity Engineer</h3>
           <h3 class="subtitle">Toshiba Global Commerce Solution, May 2024 - Dec 2024</h3>
           <p>
-            Conducted penetration testing on over 25 web applications, identifying 50+ critical vulnerabilities and reducing potential incidents significantly. Automated security processes, integrated advanced tools, and improved operational efficiency to streamline testing and ensure robust protection. Contributed to security architecture reviews across multiple projects, enhancing compliance and documenting vulnerabilities. Collaborated with agile teams to design and implement security-focused systems, ensuring alignment with business goals while staying ahead of emerging cybersecurity threats.
+            Conducted penetration testing on over 25 web applications, identifying 50+ critical vulnerabilities 
+            and reducing potential incidents significantly. Automated security processes, integrated advanced tools, 
+            and improved operational efficiency to streamline testing and ensure robust protection. Contributed to 
+            security architecture reviews across multiple projects, enhancing compliance and documenting vulnerabilities. 
+            Collaborated with agile teams to design and implement security-focused systems, ensuring alignment with 
+            business goals while staying ahead of emerging cybersecurity threats.
           </p>
         </article>
         <article>
           <h3 class="title">Cybersecurity Analyst Intern</h3>
           <h3 class="subtitle">Langan Engineering and Environmental Services, Sept 2023 - May 2024</h3>
           <p>
-            Enhanced enterprise security at Langan by conducting vulnerability assessments and penetration tests across 18 internal systems and web applications, reducing system vulnerabilities by 45%. Contributed to the development of NIST-27001-compliant documentation and enterprise security standards. Implemented YARA scripts to improve phishing detection accuracy and response times while integrating advanced tools like Cisco AMP, Mimecast, Arctic Wolf, and Burp Suite to strengthen security operations.
+            Enhanced enterprise security at Langan by conducting vulnerability assessments and penetration tests 
+            across 18 internal systems and web applications, reducing system vulnerabilities by 45%. Contributed 
+            to the development of NIST-27001-compliant documentation and enterprise security standards. Implemented 
+            YARA scripts to improve phishing detection accuracy and response times while integrating advanced tools 
+            like Cisco AMP, Mimecast, Arctic Wolf, and Burp Suite to strengthen security operations.
           </p>
         </article>
         <article>
           <h3 class="title">Research Assistant</h3>
           <h3 class="subtitle">Rochester Institute of Technology, Jan 2023 - Aug 2023</h3>
           <p>
-            Applied deep knowledge of security and privacy standards, including NIST SP 800-53, NIST SP 800-30, and ISO/IEC 27001, to ensure regulatory compliance. Skilled in conducting comprehensive risk assessments to identify, analyze, and mitigate potential risks while implementing effective controls. Leveraged industry best practices to align security and compliance efforts with organizational goals.
+            Applied deep knowledge of security and privacy standards, including NIST SP 800-53, NIST SP 800-30, and 
+            ISO/IEC 27001, to ensure regulatory compliance. Skilled in conducting comprehensive risk assessments to 
+            identify, analyze, and mitigate potential risks while implementing effective controls. Leveraged industry 
+            best practices to align security and compliance efforts with organizational goals.
           </p>
         </article>
         <article>
           <h3 class="title">Security Operational Analyst (SOC)</h3>
           <h3 class="subtitle">RNS Technology, June 2021 - July 2022</h3>
           <p>
-            Monitored over 100 security devices and intrusion detection systems, identifying and mitigating 100+ critical incidents to enhance enterprise system security. Assessed and responded to 200+ threat alerts, conducting root cause analysis and recommending remediation actions to protect data integrity. Utilized advanced tools such as Falcon CrowdStrike, Nmap, AlienVault, and LogRhythm to analyze network traffic and detect compromises, while implementing preventive measures to reduce organizational impact and safeguard infrastructure.
+            Monitored over 100 security devices and intrusion detection systems, identifying and mitigating 100+ critical 
+            incidents to enhance enterprise system security. Assessed and responded to 200+ threat alerts, conducting root 
+            cause analysis and recommending remediation actions to protect data integrity. Utilized advanced tools such as 
+            Falcon CrowdStrike, Nmap, AlienVault, and LogRhythm to analyze network traffic and detect compromises, while 
+            implementing preventive measures to reduce organizational impact and safeguard infrastructure.
           </p>
         </article>
       </div>
@@ -108,28 +132,94 @@
     </div>
   </section>
 
-  <!-- CONTACT SECTION -->
-  <section class="contact" id="contact">
+  <!-- NEW CERTIFICATIONS SECTION -->
+  <section class="certifications" id="certs">
     <div class="container">
-      <h2>CONTACT</h2>
-      <p class="section-intro">
-        Ready to collaborate? Fill out the form below or shoot me an email.
-      </p>
-      <form action="#" method="post" class="contact-form">
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" required />
-
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required />
-
-        <label for="message">Message</label>
-        <textarea id="message" name="message" rows="5" required></textarea>
-
-        <button type="submit" class="btn">Send Message</button>
-      </form>
-    </div>
+      <h2>CERTIFICATIONS</h2>
+  
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>CompTIA Security+ SY0601</span>
+          <!-- The arrow icon -->
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Aug 2022 by CompTIA - Expires Aug 2025</p>
+          <a href="#" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+  
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>Microsoft Azure Security, Compliance and Identity Fundamentals (SC-900)</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Jan 2023 by Microsoft - No expiration</p>
+          <a href="#" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+  
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>Microsoft Azure Security Operations Analyst (SC-200)</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Jun 2023 by Microsoft</p>
+          <a href="#" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+  
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>Certified Network Security Specialist (CNSS)</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Oct 2021</p>
+          <a href="#" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+  
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>Convolutional Neural Networks</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Nov 2022</p>
+          <a href="#" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+  
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>Cybersecurity Roles, Processes &amp; Operating System Security</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Apr 2023</p>
+          <a href="#" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+  
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>Introduction to Cybersecurity Tools &amp; Cyber Attack by IBM</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Dec 2022</p>
+          <a href="#" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+  
+    </div> <!-- container -->
   </section>
+  
 
+  
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container">

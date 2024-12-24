@@ -14,3 +14,18 @@ themeToggleBtn.addEventListener("click", () => {
     themeToggleBtn.textContent = "Dark Mode";
   }
 });
+
+// script.js
+document.addEventListener("DOMContentLoaded", () => {
+    const certItems = document.querySelectorAll(".cert-item");
+  
+    certItems.forEach((item) => {
+      const titleButton = item.querySelector(".cert-title");
+  
+      titleButton.addEventListener("click", () => {
+        // Toggle the 'open' class on this cert-item
+        item.classList.toggle("open");
+      });
+    });
+  });
+  
