@@ -575,3 +575,125 @@ p {
 .social-icons a:hover {
   color: var(--accent-color); /* Change to accent color on hover */
 }
+/* Timeline Styles */
+.timeline-container {
+  display: flex;
+  justify-content: space-between; /* Distributes items evenly */
+  align-items: flex-start;
+  margin: 2rem 0;
+  padding: 2rem 0;
+}
+
+.timeline {
+  display: flex;
+  justify-content: space-between; /* Ensures items are evenly spaced */
+  align-items: flex-start;
+  width: 100%; /* Uses the full width of the container */
+  position: relative;
+}
+
+.timeline-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1; /* Ensures equal space for all items */
+  position: relative;
+}
+
+.timeline-item .year {
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: var(--accent-color);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.timeline-item .content {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 90%; /* Prevents content from overflowing */
+  text-align: left; /* Align content to the left */
+}
+
+.timeline-item .content h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+}
+
+.timeline-item .content h4 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent-color);
+}
+
+.timeline-item .content p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+.timeline::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--border-color);
+  z-index: -1;
+}
+
+/* Remove dots */
+.timeline-item::before {
+  display: none; /* Removes the blue dot */
+}
+
+.timeline-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 1rem);
+  transform: translateY(-50%);
+  width: 2rem;
+  height: 2px;
+  background-color: var(--border-color);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .timeline {
+    flex-wrap: wrap; /* Stacks items on smaller screens */
+    gap: 2rem;
+  }
+
+  .timeline-item {
+    width: calc(50% - 1rem); /* Two items per row */
+    margin-bottom: 2rem;
+  }
+
+  .timeline-item .content {
+    width: 100%;
+  }
+
+  .timeline::after {
+    display: none; /* Remove horizontal line for stacked layout */
+  }
+
+  .timeline-item::before {
+    display: none; /* Remove dots for smaller screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .timeline-item {
+    width: 100%; /* Full width on smaller screens */
+  }
+}
