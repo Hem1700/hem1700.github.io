@@ -34,3 +34,9 @@ themeToggleBtn.addEventListener("click", () => {
     themeToggleBtn.textContent = "Dark Mode";
   }
 });
+
+// Smooth scrolling for timeline
+document.addEventListener("DOMContentLoaded", () => {
+  const timelineContainer = document.querySelector(".timeline-container");
+  timelineContainer.scrollLeft = 0; // Start at the leftmost position
+});
