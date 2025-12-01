@@ -445,15 +445,25 @@ body.dark .navbar {
 }
 
 /* CERTIFICATIONS */
+/* CERTIFICATIONS */
 .certifications h2 {
   text-align: center;
   font-size: clamp(1.5rem, 3vw, 2.2rem);
   margin-bottom: 1.8rem;
 }
 
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
 .cert-item {
-  border-bottom: 1px solid var(--border);
-  padding: 0.9rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow);
 }
 
 .cert-title {
@@ -467,7 +477,7 @@ body.dark .navbar {
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  padding: 0.35rem 0;
+  padding: 0;
 }
 
 .cert-title:focus-visible {
@@ -480,17 +490,10 @@ body.dark .navbar {
   transition: transform 0.25s ease;
 }
 
+/* We don't collapse content on the grid layout; keep it visible */
 .cert-item .cert-content {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease, opacity 0.35s ease;
-  opacity: 0;
-}
-
-.cert-item.open .cert-content {
-  max-height: 500px;
-  opacity: 1;
   padding-top: 0.4rem;
+  opacity: 1;
 }
 
 .cert-item.open .arrow {

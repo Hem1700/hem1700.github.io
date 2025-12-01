@@ -10,7 +10,7 @@ export default function CertificationsPage() {
           <p className="blog-subtitle">Credentials and exams I’ve completed.</p>
         </div>
       </header>
-      <Certifications items={certifications} />
+      <Certifications items={certifications} showHeader={false} />
     </>
   );
 }

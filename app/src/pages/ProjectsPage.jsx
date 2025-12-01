@@ -10,7 +10,7 @@ export default function ProjectsPage() {
           <p className="blog-subtitle">A focused list of what I’ve shipped and explored.</p>
         </div>
       </header>
-      <Projects items={projects} />
+      <Projects items={projects} showHeader={false} />
     </>
   );
 }
