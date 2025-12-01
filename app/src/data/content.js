@@ -25,6 +25,13 @@ export const about = {
 
 export const experience = [
   {
+    range: "Mar 2025 - Present",
+    role: "Privacy Engineer",
+    org: "Amazon",
+    desc:
+      "Driving privacy-by-design reviews and mitigating data exposure risks across services; partnering with engineering teams to embed controls and streamline compliance.",
+  },
+  {
     range: "June 2021 - July 2022",
     role: "Security Operational Analyst (SOC)",
     org: "RNS Technology",
