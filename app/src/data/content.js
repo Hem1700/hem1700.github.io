@@ -174,7 +174,7 @@ export const blogs = [
     href: "/blog/firmware_llm_annotator",
     excerpt:
       "How to use an LLM as a helper for firmware reversing: triaging strings, summarizing decompiled functions, and annotating config blobs while you stay in control of the analysis.",
-    date: "October 31, 2024",
+    date: "November 30, 2025",
     readTime: "5 min read",
   },
   {
