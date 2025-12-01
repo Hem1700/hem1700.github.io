@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Hem Parekh's Portfolio</title>
+    <!-- Link to CSS -->
+    <link rel="stylesheet" href="style.css" />
+    <!-- Link to Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  </head>
+
+<body class="dark"> <!-- Default theme is "light" -->
+  
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <div class="logo">Hem Parekh</div>
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#experience">Experience</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#certs">Certs</a></li>
+        <li><a href="https://drive.google.com/file/d/18iXELe1Bge8-SSpKBscATGjY4rCicmNb/view?usp=sharing">Resume</a></li>
+        <li><a href="blogs.html">Blog</a></li>
+      </ul>
+      <button class="theme-toggle" id="themeToggle">Light Mode</button>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="hero" id="home">
+    <div class="hero-content container">
+      <h1>Hello, I'm <span class="highlight">Hem Parekh</span>.</h1>
+      <img 
+        src="images/heading_image.webp" 
+        class="heading-image"
+        alt="Heading Image"
+      >
+      <p>I’m a Security Engineer &amp; Pen Tester, enthusiastic about building robust software and hunting vulnerabilities.</p>
+      <div class="scroll-down-arrow">
+        <a href="#about" class="arrow-link">
+          <span>&#8595;</span> <!-- Down arrow -->
+        </a>
+      </div>
+    </div>
+  </header>
+
+<!-- ABOUT SECTION -->
+<section class="about" id="about">
+  <div class="container about-container">
+    <div class="about-photo">
+      <img 
+        src="images/profile.jpeg" 
+        alt="Hem Parekh" 
+        style="max-width: 100%; border-radius: 10px;"
+      />
+    </div>
+    <div class="about-content">
+      <h2>ABOUT ME</h2>
+      <p>
+        I’m Hem Parekh, a Security Engineer and Pen Tester who thrives on building robust software 
+        and unearthing vulnerabilities. I blend engineering expertise with a hacker’s curiosity to design 
+        secure solutions. Outside of code and exploits, I enjoy blogging about my discoveries and advocating 
+        for a safer digital world.
+      </p>
+      <!-- Social Media Links -->
+      <div class="social-icons">
+        <a href="https://github.com/Hem1700" target="_blank" aria-label="GitHub">
+          <i class="fab fa-github"></i>
+        </a>
+        <a href="https://www.linkedin.com/in/hem-parekh/" target="_blank" aria-label="LinkedIn">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+        <a href="https://medium.com/@hemparekh1596" target="_blank" aria-label="Medium">
+          <i class="fab fa-medium"></i>
+        </a>
+        <a href="https://tryhackme.com/r/p/beatmonk" target="_blank" aria-label="TryHackMe">
+          <i class="fas fa-terminal"></i>
+        </a>
+        <a href="https://app.hackthebox.com/profile/overview" target="_blank" aria-label="HackTheBox">
+          <i class="fas fa-user-secret"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <!-- EXPERIENCE SECTION -->
+  <section class="experience" id="experience">
+    <div class="container">
+      <h2>EXPERIENCE</h2>
+      <div class="timeline-container">
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="year">June 2021 - July 2022</div>
+            <div class="content">
+              <h3>Security Operational Analyst (SOC)</h3>
+              <h4>RNS Technology</h4>
+              <p>
+                Monitored 100+ security devices, responded to threat alerts, and conducted root cause analyses to enhance system security and data integrity.
+              </p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="year">Jan 2023 - Aug 2023</div>
+            <div class="content">
+              <h3>Research Assistant</h3>
+              <h4>Rochester Institute of Technology</h4>
+              <p>
+                Applied knowledge of security standards, including NIST SP 800-53 and ISO/IEC 27001, conducting risk assessments and implementing controls to mitigate risks effectively.
+              </p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="year">Sep 2023 - May 2024</div>
+            <div class="content">
+              <h3>Cybersecurity Analyst Intern</h3>
+              <h4>Langan Engineering and Environmental Services</h4>
+              <p>
+                Conducted vulnerability assessments and penetration tests across 18 internal systems, contributing to enterprise security and developing NIST-27001-compliant documentation.
+              </p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="year">May 2024 - Dec 2024</div>
+            <div class="content">
+              <h3>Cybersecurity Engineer Intern</h3>
+              <h4>Toshiba Global Commerce Solution</h4>
+              <p>
+                Conducted penetration testing on over 25 web applications, identifying critical vulnerabilities, automating processes, and improving operational efficiency.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS SECTION -->
+  <section class="projects" id="projects">
+    <div class="container">
+      <h2 class="section-title">Projects</h2>
+      <p class="section-subtitle">
+        Every project is a unique endeavor. See what I have accomplished so far!
+      </p>
+      <div class="projects-grid">
+        <!-- Project Card 1 -->
+        <div class="project-card">
+            <a href="https://github.com/Hem1700/sita">
+            <h5 class="project-title">Phish Analyzer Tool</h5> 
+            <p class="project-description">
+              A patented desktop application designed to analyze and secure against phishing emails, featuring sandbox configurations, advanced security mechanisms, and a user-friendly interface to enhance threat detection and response.
+            </p>   
+            </a>
+        </div>
+        <!-- Project Card 2 -->
+        <div class="project-card">
+          <a href="https://drive.google.com/file/d/1WcmhCJQN_b8jad3dQoGplBmO6EN1leYZ/view?usp=sharing">
+          <h5 class="project-title">Secure Communication Using Image Exif Data</h5>
+          <p class="project-description">
+            Explored the innovative use of image Exif data for covert communication. Developed methodologies for securely embedding and transmitting sensitive information through image metadata.
+          </p>  
+          </a> 
+      </div>
+        <!-- Project Card 3 -->
+        <div class="project-card">
+          <a href="https://drive.google.com/file/d/1Y2vyRjVBgjy6QB9_qn_taJUrYCodehHT/view?usp=sharing">
+          <h5 class="project-title">Architecture and Advancement in Virtualization of TPM</h5> 
+          <p class="project-description">
+            Explored the architecture and advancements of virtual Trusted Platform Modules (vTPMs) in virtual and cloud environments. The project highlighted security flaws, key-sharing mechanisms, and the migration challenges associated with vTPMs, proposing solutions for enhanced security and trust in virtualization.
+          </p>   
+          </a>
+      </div>
+     <!-- Project Card 5-->
+     <div class="project-card">
+      <a href="https://drive.google.com/file/d/17vZRyJyKYX7CmUgC1iBQf4buEsBgoC30/view?usp=sharing">
+      <h5 class="project-title">Quantum Key Distribution</h5> 
+      <p class="project-description">
+        This project delves into the rapidly evolving field of quantum cryptography, focusing on Quantum Key Distribution (QKD). It explores innovative methods to increase QKD transmission distance while maintaining secure data transmission, addressing challenges such as key generation rates, distance limitations, and potential vulnerabilities.
+      </p>   
+      </a>
+  </div>
+  <!-- Project Card 6-->
+  <div class="project-card">
+    <a href="https://github.com/Hem1700/sectool">
+    <h5 class="project-title">SecTool: The Comprehensive Cybersecurity Toolkit</h5> 
+    <p class="project-description">
+      SecTool is a versatile cybersecurity toolkit with features like keylogging, OSINT, payload generation, hash cracking, network analysis, social engineering tools, web vulnerability detection, and more. It’s a comprehensive solution for security testing and digital defense.
+    </p>  
+    </a> 
+</div>
+<!-- Project Card 7-->
+<div class="project-card">
+  <a href="https://github.com/Hem1700/Website-crawler">
+  <h5 class="project-title">Website Crawler</h5> 
+  <p class="project-description">
+    A lightweight and efficient web crawler designed to scrape, analyze, and extract data from websites, enabling seamless data collection for various use cases.
+  </p>   
+  </a>
+</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW CERTIFICATIONS SECTION -->
+  <section class="certifications" id="certs">
+    <div class="container">
+      <h2>CERTIFICATIONS</h2>
+  
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>CompTIA Security+</span>
+          <!-- The arrow icon -->
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Oct 2024 by CompTIA - Expires Oct 2027</p>
+          <a href="https://www.credly.com/badges/7270d02f-a0d1-483a-8000-8ebd2b628391/linked_in_profile" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>CompTIA Pentest+</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Oct 2024 by CompTIA - Expires Oct 2027</p>
+          <a href="https://www.credly.com/badges/d93ed2a7-c86b-42ec-b4e4-7a7d2a2cd972/linked_in_profile" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>CompTIA CySA+</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Nov 2024 by CompTIA - Expires Nov 2027</p>
+          <a href="https://www.credly.com/badges/d6a9802e-23b8-4a0a-83e1-edc7e89a457c/linked_in_profile" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>CompTIA Network Vulnerability Assessment Professional (CVNP)</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Oct 2024 by CompTIA - Expires Oct 2027</p>
+          <a href="https://www.credly.com/badges/59404c7e-7680-45a9-8622-2a76f603c0c7/linked_in_profile" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>CompTIA Security Analytics Professional (CSAP)</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Nov 2024 by CompTIA - Expires Nov 2027</p>
+          <a href="https://www.credly.com/badges/8c6cca3e-0eb1-4920-8eff-826998743336/linked_in_profile" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>CompTIA Network Security Professional (CNSP)</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Nov 2024 by CompTIA - Expires Nov 2027</p>
+          <a href="https://www.credly.com/badges/08f2dd46-295b-402c-bc67-29189bea83ff/linked_in_profile" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>ICS2 Certified in Cybersecurity (CC)</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Oct 2024 - Expires Oct 2027</p>
+          <a href="https://www.credly.com/badges/c16c4d43-1e84-44ab-bebe-38d747073ccb/linked_in_profile" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>AWS Certified Cloud Practitioner (CCP)</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Mar 2024 - Expires Mar 2027</p>
+          <a href="https://www.credly.com/badges/6a0d691b-b3b2-4d44-addb-f2b5b171e83d/linked_in_profile" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>Microsoft Azure Security, Compliance and Identity Fundamentals (SC-900)</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Sep 2024 by Microsoft - No expiration</p>
+          <a href="https://learn.microsoft.com/api/credentials/share/en-us/HemParekh-9873/BD2B5E59D28A7F54?sharingId=1D33B191273E7834" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>Microsoft Azure Fundamentals (AZ-900)</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Sep 2024 by Microsoft - No expiration</p>
+          <a href="https://learn.microsoft.com/api/credentials/share/en-gb/HemParekh-9873/8B3B97F4E45B9F2C?sharingId" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>CCNA: Introduction to Networks</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Jun 2020 by Cicso - No expiration</p>
+          <a href="https://www.credly.com/badges/be753401-bd44-4d09-81d7-33af049e6fad/linked_in_profile" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+      <div class="cert-item">
+        <button class="cert-title">
+          <span>Cisco: Endpoint Security</span>
+          <span class="arrow">&#9662;</span>
+        </button>
+        <div class="cert-content">
+          <p>Issued Nov 2024 by Cicso - No expiration</p>
+          <a href="https://www.credly.com/badges/9e4309a6-089f-4259-8333-c9c501666c77/linked_in_profile" class="view-credentials">View credentials</a>
+        </div>
+      </div>
+    </div> <!-- container -->
+  </section>
+  
+
+  
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2024 Hem Parekh | All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Link to JS -->
+  <script src="script.js"></script>
+</body>
+</html>

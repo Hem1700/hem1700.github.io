@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Blog</title>
+
+  <!-- Link to the common style.css -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Font Awesome (Optional Icons) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    integrity="sha512-P1gywDxRdjz+MfI5LZaLo19tA/HZ0m+HaY/fk06r8jyM2xBm27JmyyxI+4KE9ErA+H4bkMl7nzE5F2Tg9M1VDg=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+</head>
+<body class="dark">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <div class="logo">Hem Parekh</div>
+      <ul class="nav-links">
+        <li><a href="index.html#home">Home</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#experience">Experience</a></li>
+        <li><a href="index.html#projects">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+        <li><a href="blogs.html" class="active">Blog</a></li>
+      </ul>
+      <button class="theme-toggle" id="themeToggle">Light Mode</button>
+    </div>
+  </nav>
+
+  <!-- BLOG WELCOME SECTION -->
+  <header class="blog-welcome-section">
+    <div class="container text-center">
+      <h1>Hi there <span class="wave">👋</span>, welcome to my Blog</h1>
+      <p class="blog-subtitle">
+        This is where I talk about my projects and everything that I find interesting in Cybersecurity.
+      </p>
+      <div class="social-icons">
+        <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+        <a href="#" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#" target="_blank"><i class="fab fa-github"></i></a>
+        <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- BLOG LIST SECTION -->
+  <section class="blog-list-section">
+    <div class="container text-center">
+      <article class="blog-card">
+        <a href="firmware_llm_annotator.html"><h2 class="blog-title">Firmware Exploration: LLM as Your Annotator</h2></a>
+          <p class="blog-excerpt">
+            How to use an LLM as a helper for firmware reversing: triaging strings, summarizing decompiled functions, and annotating config blobs while you stay in control of the analysis.
+          </p>
+          <p class="blog-meta">
+            <span>October 31, 2024</span> · <span>5 min read</span>
+          </p>
+      </article>
+      <article class="blog-card">
+        <a href="1001.html"><h2 class="blog-title">CVE-2024–1001</h2></a>
+          <p class="blog-excerpt">
+            Kubernetes relies heavily on Role-Based Access Control (RBAC) to manage permissions. However, in early 2024, CVE-2024–1001 was disclosed, revealing how misconfigured RBAC rules in Kubernetes could allow attackers to gain full control over a cluster. This vulnerability emphasizes the risks of poorly defined access policies.
+          </p>
+          <p class="blog-meta">
+            <span>September 8, 2024</span> · <span>3 min read</span>
+          </p>
+      </article>
+      <article class="blog-card">
+        <a href="0012.html"><h2 class="blog-title">CVE-2024–0012</h2></a>
+          <p class="blog-excerpt">
+            CVE-2024–0012, known as the HTTP/2 Rapid Reset Attack, was disclosed, affecting major web servers like Apache and Nginx. This denial-of-service (DoS) vulnerability exploits HTTP/2’s stream management system by abusing the RST_STREAM frame. By overwhelming the server with rapid stream resets, attackers can exhaust resources and disrupt services.
+          </p>
+          <p class="blog-meta">
+            <span>September 8, 2024</span> · <span>3 min read</span>
+          </p>
+      </article>
+      <article class="blog-card">
+        <a href="40982.html"><h2 class="blog-title">CVE-2022–40982</h2></a>
+          <p class="blog-excerpt">
+            A critical vulnerability, CVE-2022–40982, dubbed Downfall, was disclosed. This vulnerability affects Intel x86–64 processors and exploits speculative execution to access sensitive data stored in vector registers. It impacts both consumer CPUs and server-grade Xeon processors, allowing attackers with local access to bypass security boundaries and potentially extract confidential information like encryption keys or passwords.
+          </p>
+          <p class="blog-meta">
+            <span>September 8, 2024</span> · <span>3 min read</span>
+          </p>
+      </article>
+      <article class="blog-card">
+        <a href="cow.html"><h2 class="blog-title">CVE-2016–5195</h2></a>
+          <p class="blog-excerpt">
+            In 2016, a critical vulnerability in the Linux kernel, known as Dirty Cow (CVE-2016–5195), was disclosed. This privilege escalation flaw exploited a race condition in the kernel’s memory management system, allowing attackers to write to read-only memory mappings. The name “Dirty Cow” comes from its exploitation of the Copy-On-Write (COW) mechanism in Linux.
+          </p>
+          <p class="blog-meta">
+            <span>September 8, 2024</span> · <span>3 min read</span>
+          </p>
+      </article>
+      <article class="blog-card">
+        <a href="symlinks.html"><h2 class="blog-title">Symbolic Links (Symlinks) in Linux</h2></a>
+          <p class="blog-excerpt">
+            TIn Linux, symbolic links are essentially shortcuts that point to other files or directories. They allow you to reference a file or directory without duplicating its contents. To know more read the blog. 
+          </p>
+          <p class="blog-meta">
+            <span>September 8, 2024</span> · <span>3 min read</span>
+          </p>
+      </article>
+      <article class="blog-card">
+        <a href="23397.html"><h2 class="blog-title">CVE-2023–23397</h2></a>
+          <p class="blog-excerpt">
+            This blog will break down the ROBOT attack, provide examples, and discuss mitigations to protect vulnerable systems.
+          </p>
+          <p class="blog-meta">
+            <span>September 8, 2024</span> · <span>3 min read</span>
+          </p>
+      </article>
+      <article class="blog-card">
+        <a href="0160.html"><h2 class="blog-title">CVE-2014-0160</h2></a>
+          <p class="blog-excerpt">
+            Heartbleed’s simplicity and devastating impact exposed the internet’s underlying fragility, and despite extensive efforts to patch affected systems, its ghost still haunts forgotten and neglected systems today. Let’s explore the technical details of this vulnerability, the global chaos it caused, and why it’s still relevant.
+          </p>
+          <p class="blog-meta">
+            <span>September 8, 2024</span> · <span>3 min read</span>
+          </p>
+      </article>
+      <article class="blog-card">
+        <a href="11882.html"><h2 class="blog-title">CVE-2017-11882</h2></a>
+          <p class="blog-excerpt">
+            One of the most notorious among these is CVE-2017–11882, commonly known as the Microsoft Office Memory Corruption Vulnerability. Originating in 2000, this vulnerability remains a frequently exploited entry point for attackers worldwide, from nation-state actors to cyber criminals.
+          </p>
+          <p class="blog-meta">
+            <span>October 26 2024</span> · <span>3 min read</span>
+          </p>
+      </article>
+      <article class="blog-card">
+        <a href="robot.html"><h2 class="blog-title">ROBOT (Return of Bleichenbacher’s Oracle Threat) Attack</h2></a>
+          <p class="blog-excerpt">
+            This blog will break down the ROBOT attack, provide examples, and discuss mitigations to protect vulnerable systems.
+          </p>
+          <p class="blog-meta">
+            <span>September 8, 2024</span> · <span>3 min read</span>
+          </p>
+      </article>
+      <article class="blog-card">
+        <a href="poodle.html"><h2 class="blog-title">ZOMBIE POODLE and GOLDENDOODLE ATTACKS</h2></a>
+          <p class="blog-excerpt">
+            This blog provides an in-depth look at Zombie Poodle and Goldendoodle attacks, how they work, and their implications for modern cybersecurity.
+          </p>
+          <p class="blog-meta">
+            <span>September 6, 2024</span> · <span>6 min read</span>
+          </p>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2024 Hem Parekh | All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- JS for theme toggle -->
+  <script src="script.js"></script>
+</body>
+</html>
