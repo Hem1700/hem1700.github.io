@@ -10,7 +10,6 @@ export default function Hero({ data }) {
         <div className="hero-descriptors">
           <span className="pill">Security Engineer</span>
           <span className="pill">Pen Tester</span>
-          <span className="pill">Remote • PT</span>
         </div>
         <img src={data.image} className="heading-image" alt="Heading" />
         <p>{data.blurb}</p>
