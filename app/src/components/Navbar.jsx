@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 
 export default function Navbar({ onToggleTheme, theme }) {
   const location = useLocation();
@@ -54,9 +54,9 @@ export default function Navbar({ onToggleTheme, theme }) {
             </a>
           </li>
           <li>
-            <a href="/blogs" className={isBlog ? "active" : ""}>
+            <Link to="/blogs" className={isBlog ? "active" : ""}>
               Blog
-            </a>
+            </Link>
           </li>
         </ul>
         <button className="theme-toggle" id="themeToggle" onClick={onToggleTheme}>

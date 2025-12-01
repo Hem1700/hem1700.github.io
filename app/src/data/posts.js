@@ -1,0 +1,69 @@
+import post0012 from "../posts/0012.html?raw";
+import post0160 from "../posts/0160.html?raw";
+import post1001 from "../posts/1001.html?raw";
+import post11882 from "../posts/11882.html?raw";
+import post23397 from "../posts/23397.html?raw";
+import post40982 from "../posts/40982.html?raw";
+import postCow from "../posts/cow.html?raw";
+import postFirmware from "../posts/firmware_llm_annotator.html?raw";
+import postPoodle from "../posts/poodle.html?raw";
+import postRobot from "../posts/robot.html?raw";
+import postSymlinks from "../posts/symlinks.html?raw";
+
+export const posts = {
+  "firmware_llm_annotator": {
+    title: "Firmware Exploration: LLM as Your Annotator",
+    slug: "firmware_llm_annotator",
+    content: postFirmware,
+  },
+  "1001": {
+    title: "CVE-2024–1001",
+    slug: "1001",
+    content: post1001,
+  },
+  "0012": {
+    title: "CVE-2024–0012",
+    slug: "0012",
+    content: post0012,
+  },
+  "40982": {
+    title: "CVE-2022–40982",
+    slug: "40982",
+    content: post40982,
+  },
+  "cow": {
+    title: "CVE-2016–5195",
+    slug: "cow",
+    content: postCow,
+  },
+  "symlinks": {
+    title: "Symbolic Links (Symlinks) in Linux",
+    slug: "symlinks",
+    content: postSymlinks,
+  },
+  "23397": {
+    title: "CVE-2023–23397",
+    slug: "23397",
+    content: post23397,
+  },
+  "0160": {
+    title: "CVE-2014-0160",
+    slug: "0160",
+    content: post0160,
+  },
+  "11882": {
+    title: "CVE-2017-11882",
+    slug: "11882",
+    content: post11882,
+  },
+  "robot": {
+    title: "ROBOT (Return of Bleichenbacher’s Oracle Threat) Attack",
+    slug: "robot",
+    content: postRobot,
+  },
+  "poodle": {
+    title: "ZOMBIE POODLE and GOLDENDOODLE ATTACKS",
+    slug: "poodle",
+    content: postPoodle,
+  },
+};

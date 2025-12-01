@@ -169,88 +169,99 @@ export const blogIntro = {
 
 export const blogs = [
   {
+    slug: "firmware_llm_annotator",
     title: "Firmware Exploration: LLM as Your Annotator",
-    href: "/firmware_llm_annotator.html",
+    href: "/blog/firmware_llm_annotator",
     excerpt:
       "How to use an LLM as a helper for firmware reversing: triaging strings, summarizing decompiled functions, and annotating config blobs while you stay in control of the analysis.",
     date: "October 31, 2024",
     readTime: "5 min read",
   },
   {
+    slug: "1001",
     title: "CVE-2024–1001",
-    href: "/1001.html",
+    href: "/blog/1001",
     excerpt:
       "Kubernetes relies heavily on Role-Based Access Control (RBAC) to manage permissions. However, in early 2024, CVE-2024–1001 was disclosed, revealing how misconfigured RBAC rules in Kubernetes could allow attackers to gain full control over a cluster. This vulnerability emphasizes the risks of poorly defined access policies.",
     date: "September 8, 2024",
     readTime: "3 min read",
   },
   {
+    slug: "0012",
     title: "CVE-2024–0012",
-    href: "/0012.html",
+    href: "/blog/0012",
     excerpt:
       "CVE-2024–0012, known as the HTTP/2 Rapid Reset Attack, was disclosed, affecting major web servers like Apache and Nginx. This denial-of-service (DoS) vulnerability exploits HTTP/2’s stream management system by abusing the RST_STREAM frame. By overwhelming the server with rapid stream resets, attackers can exhaust resources and disrupt services.",
     date: "September 8, 2024",
     readTime: "3 min read",
   },
   {
+    slug: "40982",
     title: "CVE-2022–40982",
-    href: "/40982.html",
+    href: "/blog/40982",
     excerpt:
       "A critical vulnerability, CVE-2022–40982, dubbed Downfall, was disclosed. This vulnerability affects Intel x86–64 processors and exploits speculative execution to access sensitive data stored in vector registers. It impacts both consumer CPUs and server-grade Xeon processors, allowing attackers with local access to bypass security boundaries and potentially extract confidential information like encryption keys or passwords.",
     date: "September 8, 2024",
     readTime: "3 min read",
   },
   {
+    slug: "cow",
     title: "CVE-2016–5195",
-    href: "/cow.html",
+    href: "/blog/cow",
     excerpt:
       "In 2016, a critical vulnerability in the Linux kernel, known as Dirty Cow (CVE-2016–5195), was disclosed. This privilege escalation flaw exploited a race condition in the kernel’s memory management system, allowing attackers to write to read-only memory mappings. The name “Dirty Cow” comes from its exploitation of the Copy-On-Write (COW) mechanism in Linux.",
     date: "September 8, 2024",
     readTime: "3 min read",
   },
   {
+    slug: "symlinks",
     title: "Symbolic Links (Symlinks) in Linux",
-    href: "/symlinks.html",
+    href: "/blog/symlinks",
     excerpt:
       "TIn Linux, symbolic links are essentially shortcuts that point to other files or directories. They allow you to reference a file or directory without duplicating its contents. To know more read the blog.",
     date: "September 8, 2024",
     readTime: "3 min read",
   },
   {
+    slug: "23397",
     title: "CVE-2023–23397",
-    href: "/23397.html",
+    href: "/blog/23397",
     excerpt:
       "This blog will break down the ROBOT attack, provide examples, and discuss mitigations to protect vulnerable systems.",
     date: "September 8, 2024",
     readTime: "3 min read",
   },
   {
+    slug: "0160",
     title: "CVE-2014-0160",
-    href: "/0160.html",
+    href: "/blog/0160",
     excerpt:
       "Heartbleed’s simplicity and devastating impact exposed the internet’s underlying fragility, and despite extensive efforts to patch affected systems, its ghost still haunts forgotten and neglected systems today. Let’s explore the technical details of this vulnerability, the global chaos it caused, and why it’s still relevant.",
     date: "September 8, 2024",
     readTime: "3 min read",
   },
   {
+    slug: "11882",
     title: "CVE-2017-11882",
-    href: "/11882.html",
+    href: "/blog/11882",
     excerpt:
       "One of the most notorious among these is CVE-2017–11882, commonly known as the Microsoft Office Memory Corruption Vulnerability. Originating in 2000, this vulnerability remains a frequently exploited entry point for attackers worldwide, from nation-state actors to cyber criminals.",
     date: "October 26 2024",
     readTime: "3 min read",
   },
   {
+    slug: "robot",
     title: "ROBOT (Return of Bleichenbacher’s Oracle Threat) Attack",
-    href: "/robot.html",
+    href: "/blog/robot",
     excerpt:
       "This blog will break down the ROBOT attack, provide examples, and discuss mitigations to protect vulnerable systems.",
     date: "September 8, 2024",
     readTime: "3 min read",
   },
   {
+    slug: "poodle",
     title: "ZOMBIE POODLE and GOLDENDOODLE ATTACKS",
-    href: "/poodle.html",
+    href: "/blog/poodle",
     excerpt:
       "This blog provides an in-depth look at Zombie Poodle and Goldendoodle attacks, how they work, and their implications for modern cybersecurity.",
     date: "September 6, 2024",

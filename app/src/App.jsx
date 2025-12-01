@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomePage from "./pages/Home";
 import BlogsPage from "./pages/Blogs";
+import PostPage from "./pages/Post";
 import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
@@ -16,6 +17,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/blogs" element={<BlogsPage />} />
+            <Route path="/blog/:slug" element={<PostPage />} />
+            <Route path="*" element={<HomePage />} />
           </Routes>
         </main>
         <Footer />
