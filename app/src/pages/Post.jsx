@@ -7,11 +7,11 @@ function extractContent(htmlString) {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, "text/html");
-    const styles = Array.from(doc.querySelectorAll("style"))
-      .map((node) => node.outerHTML)
-      .join("");
+    // Remove inline styles to avoid clashing with site theme
+    doc.querySelectorAll("style").forEach((node) => node.remove());
+    // Remove stray body/html wrappers; keep inner content
     const bodyHtml = doc.body ? doc.body.innerHTML : htmlString;
-    return `${styles}${bodyHtml}`;
+    return bodyHtml;
   } catch (e) {
     return htmlString;
   }

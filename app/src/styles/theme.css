@@ -534,6 +534,28 @@ body.dark .navbar {
   text-align: justify;
 }
 
+.blog-post-content article {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: clamp(1.4rem, 4vw, 2rem);
+  box-shadow: var(--shadow);
+  max-width: 960px;
+  margin: 0 auto 3rem;
+}
+
+.blog-post-content article h1,
+.blog-post-content article h2,
+.blog-post-content article h3,
+.blog-post-content article h4 {
+  color: var(--text-strong);
+}
+
+.blog-post-content article p,
+.blog-post-content article li {
+  color: var(--text-muted);
+}
+
 .blog-post-content ul,
 .blog-post-content ol {
   margin: 1rem 0 1.25rem 1.3rem;
