@@ -26,23 +26,19 @@ export default function Certifications({ items, showViewAll = false, showHeader 
           </div>
         )}
         <div className="cert-grid">
-          {items.map((item, idx) => {
-            const isOpen = idx === openIndex;
-            return (
-              <div className={`cert-item${isOpen ? " open" : ""}`} key={item.title}>
-                <button className="cert-title" onClick={() => toggle(idx)}>
-                  <span>{item.title}</span>
-                  <span className="arrow">&#9662;</span>
-                </button>
-                <div className="cert-content">
-                  <p>{item.details}</p>
-                  <a href={item.href} className="view-credentials" target="_blank" rel="noreferrer">
-                    View credentials
-                  </a>
-                </div>
+          {items.map((item) => (
+            <div className="cert-item" key={item.title}>
+              <div className="cert-title">
+                <span>{item.title}</span>
               </div>
-            );
-          })}
+              <div className="cert-content">
+                <p>{item.details}</p>
+                <a href={item.href} className="view-credentials" target="_blank" rel="noreferrer">
+                  View credentials
+                </a>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
