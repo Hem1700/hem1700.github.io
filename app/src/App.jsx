@@ -6,6 +6,9 @@ import BlogsPage from "./pages/Blogs";
 import PostPage from "./pages/Post";
 import ProjectsPage from "./pages/ProjectsPage";
 import CertificationsPage from "./pages/CertificationsPage";
+import ContactStrip from "./components/ContactStrip";
+import ScrollProgress from "./components/ScrollProgress";
+import BackToTop from "./components/BackToTop";
 import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
@@ -14,6 +17,7 @@ export default function App() {
   return (
     <Router>
       <div className="app-shell">
+        <ScrollProgress />
         <Navbar onToggleTheme={toggleTheme} theme={theme} />
         <main>
           <Routes>
@@ -25,7 +29,9 @@ export default function App() {
             <Route path="*" element={<HomePage />} />
           </Routes>
         </main>
+        <ContactStrip />
         <Footer />
+        <BackToTop />
       </div>
     </Router>
   );

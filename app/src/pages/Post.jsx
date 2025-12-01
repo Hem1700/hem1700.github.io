@@ -21,10 +21,26 @@ export default function PostPage() {
   const { slug } = useParams();
   const postEntry = posts[slug];
   const meta = blogs.find((b) => b.slug === slug);
+  const toc = useMemo(() => {
+    if (!postEntry) return [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(postEntry.content, "text/html");
+    return Array.from(doc.querySelectorAll("h2, h3")).map((h, idx) => ({
+      text: h.textContent || `Section ${idx + 1}`,
+      id: `toc-${idx}`,
+      tag: h.tagName.toLowerCase(),
+    }));
+  }, [postEntry]);
 
   const content = useMemo(() => {
     if (!postEntry) return "";
-    return extractContent(postEntry.content);
+    // add IDs for TOC anchors
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(postEntry.content, "text/html");
+    Array.from(doc.querySelectorAll("h2, h3")).forEach((h, idx) => {
+      h.id = `toc-${idx}`;
+    });
+    return extractContent(doc.documentElement.outerHTML);
   }, [postEntry]);
 
   if (!postEntry) {
@@ -48,6 +64,18 @@ export default function PostPage() {
         </div>
       </header>
       <main className="blog-post-content container">
+        {toc.length > 0 && (
+          <aside className="post-toc">
+            <p className="pill">On this page</p>
+            <ul>
+              {toc.map((item) => (
+                <li key={item.id} className={item.tag === "h3" ? "toc-sub" : ""}>
+                  <a href={`#${item.id}`}>{item.text}</a>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
         <article dangerouslySetInnerHTML={{ __html: content }} />
       </main>
     </>

@@ -1,12 +1,14 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useState, useMemo } from "react";
+
+const domains = ["All", "Security", "Cloud", "Networking"];
 
 export default function Certifications({ items, showViewAll = false, showHeader = true }) {
-  const [openIndex, setOpenIndex] = useState(null);
-
-  const toggle = (idx) => {
-    setOpenIndex((prev) => (prev === idx ? null : idx));
-  };
+  const [filter, setFilter] = useState("All");
+  const filteredItems = useMemo(() => {
+    if (filter === "All") return items;
+    return items.filter((item) => item.domain ? item.domain === filter : true);
+  }, [filter, items]);
 
   return (
     <section className="certifications" id="certs">
@@ -25,8 +27,17 @@ export default function Certifications({ items, showViewAll = false, showHeader 
             )}
           </div>
         )}
+        {showHeader && (
+          <div className="filter-chips">
+            {domains.map((domain) => (
+              <button key={domain} className={`chip ${domain === filter ? "active" : ""}`} type="button" onClick={() => setFilter(domain)}>
+                {domain}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="cert-grid">
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <div className="cert-item" key={item.title}>
               <div className="cert-title">
                 <span>{item.title}</span>

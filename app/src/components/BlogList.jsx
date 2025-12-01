@@ -13,6 +13,9 @@ export default function BlogList({ posts }) {
             <p className="blog-meta">
               <span>{post.date}</span> · <span>{post.readTime}</span>
             </p>
+            <div className="blog-tags">
+              <span className="pill">Security</span>
+            </div>
           </article>
         ))}
       </div>

@@ -2,11 +2,16 @@ export default function Experience({ items }) {
   return (
     <section className="experience" id="experience">
       <div className="container">
-        <h2>EXPERIENCE</h2>
+        <div className="section-header">
+          <div>
+            <h2>EXPERIENCE</h2>
+          </div>
+        </div>
         <div className="timeline-container">
           <div className="timeline">
             {items.map((item) => (
               <div className="timeline-item" key={`${item.range}-${item.role}`}>
+                <div className="timeline-badge">{item.org?.[0] || item.role?.[0] || "•"}</div>
                 <div className="year">{item.range}</div>
                 <div className="content">
                   <h3>{item.role}</h3>

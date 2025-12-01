@@ -67,36 +67,42 @@ export const projects = [
     description:
       "A patented desktop application designed to analyze and secure against phishing emails, featuring sandbox configurations, advanced security mechanisms, and a user-friendly interface to enhance threat detection and response.",
     href: "https://github.com/Hem1700/sita",
+    tags: ["Security", "Desktop"],
   },
   {
     title: "Secure Communication Using Image Exif Data",
     description:
       "Explored the innovative use of image Exif data for covert communication. Developed methodologies for securely embedding and transmitting sensitive information through image metadata.",
     href: "https://drive.google.com/file/d/1WcmhCJQN_b8jad3dQoGplBmO6EN1leYZ/view?usp=sharing",
+    tags: ["Research", "Security"],
   },
   {
     title: "Architecture and Advancement in Virtualization of TPM",
     description:
       "Explored the architecture and advancements of virtual Trusted Platform Modules (vTPMs) in virtual and cloud environments. The project highlighted security flaws, key-sharing mechanisms, and the migration challenges associated with vTPMs, proposing solutions for enhanced security and trust in virtualization.",
     href: "https://drive.google.com/file/d/1Y2vyRjVBgjy6QB9_qn_taJUrYCodehHT/view?usp=sharing",
+    tags: ["Research", "Cloud"],
   },
   {
     title: "Quantum Key Distribution",
     description:
       "This project delves into the rapidly evolving field of quantum cryptography, focusing on Quantum Key Distribution (QKD). It explores innovative methods to increase QKD transmission distance while maintaining secure data transmission, addressing challenges such as key generation rates, distance limitations, and potential vulnerabilities.",
     href: "https://drive.google.com/file/d/17vZRyJyKYX7CmUgC1iBQf4buEsBgoC30/view?usp=sharing",
+    tags: ["Research", "Cryptography"],
   },
   {
     title: "SecTool: The Comprehensive Cybersecurity Toolkit",
     description:
       "SecTool is a versatile cybersecurity toolkit with features like keylogging, OSINT, payload generation, hash cracking, network analysis, social engineering tools, web vulnerability detection, and more. It’s a comprehensive solution for security testing and digital defense.",
     href: "https://github.com/Hem1700/sectool",
+    tags: ["Security", "Toolkit"],
   },
   {
     title: "Website Crawler",
     description:
       "A lightweight and efficient web crawler designed to scrape, analyze, and extract data from websites, enabling seamless data collection for various use cases.",
     href: "https://github.com/Hem1700/Website-crawler",
+    tags: ["Web", "Automation"],
   },
 ];
 
@@ -105,61 +111,73 @@ export const certifications = [
     title: "CompTIA Security+",
     details: "Issued Oct 2024 by CompTIA - Expires Oct 2027",
     href: "https://www.credly.com/badges/7270d02f-a0d1-483a-8000-8ebd2b628391/linked_in_profile",
+    domain: "Security",
   },
   {
     title: "CompTIA Pentest+",
     details: "Issued Oct 2024 by CompTIA - Expires Oct 2027",
     href: "https://www.credly.com/badges/d93ed2a7-c86b-42ec-b4e4-7a7d2a2cd972/linked_in_profile",
+    domain: "Security",
   },
   {
     title: "CompTIA CySA+",
     details: "Issued Nov 2024 by CompTIA - Expires Nov 2027",
     href: "https://www.credly.com/badges/d6a9802e-23b8-4a0a-83e1-edc7e89a457c/linked_in_profile",
+    domain: "Security",
   },
   {
     title: "CompTIA Network Vulnerability Assessment Professional (CVNP)",
     details: "Issued Oct 2024 by CompTIA - Expires Oct 2027",
     href: "https://www.credly.com/badges/59404c7e-7680-45a9-8622-2a76f603c0c7/linked_in_profile",
+    domain: "Security",
   },
   {
     title: "CompTIA Security Analytics Professional (CSAP)",
     details: "Issued Nov 2024 by CompTIA - Expires Nov 2027",
     href: "https://www.credly.com/badges/8c6cca3e-0eb1-4920-8eff-826998743336/linked_in_profile",
+    domain: "Security",
   },
   {
     title: "CompTIA Network Security Professional (CNSP)",
     details: "Issued Nov 2024 by CompTIA - Expires Nov 2027",
     href: "https://www.credly.com/badges/08f2dd46-295b-402c-bc67-29189bea83ff/linked_in_profile",
+    domain: "Security",
   },
   {
     title: "ICS2 Certified in Cybersecurity (CC)",
     details: "Issued Oct 2024 - Expires Oct 2027",
     href: "https://www.credly.com/badges/c16c4d43-1e84-44ab-bebe-38d747073ccb/linked_in_profile",
+    domain: "Security",
   },
   {
     title: "AWS Certified Cloud Practitioner (CCP)",
     details: "Issued Mar 2024 - Expires Mar 2027",
     href: "https://www.credly.com/badges/6a0d691b-b3b2-4d44-addb-f2b5b171e83d/linked_in_profile",
+    domain: "Cloud",
   },
   {
     title: "Microsoft Azure Security, Compliance and Identity Fundamentals (SC-900)",
     details: "Issued Sep 2024 by Microsoft - No expiration",
     href: "https://learn.microsoft.com/api/credentials/share/en-us/HemParekh-9873/BD2B5E59D28A7F54?sharingId=1D33B191273E7834",
+    domain: "Cloud",
   },
   {
     title: "Microsoft Azure Fundamentals (AZ-900)",
     details: "Issued Sep 2024 by Microsoft - No expiration",
     href: "https://learn.microsoft.com/api/credentials/share/en-gb/HemParekh-9873/8B3B97F4E45B9F2C?sharingId",
+    domain: "Cloud",
   },
   {
     title: "CCNA: Introduction to Networks",
     details: "Issued Jun 2020 by Cicso - No expiration",
     href: "https://www.credly.com/badges/be753401-bd44-4d09-81d7-33af049e6fad/linked_in_profile",
+    domain: "Networking",
   },
   {
     title: "Cisco: Endpoint Security",
     details: "Issued Nov 2024 by Cicso - No expiration",
     href: "https://www.credly.com/badges/9e4309a6-089f-4259-8333-c9c501666c77/linked_in_profile",
+    domain: "Security",
   },
 ];
 

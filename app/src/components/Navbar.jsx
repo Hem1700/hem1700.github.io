@@ -7,6 +7,7 @@ export default function Navbar({ onToggleTheme, theme }) {
   const isBlog = location.pathname === "/blogs";
   const isProjectsPage = location.pathname.startsWith("/projects");
   const isCertsPage = location.pathname.startsWith("/certifications");
+  const isContact = location.hash === "#contact" || location.pathname === "/contact";
 
   const handleAnchorClick = (event, id) => {
     event.preventDefault();
@@ -59,6 +60,11 @@ export default function Navbar({ onToggleTheme, theme }) {
             <Link to="/blogs" className={isBlog ? "active" : ""}>
               Blog
             </Link>
+          </li>
+          <li>
+            <a href="#contact" className={isContact ? "active" : ""} onClick={(e) => handleAnchorClick(e, "contact")}>
+              Contact
+            </a>
           </li>
         </ul>
         <button className="theme-toggle" id="themeToggle" onClick={onToggleTheme}>
