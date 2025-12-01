@@ -30,8 +30,8 @@ function sanitizePostContent(htmlString) {
     const firstH1 = doc.querySelector("h1");
     if (firstH1) firstH1.remove();
 
-    // Prefer blog content section; fall back to body
-    const mainCandidates = [".blog-post-content", ".blog-text", "article", "main"];
+    // Prefer the inner text wrapper; fall back to section/article/body
+    const mainCandidates = [".blog-text", "article", ".blog-post-content", "main"];
     let container = doc.body;
     for (const selector of mainCandidates) {
       const found = doc.querySelector(selector);
@@ -40,6 +40,14 @@ function sanitizePostContent(htmlString) {
         break;
       }
     }
+
+    // Unwrap generic container divs to avoid nested widths interfering with our card
+    container.querySelectorAll(".container").forEach((node) => {
+      while (node.firstChild) {
+        node.parentNode.insertBefore(node.firstChild, node);
+      }
+      node.remove();
+    });
 
     // Add predictable IDs for headings (helps future TOC or anchor links)
     Array.from(container.querySelectorAll("h2, h3")).forEach((heading, idx) => {
