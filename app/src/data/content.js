@@ -32,11 +32,11 @@ export const experience = [
       "Driving privacy-by-design reviews and mitigating data exposure risks across services; partnering with engineering teams to embed controls and streamline compliance.",
   },
   {
-    range: "June 2021 - July 2022",
-    role: "Security Operational Analyst (SOC)",
-    org: "RNS Technology",
+    range: "May 2024 - Dec 2024",
+    role: "Cybersecurity Engineer Intern",
+    org: "Toshiba Global Commerce Solution",
     desc:
-      "Monitored 100+ security devices, responded to threat alerts, and conducted root cause analyses to enhance system security and data integrity.",
+      "Conducted penetration testing on over 25 web applications, identifying critical vulnerabilities, automating processes, and improving operational efficiency.",
   },
   {
     range: "Jan 2023 - Aug 2023",
@@ -53,11 +53,11 @@ export const experience = [
       "Conducted vulnerability assessments and penetration tests across 18 internal systems, contributing to enterprise security and developing NIST-27001-compliant documentation.",
   },
   {
-    range: "May 2024 - Dec 2024",
-    role: "Cybersecurity Engineer Intern",
-    org: "Toshiba Global Commerce Solution",
+    range: "June 2021 - July 2022",
+    role: "Security Operational Analyst (SOC)",
+    org: "RNS Technology",
     desc:
-      "Conducted penetration testing on over 25 web applications, identifying critical vulnerabilities, automating processes, and improving operational efficiency.",
+      "Monitored 100+ security devices, responded to threat alerts, and conducted root cause analyses to enhance system security and data integrity.",
   },
 ];
 
