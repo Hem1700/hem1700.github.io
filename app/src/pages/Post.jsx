@@ -64,18 +64,6 @@ export default function PostPage() {
         </div>
       </header>
       <main className="blog-post-content container">
-        {toc.length > 0 && (
-          <aside className="post-toc">
-            <p className="pill">On this page</p>
-            <ul>
-              {toc.map((item) => (
-                <li key={item.id} className={item.tag === "h3" ? "toc-sub" : ""}>
-                  <a href={`#${item.id}`}>{item.text}</a>
-                </li>
-              ))}
-            </ul>
-          </aside>
-        )}
         <article dangerouslySetInnerHTML={{ __html: content }} />
       </main>
     </>
