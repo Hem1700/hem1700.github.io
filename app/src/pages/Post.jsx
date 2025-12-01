@@ -3,15 +3,50 @@ import { useParams, Link } from "react-router-dom";
 import { blogs } from "../data/content";
 import { posts } from "../data/posts";
 
-function extractContent(htmlString) {
+function sanitizePostContent(htmlString) {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, "text/html");
-    // Remove inline styles to avoid clashing with site theme
-    doc.querySelectorAll("style").forEach((node) => node.remove());
-    // Remove stray body/html wrappers; keep inner content
-    const bodyHtml = doc.body ? doc.body.innerHTML : htmlString;
-    return bodyHtml;
+
+    // Strip external chrome or inline styling that fights the SPA theme
+    const removeSelectors = [
+      "style",
+      "script",
+      "link",
+      "nav",
+      "header",
+      "footer",
+      ".navbar",
+      ".nav-container",
+      ".theme-toggle",
+      ".footer",
+      ".social-links",
+      ".social-icons",
+    ];
+    doc.querySelectorAll(removeSelectors.join(",")).forEach((node) => node.remove());
+    doc.querySelectorAll("[style]").forEach((el) => el.removeAttribute("style"));
+
+    // Remove duplicated titles from imported HTML; page already renders the H1
+    const firstH1 = doc.querySelector("h1");
+    if (firstH1) firstH1.remove();
+
+    // Prefer blog content section; fall back to body
+    const mainCandidates = [".blog-post-content", ".blog-text", "article", "main"];
+    let container = doc.body;
+    for (const selector of mainCandidates) {
+      const found = doc.querySelector(selector);
+      if (found) {
+        container = found;
+        break;
+      }
+    }
+
+    // Add predictable IDs for headings (helps future TOC or anchor links)
+    Array.from(container.querySelectorAll("h2, h3")).forEach((heading, idx) => {
+      if (!heading.id) heading.id = `section-${idx + 1}`;
+    });
+
+    return container.innerHTML || htmlString;
   } catch (e) {
     return htmlString;
   }
@@ -21,26 +56,10 @@ export default function PostPage() {
   const { slug } = useParams();
   const postEntry = posts[slug];
   const meta = blogs.find((b) => b.slug === slug);
-  const toc = useMemo(() => {
-    if (!postEntry) return [];
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(postEntry.content, "text/html");
-    return Array.from(doc.querySelectorAll("h2, h3")).map((h, idx) => ({
-      text: h.textContent || `Section ${idx + 1}`,
-      id: `toc-${idx}`,
-      tag: h.tagName.toLowerCase(),
-    }));
-  }, [postEntry]);
 
   const content = useMemo(() => {
     if (!postEntry) return "";
-    // add IDs for TOC anchors
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(postEntry.content, "text/html");
-    Array.from(doc.querySelectorAll("h2, h3")).forEach((h, idx) => {
-      h.id = `toc-${idx}`;
-    });
-    return extractContent(doc.documentElement.outerHTML);
+    return sanitizePostContent(postEntry.content);
   }, [postEntry]);
 
   if (!postEntry) {
