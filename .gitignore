@@ -1,0 +1,9 @@
+node_modules
+.DS_Store
+dist
+.vite
+*.log
+deploy.sh
+DEPLOY_STEPS.md
+REACT_MIGRATION_TODO.md
+app-dist.tar.gz
