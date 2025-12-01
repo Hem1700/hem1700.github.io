@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
-export default function Certifications({ items }) {
+export default function Certifications({ items, showViewAll = false }) {
   const [openIndex, setOpenIndex] = useState(null);
 
   const toggle = (idx) => {
@@ -10,7 +11,18 @@ export default function Certifications({ items }) {
   return (
     <section className="certifications" id="certs">
       <div className="container">
-        <h2>CERTIFICATIONS</h2>
+        <div className="section-header">
+          <div>
+            <h2>CERTIFICATIONS</h2>
+          </div>
+          {showViewAll && (
+            <div className="section-actions">
+              <Link className="link-button" to="/certifications">
+                View all certifications
+              </Link>
+            </div>
+          )}
+        </div>
         {items.map((item, idx) => {
           const isOpen = idx === openIndex;
           return (

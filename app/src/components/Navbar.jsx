@@ -6,6 +6,7 @@ export default function Navbar({ onToggleTheme, theme }) {
 
   const isBlog = location.pathname === "/blogs";
   const isProjectsPage = location.pathname.startsWith("/projects");
+  const isCertsPage = location.pathname.startsWith("/certifications");
 
   const handleAnchorClick = (event, id) => {
     event.preventDefault();
@@ -48,6 +49,15 @@ export default function Navbar({ onToggleTheme, theme }) {
           <li>
             <a href="/projects" className={isProjectsPage ? "active" : ""} onClick={handleProjectsClick}>
               Projects
+            </a>
+          </li>
+          <li>
+            <a href="/certifications" className={isCertsPage ? "active" : ""} onClick={(e) => {
+              if (location.pathname === "/") {
+                handleAnchorClick(e, "certs");
+              }
+            }}>
+              Certs
             </a>
           </li>
           <li>
