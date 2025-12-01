@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState, useMemo } from "react";
+import CertBadge from "./CertBadge";
 
 const domains = ["All", "Security", "Cloud", "Networking"];
 
@@ -40,6 +41,7 @@ export default function Certifications({ items, showViewAll = false, showHeader 
           {filteredItems.map((item) => (
             <div className="cert-item" key={item.title}>
               <div className="cert-title">
+                <CertBadge issuer={item.issuer} />
                 <span>{item.title}</span>
               </div>
               <div className="cert-content">

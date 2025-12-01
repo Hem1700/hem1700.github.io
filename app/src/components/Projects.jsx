@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useMemo } from "react";
 import FeaturedProjects from "./FeaturedProjects";
 import ProjectFilters from "./ProjectFilters";
+import FeaturedCarousel from "./FeaturedCarousel";
 
 export default function Projects({ items, showViewAll = false, showHeader = true }) {
   const [filter, setFilter] = useState("All");
@@ -30,7 +31,7 @@ export default function Projects({ items, showViewAll = false, showHeader = true
           </div>
         )}
         {showHeader && <ProjectFilters activeFilter={filter} onFilterChange={setFilter} />}
-        {showHeader && <FeaturedProjects items={featured} />}
+        {showHeader && <FeaturedCarousel items={featured} />}
         <div className="projects-grid">
           {filtered.map((project) => (
             <div className="project-card" key={project.title}>

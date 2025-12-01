@@ -12,7 +12,7 @@ export default function ContactStrip() {
         <div>
           <p className="pill">Let’s talk</p>
           <h2>Get in touch</h2>
-          <p className="contact-blurb">Open to security engineering, privacy engineering, and penetration testing roles.</p>
+          <p className="contact-blurb">Let’s connect to collaborate on security engineering or privacy-focused initiatives.</p>
         </div>
         <div className="contact-actions">
           <button className="button primary" onClick={copyEmail} type="button">

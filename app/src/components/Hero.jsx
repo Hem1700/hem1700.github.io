@@ -14,20 +14,6 @@ export default function Hero({ data }) {
         </div>
         <img src={data.image} className="heading-image" alt="Heading" />
         <p>{data.blurb}</p>
-        <div className="hero-stats">
-          <div className="stat-card">
-            <div className="stat-value">4+</div>
-            <div className="stat-label">Years in Security</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-value">10+</div>
-            <div className="stat-label">Projects Shipped</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-value">12</div>
-            <div className="stat-label">Certifications</div>
-          </div>
-        </div>
         <div className="hero-ctas">
           <Link className="button primary" to="/projects">
             View Projects

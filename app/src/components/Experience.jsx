@@ -11,7 +11,6 @@ export default function Experience({ items }) {
           <div className="timeline">
             {items.map((item) => (
               <div className="timeline-item" key={`${item.range}-${item.role}`}>
-                <div className="timeline-badge">{item.org?.[0] || item.role?.[0] || "•"}</div>
                 <div className="year">{item.range}</div>
                 <div className="content">
                   <h3>{item.role}</h3>
