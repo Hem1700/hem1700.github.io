@@ -25,12 +25,6 @@ export default function Navbar({ onToggleTheme, theme }) {
     }
   };
 
-  const handleProjectsClick = (event) => {
-    if (location.pathname === "/") {
-      handleAnchorClick(event, "projects");
-    } // otherwise let it navigate to /projects
-  };
-
   return (
     <nav className="navbar">
       <div className="container nav-container">
@@ -47,23 +41,14 @@ export default function Navbar({ onToggleTheme, theme }) {
             </a>
           </li>
           <li>
-            <a href="/projects" className={isProjectsPage ? "active" : ""} onClick={handleProjectsClick}>
+            <Link to="/projects" className={isProjectsPage ? "active" : ""}>
               Projects
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/certifications" className={isCertsPage ? "active" : ""} onClick={(e) => {
-              if (location.pathname === "/") {
-                handleAnchorClick(e, "certs");
-              }
-            }}>
+            <Link to="/certifications" className={isCertsPage ? "active" : ""}>
               Certs
-            </a>
-          </li>
-          <li>
-            <a href="#certs" onClick={(e) => handleAnchorClick(e, "certs")}>
-              Certs
-            </a>
+            </Link>
           </li>
           <li>
             <a href="https://drive.google.com/file/d/18iXELe1Bge8-SSpKBscATGjY4rCicmNb/view?usp=sharing" target="_blank" rel="noreferrer">
