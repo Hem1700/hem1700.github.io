@@ -5,6 +5,7 @@ export default function Navbar({ onToggleTheme, theme }) {
   const navigate = useNavigate();
 
   const isBlog = location.pathname === "/blogs";
+  const isProjectsPage = location.pathname.startsWith("/projects");
 
   const handleAnchorClick = (event, id) => {
     event.preventDefault();
@@ -23,6 +24,12 @@ export default function Navbar({ onToggleTheme, theme }) {
     }
   };
 
+  const handleProjectsClick = (event) => {
+    if (location.pathname === "/") {
+      handleAnchorClick(event, "projects");
+    } // otherwise let it navigate to /projects
+  };
+
   return (
     <nav className="navbar">
       <div className="container nav-container">
@@ -39,7 +46,7 @@ export default function Navbar({ onToggleTheme, theme }) {
             </a>
           </li>
           <li>
-            <a href="#projects" onClick={(e) => handleAnchorClick(e, "projects")}>
+            <a href="/projects" className={isProjectsPage ? "active" : ""} onClick={handleProjectsClick}>
               Projects
             </a>
           </li>

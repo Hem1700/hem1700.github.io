@@ -4,6 +4,7 @@ import Footer from "./components/Footer";
 import HomePage from "./pages/Home";
 import BlogsPage from "./pages/Blogs";
 import PostPage from "./pages/Post";
+import ProjectsPage from "./pages/ProjectsPage";
 import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/blogs" element={<BlogsPage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/blog/:slug" element={<PostPage />} />
             <Route path="*" element={<HomePage />} />
           </Routes>

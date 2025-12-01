@@ -11,7 +11,7 @@ export default function HomePage() {
       <Hero data={hero} />
       <About data={about} socials={socialLinks} />
       <Experience items={experience} />
-      <Projects items={projects} />
+      <Projects items={projects} showViewAll />
       <Certifications items={certifications} />
     </>
   );
