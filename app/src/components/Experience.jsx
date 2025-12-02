@@ -12,11 +12,7 @@ const meta = {
     },
     tools: ["AWS", "Splunk", "Python", "Terraform"],
     outcome: "Cut data exposure paths; embedded privacy-by-design across services.",
-    actions: [
-      "Ran DPIAs and embedded data minimization controls into SDLC checkpoints.",
-      "Built automated privacy checks; closed data leakage pathways with teams.",
-      "Partnered with engineering to enforce retention and access boundaries.",
-    ],
+    actions: [],
   },
   "Cybersecurity Engineer Intern": {
     domains: ["AppSec", "Infra"],
@@ -30,11 +26,7 @@ const meta = {
       "Privacy Reviews": false,
     },
     outcome: "8 critical issues fixed; 25+ web apps hardened.",
-    actions: [
-      "Performed web app testing and prioritized fixes with teams.",
-      "Automated scans and performance baselines in CI pipelines.",
-      "Authored NIST-27001-ready documentation to support compliance.",
-    ],
+    actions: [],
   },
   "Research Assistant": {
     domains: ["Research", "Compliance"],
@@ -49,11 +41,7 @@ const meta = {
     },
     tools: ["NIST 800-53", "ISO 27001", "Python"],
     outcome: "Risk assessments aligned to NIST/ISO; controls implemented with teams.",
-    actions: [
-      "Conducted risk assessments mapped to NIST SP 800-53 and ISO/IEC 27001.",
-      "Worked with stakeholders to implement mitigating controls.",
-      "Documented findings and recommendations for research systems.",
-    ],
+    actions: [],
   },
   "Cybersecurity Analyst Intern": {
     domains: ["AppSec", "Infra"],
@@ -68,11 +56,7 @@ const meta = {
     },
     tools: ["Nessus", "Burp", "Splunk"],
     outcome: "Assessed 18 internal systems; delivered remediation guidance.",
-    actions: [
-      "Executed vulnerability assessments and penetration tests on internal systems.",
-      "Delivered remediation guidance and tracked fixes with engineers.",
-      "Supported creation of NIST-27001-compliant documentation.",
-    ],
+    actions: [],
   },
   "Security Operational Analyst (SOC)": {
     domains: ["Detection", "Operations"],
@@ -86,11 +70,7 @@ const meta = {
       "Privacy Reviews": false,
     },
     outcome: "Monitored 100+ devices; improved alert handling and root-cause analysis.",
-    actions: [
-      "Monitored security telemetry across 100+ devices and responded to alerts.",
-      "Performed root-cause analysis on incidents and tuned detections.",
-      "Streamlined triage by automating routine checks.",
-    ],
+    actions: [],
   },
 };
 
