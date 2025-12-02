@@ -1,18 +1,20 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
 
 :root {
-  --bg-body: #05070d;
-  --bg-surface: #0b111d;
-  --bg-subtle: #0f1624;
-  --text-strong: #e8edf7;
-  --text-muted: #9aa6bf;
-  --accent: #6bffb5;
-  --accent-strong: #38f58a;
-  --border: #1a2335;
-  --shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+  --bg-body: #f6f8fc;
+  --bg-surface: #ffffff;
+  --bg-subtle: #eef2fb;
+  --text-strong: #0d1626;
+  --text-muted: #4c5975;
+  --accent: #27d883;
+  --accent-strong: #16c774;
+  --border: #d9e1f2;
+  --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
   --radius: 14px;
-  --gradient: linear-gradient(135deg, #6bffb5, #40c6ff);
+  --gradient: linear-gradient(135deg, #27d883, #40c6ff);
   --mono: "IBM Plex Mono", "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --panel: rgba(255, 255, 255, 0.92);
+  --panel-contrast: rgba(248, 250, 255, 0.92);
 }
 
 body.dark {
@@ -26,6 +28,8 @@ body.dark {
   --border: #192233;
   --shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
   --gradient: linear-gradient(135deg, #6bffb5, #40c6ff);
+  --panel: rgba(7, 10, 17, 0.9);
+  --panel-contrast: rgba(5, 7, 13, 0.95);
 }
 
 * {
@@ -42,9 +46,9 @@ body {
   min-height: 100%;
   font-family: "Inter", "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
-    radial-gradient(circle at 15% 20%, rgba(107, 255, 181, 0.08), transparent 26%),
-    radial-gradient(circle at 80% 0%, rgba(64, 198, 255, 0.08), transparent 28%),
-    radial-gradient(circle at 50% 60%, rgba(107, 255, 181, 0.05), transparent 28%),
+    radial-gradient(circle at 15% 20%, rgba(64, 198, 255, 0.08), transparent 26%),
+    radial-gradient(circle at 80% 0%, rgba(39, 216, 131, 0.08), transparent 28%),
+    radial-gradient(circle at 50% 60%, rgba(39, 216, 131, 0.05), transparent 28%),
     var(--bg-body);
   color: var(--text-strong);
   line-height: 1.7;
@@ -129,10 +133,10 @@ section {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(7, 10, 17, 0.9);
+  background: var(--panel);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
 }
 
 .nav-container {
@@ -526,7 +530,7 @@ section {
 
 /* PROJECTS */
 .projects {
-  background: linear-gradient(180deg, rgba(10, 16, 27, 0.92), rgba(5, 7, 13, 0.98));
+  background: linear-gradient(180deg, var(--panel-contrast), var(--bg-subtle));
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
@@ -1279,7 +1283,7 @@ article {
 
 /* FOOTER */
 .footer {
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--panel);
   border-top: 1px solid var(--border);
   padding: 1.3rem 0;
   margin-top: auto;
