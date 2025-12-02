@@ -773,9 +773,7 @@ body.dark .navbar {
 
 /* BLOG LIST */
 .blog-list-section .container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.4rem;
+  display: block;
 }
 
 .blog-controls {
@@ -842,6 +840,26 @@ body.dark .navbar {
   font-size: 0.95rem;
   display: grid;
   gap: 0.35rem;
+}
+
+.blog-row-body {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.blog-row-title {
+  font-size: 1.15rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.blog-row-excerpt {
+  color: var(--text-muted);
+  margin: 0.2rem 0 0.35rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .blog-pagination {
