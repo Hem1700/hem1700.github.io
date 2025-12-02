@@ -376,83 +376,141 @@ body.dark .navbar {
   box-shadow: var(--shadow);
 }
 
-/* EXPERIENCE / TIMELINE */
+/* EXPERIENCE / IMPACT CARDS */
 .experience h2 {
   text-align: center;
   font-size: clamp(1.5rem, 3vw, 2.2rem);
   margin-bottom: 2rem;
 }
 
-.timeline-container {
+.experience-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.exp-card {
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: clamp(1.25rem, 4vw, 2rem);
+  padding: 1.2rem;
   box-shadow: var(--shadow);
+  display: grid;
+  gap: 0.8rem;
 }
 
-.timeline {
-  position: relative;
+.exp-card-header {
   display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding-left: 1.5rem;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
 }
 
-.timeline::before {
-  content: "";
-  position: absolute;
-  left: 14px;
-  top: 0.5rem;
-  bottom: 0.5rem;
-  width: 2px;
+.exp-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.exp-card h4 {
+  margin: 0.15rem 0 0;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.exp-dates {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.exp-chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.exp-chips .pill {
+  background: var(--bg-subtle);
+  padding: 0.3rem 0.65rem;
+}
+
+.pill.impact {
+  border-color: var(--accent-strong);
+  color: var(--accent-strong);
+}
+
+.exp-outcome {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.exp-capabilities {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.4rem;
+}
+
+.exp-cap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+}
+
+.exp-cap.on {
+  border-color: rgba(56, 189, 248, 0.4);
+  color: var(--text-strong);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.dot-cap {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.exp-cap.off .dot-cap {
   background: var(--border);
 }
 
-.timeline-item {
-  position: relative;
+.exp-tools {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.exp-tools-label {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.exp-tools-list {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.exp-tools-list .pill {
+  background: var(--bg-subtle);
+  padding: 0.25rem 0.6rem;
+}
+
+.exp-actions {
+  margin: 0.2rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--text-muted);
   display: grid;
-  gap: 0.5rem;
-  background: var(--bg-surface);
-  border-radius: 14px;
-  padding: 1rem 1.25rem 1.1rem 1.25rem;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  margin-left: 0.25rem;
+  gap: 0.25rem;
 }
 
-.timeline-item::before {
-  content: "";
-  position: absolute;
-  left: -0.95rem;
-  top: 1.2rem;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 3px solid var(--bg-surface);
-  box-shadow: 0 0 0 4px var(--bg-body);
-}
-
-.timeline-item .year {
-  justify-self: flex-start;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  background: var(--gradient);
-  color: #0b1224;
-  font-weight: 700;
-  font-size: 0.95rem;
-}
-
-.timeline-item .content h3 {
-  font-size: 1.1rem;
-  margin-bottom: 0.3rem;
-}
-
-.timeline-item .content h4 {
-  font-size: 1rem;
-  color: var(--accent);
-  margin-bottom: 0.5rem;
+.exp-actions li {
+  line-height: 1.5;
 }
 
 /* PROJECTS */
