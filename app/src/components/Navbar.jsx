@@ -52,11 +52,6 @@ export default function Navbar({ onToggleTheme, theme }) {
             </Link>
           </li>
           <li>
-            <a href="https://drive.google.com/file/d/18iXELe1Bge8-SSpKBscATGjY4rCicmNb/view?usp=sharing" target="_blank" rel="noreferrer">
-              Resume
-            </a>
-          </li>
-          <li>
             <Link to="/blogs" className={isBlog ? "active" : ""}>
               Blog
             </Link>
