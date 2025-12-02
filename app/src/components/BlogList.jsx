@@ -4,28 +4,30 @@ export default function BlogList({ posts, page = 1, totalPages = 1, onPageChange
   return (
     <section className="blog-list-section">
       <div className="container">
-        {posts.map((post) => (
-          <article className="blog-row" key={post.title}>
-            <div className="blog-row-meta">
-              <div className="blog-row-date">{post.date}</div>
-              <div className="blog-row-time">{post.readTime}</div>
-            </div>
-            <div className="blog-row-body">
-              <Link to={post.href} className="blog-row-title">
-                {post.title}
-              </Link>
-              <p className="blog-row-excerpt">{post.excerpt}</p>
-              <div className="blog-tags">
-                <span className="pill">Security</span>
+        <div className="blog-grid">
+          {posts.map((post) => (
+            <article className="blog-row" key={post.title}>
+              <div className="blog-row-meta">
+                <div className="blog-row-date">{post.date}</div>
+                <div className="blog-row-time">{post.readTime}</div>
               </div>
-            </div>
-            <div className="blog-row-cta">
-              <Link to={post.href} className="view-credentials">
-                Read
-              </Link>
-            </div>
-          </article>
-        ))}
+              <div className="blog-row-body">
+                <Link to={post.href} className="blog-row-title">
+                  {post.title}
+                </Link>
+                <p className="blog-row-excerpt">{post.excerpt}</p>
+                <div className="blog-tags">
+                  <span className="pill">Security</span>
+                </div>
+              </div>
+              <div className="blog-row-cta">
+                <Link to={post.href} className="view-credentials">
+                  Read
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
 
         {totalPages > 1 && (
           <div className="blog-pagination">
