@@ -29,7 +29,6 @@ const meta = {
       "Incident Response": false,
       "Privacy Reviews": false,
     },
-    tools: ["Burp", "ZAP", "k6", "GitHub Actions"],
     outcome: "8 critical issues fixed; 25+ web apps hardened.",
     actions: [
       "Performed web app testing and prioritized fixes with teams.",
@@ -86,7 +85,6 @@ const meta = {
       Automation: true,
       "Privacy Reviews": false,
     },
-    tools: ["SIEM", "IDS/IPS", "SOAR"],
     outcome: "Monitored 100+ devices; improved alert handling and root-cause analysis.",
     actions: [
       "Monitored security telemetry across 100+ devices and responded to alerts.",
@@ -110,7 +108,6 @@ export default function Experience({ items }) {
             const m = meta[item.role] || {};
             const domains = m.domains || [];
             const capabilities = m.capabilities || {};
-            const tools = m.tools || [];
             const actions = m.actions || [item.desc];
             return (
               <article className="exp-card" key={`${item.range}-${item.role}`}>
@@ -137,16 +134,6 @@ export default function Experience({ items }) {
                       {cap}
                     </div>
                   ))}
-                </div>
-                <div className="exp-tools">
-                  <span className="exp-tools-label">Tools:</span>
-                  <div className="exp-tools-list">
-                    {tools.map((t) => (
-                      <span className="pill" key={t}>
-                        {t}
-                      </span>
-                    ))}
-                  </div>
                 </div>
                 <ul className="exp-actions">
                   {actions.map((a) => (

@@ -478,29 +478,6 @@ body.dark .navbar {
   background: var(--border);
 }
 
-.exp-tools {
-  display: flex;
-  gap: 0.6rem;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.exp-tools-label {
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.exp-tools-list {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.exp-tools-list .pill {
-  background: var(--bg-subtle);
-  padding: 0.25rem 0.6rem;
-}
-
 .exp-actions {
   margin: 0.2rem 0 0;
   padding-left: 1.1rem;
