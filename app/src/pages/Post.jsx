@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { blogs } from "../data/content";
 import { posts } from "../data/posts";
@@ -70,6 +70,59 @@ export default function PostPage() {
     return sanitizePostContent(postEntry.content);
   }, [postEntry]);
 
+  const getTheme = () => (document.body.classList.contains("dark") ? "dark" : "light");
+
+  useEffect(() => {
+    const container = document.querySelector(".giscus-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const script = document.createElement("script");
+    script.src = "https://giscus.app/client.js";
+    script.async = true;
+    script.crossOrigin = "anonymous";
+    script.setAttribute("data-giscus", "true");
+    script.setAttribute("data-repo", "Hem1700/hem1700.github.io");
+    script.setAttribute("data-repo-id", "R_kgDONilgZg");
+    script.setAttribute("data-category", "General");
+    script.setAttribute("data-category-id", "DIC_kwDONilgZs4CzSR2");
+    script.setAttribute("data-mapping", "pathname");
+    script.setAttribute("data-strict", "1");
+    script.setAttribute("data-reactions-enabled", "1");
+    script.setAttribute("data-emit-metadata", "0");
+    script.setAttribute("data-input-position", "top");
+    script.setAttribute("data-lang", "en");
+    script.setAttribute("data-theme", getTheme());
+
+    container.appendChild(script);
+
+    return () => {
+      container.innerHTML = "";
+    };
+  }, [slug]);
+
+  useEffect(() => {
+    const applyTheme = () => {
+      const iframe = document.querySelector("iframe.giscus-frame");
+      if (!iframe) return;
+      iframe.contentWindow?.postMessage(
+        {
+          giscus: {
+            setConfig: {
+              theme: getTheme(),
+            },
+          },
+        },
+        "https://giscus.app"
+      );
+    };
+
+    const observer = new MutationObserver(applyTheme);
+    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    applyTheme();
+    return () => observer.disconnect();
+  }, []);
+
   if (!postEntry) {
     return (
       <main className="blog-post-content container">
@@ -92,6 +145,11 @@ export default function PostPage() {
       </header>
       <main className="blog-post-content container">
         <article dangerouslySetInnerHTML={{ __html: content }} />
+        <section className="comments">
+          <div className="container">
+            <div className="giscus-container" />
+          </div>
+        </section>
       </main>
     </>
   );
