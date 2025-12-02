@@ -6,11 +6,20 @@ import FeaturedCarousel from "./FeaturedCarousel";
 
 export default function Projects({ items, showViewAll = false, showHeader = true }) {
   const [filter, setFilter] = useState("All");
+  const [page, setPage] = useState(1);
+  const pageSize = 4;
   const featured = items.slice(0, 2);
   const filtered = useMemo(() => {
     if (filter === "All") return items;
     return items.filter((project) => project.tags?.some((t) => t.toLowerCase().includes(filter.toLowerCase().split(" ")[0])));
   }, [filter, items]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  const handleFilter = (val) => {
+    setFilter(val);
+    setPage(1);
+  };
 
   return (
     <section className="projects" id="projects">
@@ -30,13 +39,15 @@ export default function Projects({ items, showViewAll = false, showHeader = true
             )}
           </div>
         )}
-        {showHeader && <ProjectFilters activeFilter={filter} onFilterChange={setFilter} />}
+        {showHeader && <ProjectFilters activeFilter={filter} onFilterChange={handleFilter} />}
         {showHeader && <FeaturedCarousel items={featured} />}
-        <div className="projects-grid">
-          {filtered.map((project) => (
-            <div className="project-card" key={project.title}>
-              <a href={project.href} target="_blank" rel="noreferrer">
-                <h5 className="project-title">{project.title}</h5>
+        <div className="projects-list">
+          {pageItems.map((project) => (
+            <div className="project-row" key={project.title}>
+              <div className="project-row-body">
+                <a href={project.href} target="_blank" rel="noreferrer" className="project-title-link">
+                  <h5 className="project-title">{project.title}</h5>
+                </a>
                 <p className="project-description">{project.description}</p>
                 {project.tags?.length ? (
                   <div className="project-tags">
@@ -47,10 +58,28 @@ export default function Projects({ items, showViewAll = false, showHeader = true
                     ))}
                   </div>
                 ) : null}
-              </a>
+              </div>
+              <div className="project-row-cta">
+                <a href={project.href} target="_blank" rel="noreferrer" className="view-credentials">
+                  View
+                </a>
+              </div>
             </div>
           ))}
         </div>
+        {totalPages > 1 && (
+          <div className="blog-pagination project-pagination">
+            <button className="pill" disabled={page === 1} onClick={() => setPage(Math.max(1, page - 1))}>
+              Previous
+            </button>
+            <span className="blog-page-indicator">
+              Page {page} of {totalPages}
+            </span>
+            <button className="pill" disabled={page === totalPages} onClick={() => setPage(Math.min(totalPages, page + 1))}>
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
