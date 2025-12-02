@@ -7,7 +7,7 @@ import { blogIntro, blogs } from "../data/content";
 export default function BlogsPage() {
   const [filtered, setFiltered] = useState(blogs);
   const [page, setPage] = useState(1);
-  const pageSize = 4;
+  const pageSize = 1;
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);

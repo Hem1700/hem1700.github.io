@@ -645,6 +645,23 @@ body.dark .navbar {
   gap: 1rem;
 }
 
+.cert-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.cert-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 120px;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 1.2rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
 .cert-item {
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -681,6 +698,48 @@ body.dark .navbar {
 .cert-item .cert-content {
   padding-top: 0.4rem;
   opacity: 1;
+}
+
+.cert-row-meta {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+}
+
+.cert-row-tags {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.cert-row-body {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.cert-row-title {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.cert-row-details {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.cert-row-cta {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .cert-row {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+  .cert-row-cta {
+    justify-content: flex-start;
+  }
 }
 
 .cert-item.open .arrow {
