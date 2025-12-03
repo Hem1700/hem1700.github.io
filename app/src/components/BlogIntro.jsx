@@ -8,6 +8,11 @@ export default function BlogIntro({ data }) {
           Hi there <span className="wave">👋</span>, welcome to my Blog
         </h1>
         <p className="blog-subtitle">{data.subtitle}</p>
+        <img
+          src="/images/office-meme-2.jpg"
+          alt="The Office meme"
+          className="blog-meme"
+        />
       </div>
     </header>
   );

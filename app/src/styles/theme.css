@@ -957,6 +957,15 @@ section {
   margin: 0.8rem auto 1.4rem;
 }
 
+.blog-meme {
+  width: min(260px, 50vw);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.16);
+  transform: rotate(-1deg);
+  margin: 0 auto;
+}
+
 /* BLOG LIST */
 .blog-list-section .container {
   display: block;
