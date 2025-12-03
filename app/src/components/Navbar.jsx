@@ -29,7 +29,9 @@ export default function Navbar({ onToggleTheme, theme }) {
   return (
     <nav className="navbar">
       <div className="container nav-container">
-        <div className="logo">Hem Parekh</div>
+        <div className="logo">
+          <i className="fas fa-mug-hot mug-icon" aria-hidden="true" /> Dunder Portfolio | Hem Parekh
+        </div>
         <ul className="nav-links">
           <li>
             <a href="#about" onClick={(e) => handleAnchorClick(e, "about")}>
@@ -63,7 +65,7 @@ export default function Navbar({ onToggleTheme, theme }) {
           </li>
         </ul>
         <button className="theme-toggle" id="themeToggle" onClick={onToggleTheme}>
-          {theme === "dark" ? "Light Mode" : "Dark Mode"}
+          Conference Room Lights: {theme === "dark" ? "On" : "Off"}
         </button>
       </div>
     </nav>

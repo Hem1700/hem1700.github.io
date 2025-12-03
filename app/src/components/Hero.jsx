@@ -39,27 +39,36 @@ export default function Hero({ data }) {
   return (
     <header className={`hero reveal ${visible ? "visible" : ""}`} id="home" ref={ref}>
       <div className="hero-content container">
-        <h1>
-          Hello, I'm <span className="highlight scramble-text">{data.highlight}</span>.
-        </h1>
-        <div className="hero-descriptors">
-          <span className="pill scramble-text">Security Engineer</span>
-          <span className="pill scramble-text">Pen Tester</span>
+        <div className="hero-copy">
+          <div className="hero-badge">Assistant to the Regional Security Engineer</div>
+          <h1>
+            Hello, I'm <span className="highlight scramble-text">{data.highlight}</span>.
+          </h1>
+          <div className="hero-descriptors">
+            <span className="pill scramble-text">Security Engineer</span>
+            <span className="pill scramble-text">Pen Tester</span>
+          </div>
+          <p className="hero-funfact">Fun fact: Bears. Beets. Battlestar Encryption.</p>
+          <p>{data.blurb}</p>
+          <div className="hero-ctas">
+            <Link className="button primary clipboard" to="/projects">
+              View Projects
+            </Link>
+            <Link className="button ghost clipboard" to="/certifications">
+              Schedule Conference Room
+            </Link>
+          </div>
+          <div className="scroll-down-arrow">
+            <a href="#about" className="arrow-link">
+              <span>&#8595;</span>
+            </a>
+          </div>
         </div>
-        <img src={data.image} className="heading-image" alt="Heading" />
-        <p>{data.blurb}</p>
-        <div className="hero-ctas">
-          <Link className="button primary" to="/projects">
-            View Projects
-          </Link>
-          <Link className="button ghost" to="/certifications">
-            View Certifications
-          </Link>
-        </div>
-        <div className="scroll-down-arrow">
-          <a href="#about" className="arrow-link">
-            <span>&#8595;</span>
-          </a>
+        <div className="hero-photo-card">
+          <div className="polaroid">
+            <img src={data.image} className="heading-image" alt="Heading" />
+            <div className="polaroid-caption">Scranton Branch</div>
+          </div>
         </div>
       </div>
     </header>
