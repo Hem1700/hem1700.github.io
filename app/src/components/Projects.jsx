@@ -28,7 +28,7 @@ export default function Projects({ items, showViewAll = false, showHeader = true
           <div className="section-header">
             <div>
               <h2 className="section-title">Projects</h2>
-              <p className="section-subtitle">Every project is a unique endeavor. See what I have accomplished so far!</p>
+              <p className="section-subtitle">Quarterly Projects Report — "I am Beyoncé, always."</p>
             </div>
             {showViewAll && (
               <div className="section-actions">

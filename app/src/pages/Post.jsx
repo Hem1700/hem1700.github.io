@@ -127,7 +127,7 @@ export default function PostPage() {
     return (
       <main className="blog-post-content container">
         <h2>Post not found</h2>
-        <p>The post you’re looking for does not exist.</p>
+        <p>Looks like Toby was here. Let’s go back.</p>
         <Link to="/blogs" className="view-credentials">
           Back to Blog
         </Link>

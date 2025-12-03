@@ -1,8 +1,15 @@
+import { useState } from "react";
+
 export default function ContactStrip() {
   const email = "hemparekh1596@gmail.com";
+  const [copied, setCopied] = useState(false);
+
   const copyEmail = () => {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(email).catch(() => {});
+      navigator.clipboard.writeText(email).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      }).catch(() => {});
     }
   };
 
@@ -11,8 +18,9 @@ export default function ContactStrip() {
       <div className="container contact-grid">
         <div>
           <p className="pill">Let’s talk</p>
-          <h2>Get in touch</h2>
+          <h2>Leave a message after the beep (Jim’s prank pending).</h2>
           <p className="contact-blurb">Let’s connect to collaborate on security engineering or privacy-focused initiatives.</p>
+          {copied && <p className="contact-blurb">Copied. Threat level: Midnight.</p>}
         </div>
         <div className="contact-actions">
           <button className="button primary" onClick={copyEmail} type="button">

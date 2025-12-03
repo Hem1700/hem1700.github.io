@@ -13,7 +13,7 @@ const meta = {
       "Pen Testing": false,
     },
     tools: ["AWS", "Splunk", "Python", "Terraform"],
-    outcome: "Cut data exposure paths; embedded privacy-by-design across services.",
+    outcome: "Cut data exposure paths; embedded privacy-by-design across services. Declared 'World’s Best Pen Tester' (self-awarded mug).",
     actions: [],
   },
   "Cybersecurity Engineer Intern": {
@@ -132,6 +132,7 @@ export default function Experience({ items }) {
         <div className="section-header">
           <div>
             <h2>EXPERIENCE</h2>
+            <p className="section-subtitle">Jim would absolutely look into the camera right now.</p>
           </div>
         </div>
         <div className="experience-grid">
