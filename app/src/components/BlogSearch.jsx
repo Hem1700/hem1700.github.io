@@ -15,13 +15,20 @@ export default function BlogSearch({ posts, onFilter }) {
 
   return (
     <div className="blog-search">
-      <input
-        type="search"
-        value={query}
-        onChange={handleChange}
-        placeholder="Search posts..."
-        className="search-input"
-      />
+      <label className="search-label" htmlFor="blog-search">
+        Search posts
+      </label>
+      <div className="search-shell">
+        <i className="fas fa-search search-icon" aria-hidden="true" />
+        <input
+          id="blog-search"
+          type="search"
+          value={query}
+          onChange={handleChange}
+          placeholder="Type a keyword…"
+          className="search-input"
+        />
+      </div>
     </div>
   );
 }

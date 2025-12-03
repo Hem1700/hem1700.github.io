@@ -964,22 +964,56 @@ section {
 
 .blog-controls {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
+  justify-content: flex-start;
+  margin-bottom: 1.2rem;
 }
 
 .blog-search {
-  width: min(360px, 100%);
+  width: min(460px, 100%);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.search-label {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.search-shell {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(242, 211, 95, 0.14), rgba(75, 111, 163, 0.08));
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.08);
+}
+
+.search-icon {
+  color: var(--accent-strong);
+  font-size: 1rem;
+  display: grid;
+  place-items: center;
 }
 
 .search-input {
   width: 100%;
-  padding: 0.65rem 0.9rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-surface);
+  padding: 0.35rem 0.4rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
   color: var(--text-strong);
-  box-shadow: var(--shadow);
+  font-size: 1rem;
+}
+
+.search-input:focus {
+  outline: none;
 }
 
 .blog-card {
