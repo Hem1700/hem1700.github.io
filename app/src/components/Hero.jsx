@@ -67,7 +67,6 @@ export default function Hero({ data }) {
         <div className="hero-photo-card">
           <div className="polaroid">
             <img src={data.image} className="heading-image" alt="Heading" />
-            <div className="polaroid-caption">Scranton Branch</div>
           </div>
         </div>
       </div>

@@ -30,7 +30,7 @@ export default function Navbar({ onToggleTheme, theme }) {
     <nav className="navbar">
       <div className="container nav-container">
         <div className="logo">
-          <i className="fas fa-mug-hot mug-icon" aria-hidden="true" /> Dunder Portfolio | Hem Parekh
+          <i className="fas fa-mug-hot mug-icon" aria-hidden="true" /> Portfolio | Hem Parekh
         </div>
         <ul className="nav-links">
           <li>
