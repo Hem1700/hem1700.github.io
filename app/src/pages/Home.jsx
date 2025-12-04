@@ -7,8 +7,8 @@ export default function HomePage() {
   return (
     <>
       <Hero data={hero} />
-      <About data={about} socials={socialLinks} />
       <Experience items={experience} />
+      <About data={about} socials={socialLinks} />
     </>
   );
 }
