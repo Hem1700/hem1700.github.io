@@ -592,18 +592,3 @@ Concrete actions:
    - VERW-based mitigations may hurt performance; you’ll need to benchmark and possibly make different choices per environment (internal dev vs multi-tenant cloud vs regulated workloads).
 
 ---
-
-## 7. Further reading
-
-If you want to go deeper than this blog, here’s a good starting stack:
-
-- AMD’s **Transient Scheduler Attacks** (TSA) security bulletin and technical guidance.  
-- Linux kernel docs / Phoronix coverage for `MITIGATION_TSA` and the `tsa=` boot knob.  
-- Research papers on speculative and transient execution attacks (Spectre, Meltdown, Zenbleed, Inception, Medusa, etc.).  
-- AMD and academic work on automated discovery of microarchitectural leaks and isolation-boundary testing.
-
-These will give you both the official narrative and the gritty experimental details behind TSA.
-
----
-
-*Again: everything here is for learning and for defending modern systems. Don’t point side-channel experiments at machines you don’t own or control, and assume that anything that can leak data can also get you in trouble if you use it irresponsibly.*
