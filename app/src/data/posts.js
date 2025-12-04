@@ -9,12 +9,18 @@ import postFirmware from "../posts/firmware_llm_annotator.html?raw";
 import postPoodle from "../posts/poodle.html?raw";
 import postRobot from "../posts/robot.html?raw";
 import postSymlinks from "../posts/symlinks.html?raw";
+import postTsa from "../posts/transient_scheduler_attacks_tsa_blog.html?raw";
 
 export const posts = {
   "firmware_llm_annotator": {
     title: "Firmware Exploration: LLM as Your Annotator",
     slug: "firmware_llm_annotator",
     content: postFirmware,
+  },
+  "transient_scheduler_attacks_tsa_blog": {
+    title: "Transient Scheduler Attacks on CPUs: Exploiting AMD’s New Microarchitectural Leak",
+    slug: "transient_scheduler_attacks_tsa_blog",
+    content: postTsa,
   },
   "1001": {
     title: "CVE-2024–1001",

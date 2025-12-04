@@ -206,6 +206,15 @@ export const blogIntro = {
 
 export const blogs = [
   {
+    slug: "transient_scheduler_attacks_tsa_blog",
+    title: "Transient Scheduler Attacks on CPUs: Exploiting AMD’s New Microarchitectural Leak",
+    href: "/blog/transient_scheduler_attacks_tsa_blog",
+    excerpt:
+      "AMD’s new TSA class abuses false completions in the instruction scheduler to leak data across privilege boundaries. Here’s what TSA is, how an attacker could exploit it, a tiny timing lab to feel the leak, and what defenders should do.",
+    date: "February 28, 2025",
+    readTime: "8 min read",
+  },
+  {
     slug: "firmware_llm_annotator",
     title: "Firmware Exploration: LLM as Your Annotator",
     href: "/blog/firmware_llm_annotator",
