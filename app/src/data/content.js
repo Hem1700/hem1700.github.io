@@ -211,7 +211,7 @@ export const blogs = [
     href: "/blog/transient_scheduler_attacks_tsa_blog",
     excerpt:
       "AMD’s new TSA class abuses false completions in the instruction scheduler to leak data across privilege boundaries. Here’s what TSA is, how an attacker could exploit it, a tiny timing lab to feel the leak, and what defenders should do.",
-    date: "February 28, 2025",
+    date: "December 4, 2025",
     readTime: "8 min read",
   },
   {
