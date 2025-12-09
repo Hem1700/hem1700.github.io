@@ -10,6 +10,7 @@ import postPoodle from "../posts/poodle.html?raw";
 import postRobot from "../posts/robot.html?raw";
 import postSymlinks from "../posts/symlinks.html?raw";
 import postTsa from "../posts/transient_scheduler_attacks_tsa_blog.html?raw";
+import postReact2shellToyLab from "../posts/react2shell-toy-lab.html?raw";
 
 export const posts = {
   "firmware_llm_annotator": {
@@ -21,6 +22,11 @@ export const posts = {
     title: "Transient Scheduler Attacks on CPUs: Exploiting AMD’s New Microarchitectural Leak",
     slug: "transient_scheduler_attacks_tsa_blog",
     content: postTsa,
+  },
+  "react2shell-toy-lab": {
+    title: "From React2Shell to Toy Labs: Understanding Insecure Deserialization with a Tiny \"Fake Flight\" Server",
+    slug: "react2shell-toy-lab",
+    content: postReact2shellToyLab,
   },
   "1001": {
     title: "CVE-2024–1001",

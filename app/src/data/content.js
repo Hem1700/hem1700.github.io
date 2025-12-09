@@ -206,6 +206,15 @@ export const blogIntro = {
 
 export const blogs = [
   {
+    slug: "react2shell-toy-lab",
+    title: "From React2Shell to Toy Labs: Understanding Insecure Deserialization with a Tiny \"Fake Flight\" Server",
+    href: "/blog/react2shell-toy-lab",
+    excerpt:
+      "Build a tiny \"fake Flight\" Node lab to see how insecure deserialization and thenable handling can lead to RCE, plus a safer variant and takeaways that mirror React2Shell.",
+    date: "December 8, 2025",
+    readTime: "8 min read",
+  },
+  {
     slug: "transient_scheduler_attacks_tsa_blog",
     title: "Transient Scheduler Attacks on CPUs: Exploiting AMD’s New Microarchitectural Leak",
     href: "/blog/transient_scheduler_attacks_tsa_blog",

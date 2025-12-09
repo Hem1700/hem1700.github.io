@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <div class="blog-text">
+    <h1>From React2Shell to Toy Labs: Understanding Insecure Deserialization with a Tiny "Fake Flight" Server</h1>
+    <blockquote>
+      <p>"Insecure deserialization often leads to remote code execution. Even if deserialization flaws do not result in remote code execution, they can be used to perform attacks, including replay attacks, injection attacks, and privilege escalation." — OWASP</p>
+    </blockquote>
+    <p>CVE-2025-55182 ("React2Shell") pushed insecure deserialization back into the spotlight:</p>
+    <ul>
+      <li>It’s a CVSS 10.0 RCE in <strong>React Server Components</strong> (RSC).</li>
+      <li>The bug lives in the <strong>Flight protocol</strong> used by RSC: attacker-controlled data is <strong>deserialized unsafely</strong>, letting crafted objects influence server-side execution and achieve code execution on the Node.js server.</li>
+    </ul>
+    <p>You absolutely shouldn’t be testing real React2Shell payloads against anything but an isolated lab. But you <em>can</em> understand the core pattern with a <strong>tiny, self-contained Node.js example</strong> that mimics the same <em>class</em> of bug: deserialization of untrusted data → treating it as special internal objects → executing attacker-controlled behavior.</p>
+    <p>This post walks through:</p>
+    <ul>
+      <li>A quick refresher on insecure deserialization.</li>
+      <li>A <strong>toy "fake Flight" server</strong> in Node/Express that’s intentionally vulnerable.</li>
+      <li>A harmless "payload" that only evaluates math.</li>
+      <li>A safer version of the same endpoint.</li>
+      <li>How this maps conceptually to real-world bugs like React2Shell.</li>
+    </ul>
+    <hr />
+    <h2>1. Insecure deserialization in one paragraph</h2>
+    <p>Insecure deserialization is when an application takes <strong>untrusted data</strong>, deserializes it into objects, and then uses those objects in ways that let an attacker:</p>
+    <ul>
+      <li>Manipulate logic,</li>
+      <li>Abuse "magic" methods or callbacks,</li>
+      <li>Or even <strong>execute arbitrary code</strong>.</li>
+    </ul>
+    <p>That’s why it shows up in the OWASP Top 10 and is treated as a high-risk category: unsafe deserialization logic can be a straight path to RCE.</p>
+    <p>React2Shell is a modern instance of this: the server <strong>deserializes Flight payloads</strong> and interprets them as internal “Chunk” objects. Because that deserialization didn’t sufficiently validate or constrain what those objects could look like, attackers found a way to make React resolve <em>fake</em> chunks and end up running arbitrary JavaScript on the server.</p>
+    <p>Let’s recreate that <em>pattern</em> in a tiny Node app.</p>
+    <hr />
+    <h2>2. A tiny "fake Flight" server (intentionally vulnerable)</h2>
+    <p>We’ll build a Node/Express server that:</p>
+    <ul>
+      <li>Accepts a JSON payload that looks like a "slot map" (<code>"0"</code>, <code>"1"</code>, etc.).</li>
+      <li>Pulls out slot <code>"1"</code> as a <strong>"chunk"</strong>.</li>
+      <li>Treats any chunk with a <code>then</code> field as special.</li>
+      <li>Calls a handler based on <code>chunk.then</code>.</li>
+      <li>Uses <code>chunk._expr</code> inside <code>new Function()</code>.</li>
+    </ul>
+    <p>This is obviously unsafe; that’s the point. It’s a simplified version of the larger deserialization &amp; "thenable" handling patterns described in real-world React2Shell writeups.</p>
+    <h3>2.1 Setup</h3>
+    <pre><code class="language-bash">mkdir fake-flight-lab
+cd fake-flight-lab
+npm init -y
+npm install express body-parser</code></pre>
+    <h3>2.2 Vulnerable server (<code>server-vuln.js</code>)</h3>
+    <pre><code class="language-javascript">const express = require("express");
+const bodyParser = require("body-parser");
+
+const app = express();
+app.use(bodyParser.json());
+
+// --- Fake "chunk" resolver (vulnerable) ---
+
+// Very naive "promise-like" resolver: if an object has a `then` field,
+// we treat it as something that needs to be "resolved" via a handler.
+const thenHandlers = {
+  // Our "legit" handler; mapping is attacker-controllable in this toy
+  logAndEval: function (chunk, response) {
+    console.log("[*] logAndEval called with chunk:", chunk);
+
+    // Attacker-controlled field:
+    const expr = chunk._expr;
+
+    // VULNERABLE: directly compile and run attacker-controlled string.
+    // In real bugs, this might be an internal expression or dynamic call.
+    const fn = new Function(`return (${expr});`);
+
+    const result = fn();
+    response.value = result;
+  },
+};
+
+// Fake "Flight" endpoint
+app.post("/fake-flight", (req, res) => {
+  const payload = req.body;
+
+  console.log("[*] Received payload:", JSON.stringify(payload, null, 2));
+
+  // Pick slot "1" as our main "chunk"
+  const chunk = payload["1"];
+  const response = { value: null };
+
+  try {
+    // VULN #1: trust that whatever is in `chunk.then` is a valid handler name
+    const handlerName = chunk.then;
+
+    // VULN #2: look it up dynamically without validation
+    const handler = thenHandlers[handlerName];
+
+    if (typeof handler !== "function") {
+      throw new Error("No such handler");
+    }
+
+    // Call the handler with the (attacker-controlled) chunk
+    handler(chunk, response);
+
+    // Serialize the result
+    res.json({
+      ok: true,
+      result: response.value,
+    });
+  } catch (e) {
+    console.error("[!] Error while processing fake-flight payload:", e);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.listen(3000, () => {
+  console.log("VULN fake-flight server listening on http://localhost:3000");
+});</code></pre>
+    <p>What’s insecure here:</p>
+    <ul>
+      <li>We treat any object with <code>.then</code> as special and use that field to <strong>control which function runs</strong>.</li>
+      <li>We take a string from <code>_expr</code> and feed it straight into <code>new Function</code> → arbitrary code path inside the Node process. This mirrors how insecure deserialization can escalate into code execution in real apps.</li>
+    </ul>
+    <hr />
+    <h2>3. A harmless "malicious" payload (just math)</h2>
+    <p>Start the server:</p>
+    <pre><code class="language-bash">node server-vuln.js</code></pre>
+    <p>Now send a JSON payload that looks suspiciously like a "chunk":</p>
+    <pre><code class="language-bash">curl -X POST http://localhost:3000/fake-flight   -H "Content-Type: application/json"   -d '{
+    "0": "meta",
+    "1": {
+      "status": "resolved_model",
+      "_expr": "1 + 2 + 3 * 4",
+      "then": "logAndEval"
+    }
+  }'</code></pre>
+    <p>What happens:</p>
+    <ol>
+      <li>The server reads <code>payload["1"]</code> into <code>chunk</code>.</li>
+      <li>It sees <code>chunk.then === "logAndEval"</code> and calls <code>thenHandlers.logAndEval(chunk, response)</code>.</li>
+      <li><code>logAndEval</code> pulls <code>chunk._expr</code> (<code>"1 + 2 + 3 * 4"</code>).</li>
+      <li>It builds <code>new Function("return (" + expr + ");")</code> → <code>new Function("return (1 + 2 + 3 * 4);")</code>.</li>
+      <li>Executes it and returns:</li>
+    </ol>
+    <pre><code class="language-json">{
+  "ok": true,
+  "result": 15
+}</code></pre>
+    <p>This is benign — we only evaluated a math expression — but structurally we’ve reproduced the core pattern:</p>
+    <ul>
+      <li><strong>Attacker controls object fields</strong> (<code>then</code>, <code>_expr</code>) in the deserialized payload.</li>
+      <li>The server uses those fields to <strong>drive control flow</strong> (which handler to run) and <strong>compose code to execute</strong>.</li>
+    </ul>
+    <p>That’s exactly the kind of chain OWASP warns about: untrusted data being deserialized and then used to manipulate object attributes or insert new ones, leading to logic abuse or code execution.</p>
+    <hr />
+    <h2>4. Fixing the toy: structured data, no <code>new Function</code></h2>
+    <p>Now let’s add a <strong>safe</strong> variant of the same endpoint, so you can see what “good” looks like in contrast.</p>
+    <h3>4.1 Safer handler</h3>
+    <p>Add this to the same file (or a new one):</p>
+    <pre><code class="language-javascript">// --- Safer variant: explicit, whitelisted operations only ---
+
+const SAFE_OPS = new Set(["add", "mul"]);
+
+function safeEvalExpression(op, a, b) {
+  if (!SAFE_OPS.has(op)) {
+    throw new Error("Unsupported op");
+  }
+  a = Number(a);
+  b = Number(b);
+  if (Number.isNaN(a) || Number.isNaN(b)) {
+    throw new Error("Invalid numbers");
+  }
+  return op === "add" ? a + b : a * b;
+}
+
+app.post("/fake-flight-safe", (req, res) => {
+  const payload = req.body;
+  const chunk = payload["1"];
+  const response = { value: null };
+
+  try {
+    // Validate structure explicitly
+    if (!chunk || chunk.status !== "resolved_model") {
+      throw new Error("bad status");
+    }
+
+    const { op, a, b } = chunk;
+
+    const result = safeEvalExpression(op, a, b);
+    response.value = result;
+
+    res.json({ ok: true, result: response.value });
+  } catch (e) {
+    console.error("[!] Error in safe endpoint:", e);
+    res.status(400).json({ ok: false, error: e.message });
+  }
+});</code></pre>
+    <p>Now call:</p>
+    <pre><code class="language-bash">curl -X POST http://localhost:3000/fake-flight-safe   -H "Content-Type: application/json"   -d '{
+    "1": {
+      "status": "resolved_model",
+      "op": "add",
+      "a": 10,
+      "b": 20
+    }
+  }'</code></pre>
+    <p>You should see:</p>
+    <pre><code class="language-json">{
+  "ok": true,
+  "result": 30
+}</code></pre>
+    <p>Here we:</p>
+    <ul>
+      <li><strong>Don’t</strong> treat <code>then</code> as a magic field.</li>
+      <li><strong>Don’t</strong> run arbitrary expressions.</li>
+      <li><strong>Do</strong>:
+        <ul>
+          <li>Validate fields,</li>
+          <li>Constrain operations to a whitelist,</li>
+          <li>Coerce types.</li>
+        </ul>
+      </li>
+    </ul>
+    <p>This matches common guidance on safe deserialization: define a strict schema, validate all fields, and never deserialize directly into objects with behavior (callbacks, dynamic code) that can be triggered by untrusted data.</p>
+    <hr />
+    <h2>5. Mapping this toy back to React2Shell</h2>
+    <p>Real-world CVE-2025-55182 is obviously more complex, but the <em>shape</em> of the bug is similar:</p>
+    <ul>
+      <li>RSC has a <strong>Flight protocol</strong> with a structured payload (slots, references, status codes).</li>
+      <li>The server <strong>deserializes</strong> that payload into internal “Chunks”.</li>
+      <li>Those chunks are treated like promise-like objects and resolved using their <code>then</code> and related fields.</li>
+      <li>Because the code did not sufficiently validate or lock down the structure, <strong>attacker-supplied objects</strong> can be interpreted as internal chunks, and their fields end up influencing internal callbacks and state — eventually leading to arbitrary JS execution in the Node process.</li>
+    </ul>
+    <p>Security writeups on React2Shell repeatedly describe it as an <strong>unsafe / insecure deserialization flaw in the Flight protocol</strong>: untrusted data, parsed into internal structures, used to control resolution logic and server-side behavior.</p>
+    <p>This toy example gives you a mental model to read those writeups:</p>
+    <ul>
+      <li>Anywhere you see “fake Chunk objects”, think: <em>our <code>chunk</code> object with attacker-controlled fields</em>.</li>
+      <li>Anywhere you see “thenable abused”, think: <em>our <code>chunk.then</code> controlling which function runs</em>.</li>
+      <li>Anywhere you see “code injected into internal expression”, think: <em>our <code>_expr</code> string passed into <code>new Function()</code></em>.</li>
+    </ul>
+    <hr />
+    <h2>6. Takeaways for your own code</h2>
+    <p>Whether or not you ever touch React Server Components, this pattern shows up everywhere:</p>
+    <ul>
+      <li>JSON / binary payloads mapped into "magic" objects.</li>
+      <li>ORMs or serializers that hydrate classes with methods and hooks.</li>
+      <li>Message formats that allow callbacks or special fields (<code>__proto__</code>, <code>then</code>, <code>_onLoad</code>, etc.).</li>
+    </ul>
+    <p>To avoid ending up in the same situation:</p>
+    <ol>
+      <li><strong>Don’t deserialize untrusted data into rich objects with behavior.</strong><br />Deserialize into plain data structures and validate them first.</li>
+      <li><strong>Treat protocol fields like code, not just data.</strong><br />Anything that controls which function gets called (<code>then</code>, <code>type</code>, <code>handler</code>) needs strict allowlists.</li>
+      <li><strong>Never <code>eval</code> / <code>new Function</code> on data from the network.</strong><br />If you really must interpret expressions, constrain them to a safe DSL and sandbox heavily.</li>
+      <li><strong>For complex protocols (like Flight), write fuzzers and negative tests.</strong><br />When you see a deserializer that:
+        <ul>
+          <li>Builds graphs of objects,</li>
+          <li>Treats some fields specially,</li>
+          <li>Traverses prototypes / thenables…<br />…that’s a huge red flag and deserves targeted testing.</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+</body>
+</html>
