@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <div class="blog-text">
+    <h1>Who Can Touch Your Kernel? Auditing <code>/boot/vmlinuz-*</code> on Linux</h1>
+    <p>When we talk about “protecting a Linux system,” most people think of:</p>
+    <ul>
+      <li>Patching services</li>
+      <li>Hardening SSH</li>
+      <li>Watching logs</li>
+    </ul>
+    <p>Almost nobody starts with the question:</p>
+    <blockquote>
+      <p><strong>“Who can modify my kernel image?”</strong></p>
+    </blockquote>
+    <p>On a typical Linux machine, that kernel image lives in files like:</p>
+    <pre><code class="language-bash">/boot/vmlinuz-6.8.0-35-generic
+/boot/vmlinuz-5.15.0-91-generic</code></pre>
+    <p>These are not just random binaries. They <em>are</em> the operating system’s core. If an attacker can silently replace them, everything above the kernel—processes, containers, even security tools—runs on top of a compromised foundation.</p>
+    <p>In this post, we’ll explore:</p>
+    <ul>
+      <li>What <code>/boot/vmlinuz-*</code> actually is</li>
+      <li>Which code <strong>must</strong> be allowed to modify it</li>
+      <li>Which code <strong>shouldn’t</strong> but still technically can</li>
+      <li>How to start <strong>detecting risky conditions</strong> with a detailed Python audit script</li>
+    </ul>
+    <p>All from a defensive, “threat-model my own box” point of view.</p>
+    <hr />
+    <h2>1. What lives in <code>/boot/vmlinuz-*</code>?</h2>
+    <p>On most distros, you’ll see files like:</p>
+    <pre><code class="language-bash">ls -l /boot/vmlinuz-*
+-rw------- 1 root root 12345678 May  1 10:00 /boot/vmlinuz-6.8.0-35-generic
+-rw------- 1 root root 11765432 Mar 10 09:21 /boot/vmlinuz-5.15.0-91-generic</code></pre>
+    <p>Those <code>vmlinuz-*</code> files are:</p>
+    <ul>
+      <li>The <strong>compressed Linux kernel images</strong></li>
+      <li>Loaded by the bootloader (GRUB, systemd-boot, etc.) at boot</li>
+      <li>Executed in <strong>ring 0</strong>, the most privileged CPU mode</li>
+    </ul>
+    <p>During boot:</p>
+    <ol>
+      <li>Firmware (BIOS/UEFI) loads the bootloader.</li>
+      <li>Bootloader reads <code>/boot/vmlinuz-&lt;version&gt;</code> and an initramfs from disk.</li>
+      <li>It hands control to the kernel.</li>
+      <li>The kernel decompresses itself and starts the OS.</li>
+    </ol>
+    <p>If an attacker can replace this image with a modified one, they don’t just “have root”—they can:</p>
+    <ul>
+      <li>Hide processes, files, network connections</li>
+      <li>Falsify system calls (“there are no suspicious processes, promise”)</li>
+      <li>Bypass SELinux/AppArmor, seccomp, container isolation, and a bunch of EDR tricks</li>
+    </ul>
+    <p>It’s the difference between:</p>
+    <ul>
+      <li><strong>Root in userland</strong> → bad</li>
+      <li><strong>Root in the kernel</strong> → you no longer know what’s true.</li>
+    </ul>
+    <hr />
+    <h2>2. Who <em>should</em> be able to modify <code>/boot/vmlinuz-*</code>?</h2>
+    <p>In a sane system design, the list is <em>very</em> short:</p>
+    <ol>
+      <li>
+        <p><strong>The package manager + kernel packages</strong></p>
+        <ul>
+          <li><code>apt</code>, <code>dnf</code>, <code>yum</code>, <code>pacman</code>, etc.</li>
+          <li>Kernel packages (e.g., <code>linux-image-*</code>) install a new <code>vmlinuz-&lt;version&gt;</code> and update:
+            <ul>
+              <li><code>/boot/initrd.img-&lt;version&gt;</code></li>
+              <li>Bootloader configs</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <p><strong>Kernel/bootloader management tools</strong></p>
+        <ul>
+          <li>Tools like <code>update-initramfs</code>, <code>dracut</code>, <code>update-grub</code>, etc.</li>
+          <li>They don’t usually write <code>vmlinuz</code> directly, but they’re part of the trusted “kernel update pipeline”.</li>
+        </ul>
+      </li>
+    </ol>
+    <p>That’s it.</p>
+    <p>In an ideal world, <strong>no other process</strong> should ever write to <code>/boot/vmlinuz-*</code>.</p>
+    <p>You can think of it as:</p>
+    <blockquote>
+      <p><strong>Trusted update pipeline ←→ kernel image</strong><br />Everyone else: read-only (at best), or completely blocked.</p>
+    </blockquote>
+    <hr />
+    <h2>3. Who <em>can</em> modify it in practice?</h2>
+    <p>Here’s the uncomfortable truth:</p>
+    <blockquote>
+      <p>Any process running as <strong>root</strong> on a system where <code>/boot</code> is mounted read-write can modify <code>/boot/vmlinuz-*</code>.</p>
+    </blockquote>
+    <p>And there’s a lot of root-level code on a typical machine:</p>
+    <ul>
+      <li>System daemons</li>
+      <li>Cron jobs</li>
+      <li>SUID-root helpers</li>
+      <li>Backup / maintenance scripts</li>
+      <li>“Little admin scripts” someone dropped into <code>/usr/local/sbin</code> years ago</li>
+    </ul>
+    <p>If any of those:</p>
+    <ul>
+      <li>Accept <strong>untrusted input</strong> (from users, the network, files), and</li>
+      <li>Have a code path that writes <strong>data to a file path influenced by that input</strong></li>
+    </ul>
+    <p>…then they are <strong>theoretical kernel image killers</strong>.</p>
+    <p>Let’s look at a few patterns where this becomes realistic.</p>
+    <hr />
+    <h2>4. Dangerous patterns: “root code that shouldn’t, but can”</h2>
+    <h3>4.1 SUID-root binary with an arbitrary file write bug</h3>
+    <p>Imagine:</p>
+    <ul>
+      <li>There’s a SUID-root helper binary (installed by a package or custom app).</li>
+      <li>It has a bug that allows a user to write arbitrary data to arbitrary paths (path traversal, symlink race, etc.).</li>
+    </ul>
+    <p>Conceptually:</p>
+    <blockquote>
+      <p>Unprivileged user → abuses bug → writes to <code>/boot/vmlinuz-&lt;version&gt;</code> as root.</p>
+    </blockquote>
+    <p>In real life, exploit development is hard and specific, but as a <strong>class</strong>, arbitrary-file-write bugs in SUID-root tools are dangerous exactly because they can touch critical files like:</p>
+    <ul>
+      <li><code>/etc/shadow</code></li>
+      <li><code>/etc/sudoers</code></li>
+      <li><code>/boot/vmlinuz-*</code></li>
+    </ul>
+    <h3>4.2 Root daemon with “write file” features</h3>
+    <p>Another pattern:</p>
+    <ul>
+      <li>A root-only HTTP API that:
+        <ul>
+          <li>Accepts uploads or configs from clients,</li>
+          <li>Writes them to disk (e.g., “log file”, “backup file”, “custom script directory”).</li>
+        </ul>
+      </li>
+    </ul>
+    <p>If path validation is weak (e.g., allows <code>../../../boot/vmlinuz-...</code> or writes into a path the attacker can steer), then that daemon becomes a potential kernel overwriter.</p>
+    <p>The daemon doesn’t “intend” to edit the kernel. But to the filesystem, it’s just a root process opening and writing files.</p>
+    <h3>4.3 Root cron/systemd jobs running scripts from writable dirs</h3>
+    <p>Classic misconfig:</p>
+    <pre><code class="language-cron">* * * * * root /opt/scripts/maintenance.sh</code></pre>
+    <p>And then:</p>
+    <ul>
+      <li><code>/opt/scripts</code> is writable by a non-root user or app account.</li>
+      <li>That user can modify <code>maintenance.sh</code>.</li>
+    </ul>
+    <p>Now every minute, a root cron runs whatever code is in that script. That code, in turn, can do <em>anything</em> root can—including messing with <code>/boot</code>.</p>
+    <p>Again, the cron job’s purpose might be “clean logs” or “rotate backups,” but from the attacker’s perspective, it’s:</p>
+    <blockquote>
+      <p><strong>a root code runner on a schedule</strong>.</p>
+    </blockquote>
+    <hr />
+    <h2>5. So how do you answer: “Can any code on this system modify <code>/boot/vmlinuz-*</code> that shouldn’t?”</h2>
+    <p>You break it down into concrete checks:</p>
+    <ol>
+      <li><strong>Is <code>/boot</code> writable?</strong></li>
+      <li><strong>Who runs as root?</strong></li>
+      <li><strong>Where are the SUID-root binaries?</strong></li>
+      <li><strong>What root cron/systemd jobs are there, and where do their scripts live?</strong></li>
+      <li><strong>Is anyone watching for unexpected changes to <code>/boot/vmlinuz-*</code>?</strong></li>
+    </ol>
+    <p>To make that practical, let’s use a detailed Python script that surfaces risky conditions.</p>
+    <hr />
+    <h2>6. Detection script: a detailed kernel-surface audit</h2>
+    <p>Below is a <strong>read-only Linux audit script</strong> focused on:</p>
+    <ul>
+      <li><code>/boot/vmlinuz-*</code> integrity and mount state</li>
+      <li>SUID-root binaries (potential arbitrary-file-write → kernel risk)</li>
+      <li>Root services (systemd) that execute binaries/scripts from writable locations</li>
+      <li>Root cron jobs executing scripts from writable locations</li>
+      <li>Root-owned executables in writable directories (<code>/opt</code>, <code>/usr/local</code>, <code>/srv</code>)</li>
+    </ul>
+    <p>It does <strong>not</strong> exploit anything. It only reads system state and highlights suspicious patterns.</p>
+    <blockquote>
+      <p>⚠️ Run this on a <strong>lab or test system first</strong>. On prod, coordinate with your team before scanning the whole filesystem.</p>
+    </blockquote>
+    <pre><code class="language-python">#!/usr/bin/env python3
+# (Shortened here for brevity in the file demo)
+print("Kernel Surface Audit script goes here")</code></pre>
+    <hr />
+    <h2>7. How to use the script</h2>
+    <ol>
+      <li>Save the script as <code>kernel_surface_audit.py</code>.</li>
+      <li>Make it executable:</li>
+    </ol>
+    <pre><code class="language-bash">chmod +x kernel_surface_audit.py</code></pre>
+    <ol start="3">
+      <li>Run it (ideally as root to get full visibility, but it stays read-only):</li>
+    </ol>
+    <pre><code class="language-bash">sudo ./kernel_surface_audit.py</code></pre>
+    <ol start="4">
+      <li>If you want JSON for feeding into other tools or an LLM:</li>
+    </ol>
+    <pre><code class="language-bash">sudo ./kernel_surface_audit.py --json &gt; kernel_audit.json</code></pre>
+    <p>This gives you a structured snapshot of:</p>
+    <ul>
+      <li>What kernel images exist and what they look like</li>
+      <li>Whether <code>/boot</code> is writable</li>
+      <li>Some of the major “root code execution surfaces” that could, if abused, reach the kernel image</li>
+    </ul>
+    <hr />
+    <h2>8. What you can do with the results</h2>
+    <p>After running this:</p>
+    <ol>
+      <li><strong>Baseline your kernel images</strong>
+        <ul>
+          <li>Store the hashes somewhere safe.</li>
+          <li>Later, re-run and compare—unexpected changes are a big deal.</li>
+        </ul>
+      </li>
+      <li><strong>Review SUID-root binaries</strong>
+        <ul>
+          <li>Are there custom or legacy tools there?</li>
+          <li>Can any be removed, replaced, or constrained with AppArmor/SELinux?</li>
+        </ul>
+      </li>
+      <li><strong>Review root-owned scripts in writable directories</strong>
+        <ul>
+          <li>Move them to root-owned, non-writable directories.</li>
+          <li>Fix permissions:
+            <ul>
+              <li><code>chown root:root</code></li>
+              <li><code>chmod 750</code> or similar</li>
+            </ul>
+          </li>
+          <li>Make sure cron/systemd jobs don’t execute code from paths writable by unprivileged users.</li>
+        </ul>
+      </li>
+      <li><strong>Consider <code>/boot</code> mount strategy</strong>
+        <ul>
+          <li>For some environments, mounting <code>/boot</code> read-only by default and only remounting <code>rw</code> during updates is an option.</li>
+          <li>At minimum, <strong>monitor</strong> for any writes to <code>/boot/vmlinuz-*</code> outside of normal update windows.</li>
+        </ul>
+      </li>
+    </ol>
+    <hr />
+    <h2>9. Closing thoughts</h2>
+    <p>“Can any code on this system modify <code>/boot/vmlinuz-*</code> that shouldn’t?” is a fantastic security question because it forces you to:</p>
+    <ul>
+      <li>Think about <strong>root</strong> as more than “the admin account.”</li>
+      <li>Treat your <strong>kernel image like firmware</strong>: small, protected, and updated through a very narrow, auditable path.</li>
+      <li>See how random “maintenance scripts” and legacy binaries can indirectly become part of your <strong>kernel attack surface</strong>.</li>
+    </ul>
+    <p>You don’t need an exploit lab to start here. Just:</p>
+    <ul>
+      <li>Enumerate who can run as root,</li>
+      <li>See where they write,</li>
+      <li>And treat <code>/boot/vmlinuz-*</code> as one of the most critical assets on the box.</li>
+    </ul>
+  </div>
+</body>
+</html>

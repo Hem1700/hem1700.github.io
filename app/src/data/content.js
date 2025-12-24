@@ -206,6 +206,15 @@ export const blogIntro = {
 
 export const blogs = [
   {
+    slug: "kernel_surface_audit_blog",
+    title: "Who Can Touch Your Kernel? Auditing /boot/vmlinuz-* on Linux",
+    href: "/blog/kernel_surface_audit_blog",
+    excerpt:
+      "A defender’s walkthrough on who should vs. who can modify your kernel image, dangerous root patterns, and a Python-based audit checklist to watch /boot/vmlinuz-*.",
+    date: "December 8, 2025",
+    readTime: "7 min read",
+  },
+  {
     slug: "react2shell-toy-lab",
     title: "From React2Shell to Toy Labs: Understanding Insecure Deserialization with a Tiny \"Fake Flight\" Server",
     href: "/blog/react2shell-toy-lab",

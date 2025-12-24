@@ -11,6 +11,7 @@ import postRobot from "../posts/robot.html?raw";
 import postSymlinks from "../posts/symlinks.html?raw";
 import postTsa from "../posts/transient_scheduler_attacks_tsa_blog.html?raw";
 import postReact2shellToyLab from "../posts/react2shell-toy-lab.html?raw";
+import postKernelSurfaceAudit from "../posts/kernel_surface_audit_blog.html?raw";
 
 export const posts = {
   "firmware_llm_annotator": {
@@ -22,6 +23,11 @@ export const posts = {
     title: "Transient Scheduler Attacks on CPUs: Exploiting AMD’s New Microarchitectural Leak",
     slug: "transient_scheduler_attacks_tsa_blog",
     content: postTsa,
+  },
+  "kernel_surface_audit_blog": {
+    title: "Who Can Touch Your Kernel? Auditing /boot/vmlinuz-* on Linux",
+    slug: "kernel_surface_audit_blog",
+    content: postKernelSurfaceAudit,
   },
   "react2shell-toy-lab": {
     title: "From React2Shell to Toy Labs: Understanding Insecure Deserialization with a Tiny \"Fake Flight\" Server",
