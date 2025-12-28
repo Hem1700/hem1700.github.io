@@ -132,7 +132,7 @@ export default function Experience({ items }) {
         <div className="section-header">
           <div>
             <h2>EXPERIENCE</h2>
-            <p className="section-subtitle">Jim would absolutely look into the camera right now.</p>
+            <p className="section-subtitle">Field reports from building and breaking systems.</p>
           </div>
         </div>
         <div className="experience-grid">

@@ -16,7 +16,7 @@ export default function BackToTop() {
       className="back-to-top"
       type="button"
       aria-label="Back to top"
-      title="World’s Best Dundie takes you up."
+      title="Back to top"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
     >
       ↑

@@ -16,7 +16,7 @@ export default function Hero({ data }) {
             <span className="pill">Security Engineer</span>
             <span className="pill">Pen Tester</span>
           </div>
-          <p className="hero-funfact">Fun fact: Bears. Beets. Battlestar Encryption.</p>
+          <p className="hero-funfact">Signal: encryption by default. Noise: everything else.</p>
           <p>{data.blurb}</p>
           <div className="hero-ctas">
             <Link className="button primary clipboard" to="/projects">
