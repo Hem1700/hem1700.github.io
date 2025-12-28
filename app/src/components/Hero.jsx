@@ -34,7 +34,7 @@ export default function Hero({ data }) {
         </div>
         <div className="hero-photo-card">
           <div className="polaroid">
-            <img src={data.image} className="heading-image" alt="Heading" />
+            <img src={data.image} className="heading-image glitch" alt="Heading" />
           </div>
         </div>
       </div>
