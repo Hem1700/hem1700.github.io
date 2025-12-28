@@ -246,6 +246,22 @@ section {
   overflow: hidden;
 }
 
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(98, 243, 255, 0.05),
+    rgba(98, 243, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
 .hero h1 {
   font-size: clamp(2.4rem, 4.8vw, 3.6rem);
   margin-bottom: 1.25rem;
@@ -518,11 +534,13 @@ section {
   grid-template-columns: minmax(240px, 320px) 1fr;
   gap: clamp(1.5rem, 5vw, 2.5rem);
   align-items: center;
-  background: linear-gradient(135deg, #ffffff, #f6f0e2) border-box;
-  border: 1px solid #d8cfbf;
+  background: linear-gradient(135deg, rgba(98, 243, 255, 0.08), rgba(255, 97, 216, 0.08));
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: clamp(1.25rem, 3vw, 1.75rem);
-  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35), 0 0 28px rgba(98, 243, 255, 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
 .about-content h2 {
@@ -537,7 +555,17 @@ section {
 .about-photo img {
   border-radius: 18px;
   border: 1px solid var(--border);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45), 0 0 30px rgba(107, 255, 181, 0.08);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45), 0 0 30px rgba(98, 243, 255, 0.2);
+  filter: grayscale(40%) contrast(1.08);
+}
+
+.about-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(120deg, rgba(98, 243, 255, 0.05), transparent 45%, rgba(255, 97, 216, 0.08));
+  mix-blend-mode: screen;
 }
 
 /* EXPERIENCE / IMPACT CARDS */
@@ -900,10 +928,10 @@ section {
   gap: 1rem;
   align-items: center;
   padding: 1rem 1.2rem;
-  background: linear-gradient(135deg, #f7f9ff, #eef3ff);
-  border: 1px solid #d4ddf0;
+  background: linear-gradient(135deg, rgba(98, 243, 255, 0.08), rgba(255, 97, 216, 0.08));
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.28);
 }
 
 .cert-item {
@@ -1125,9 +1153,9 @@ section {
   left: 50%;
   width: 18px;
   height: 18px;
-  background: #f2d35f;
+  background: var(--accent);
   border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 12px rgba(98, 243, 255, 0.45);
   transform: translateX(-50%);
 }
 
@@ -1591,13 +1619,14 @@ article {
 }
 
 .card-hover {
-  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
 }
 
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.38), 0 0 24px rgba(107, 255, 181, 0.18);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.42), 0 0 24px rgba(98, 243, 255, 0.22);
   border-color: var(--accent);
+  filter: saturate(1.2);
 }
 
 .scramble-text {
@@ -1659,8 +1688,8 @@ article {
 .cve-map-card {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: linear-gradient(135deg, rgba(242, 211, 95, 0.08), rgba(75, 111, 163, 0.08));
-  box-shadow: var(--shadow);
+  background: linear-gradient(135deg, rgba(98, 243, 255, 0.08), rgba(255, 97, 216, 0.08));
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.32);
   padding: 0.5rem;
 }
 
