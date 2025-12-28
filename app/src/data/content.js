@@ -215,6 +215,15 @@ export const blogs = [
     readTime: "7 min read",
   },
   {
+    slug: "cve-2022-26318-re-blog",
+    title: "Reverse-Engineering CVE-2022-26318 (WatchGuard Firebox/XTM): From Network Trace to Root Cause (Non-Weaponized)",
+    href: "/blog/cve-2022-26318-re-blog",
+    excerpt:
+      "Defender-focused RE of CVE-2022-26318: how the /agent/login path reaches wgagent, SAX parsing overflow mechanics, watchpoint-driven proof, and patch/detection guidance without weaponized details.",
+    date: "December 28, 2025",
+    readTime: "10 min read",
+  },
+  {
     slug: "react2shell-toy-lab",
     title: "From React2Shell to Toy Labs: Understanding Insecure Deserialization with a Tiny \"Fake Flight\" Server",
     href: "/blog/react2shell-toy-lab",

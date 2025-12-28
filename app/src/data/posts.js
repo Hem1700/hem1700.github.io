@@ -12,6 +12,7 @@ import postSymlinks from "../posts/symlinks.html?raw";
 import postTsa from "../posts/transient_scheduler_attacks_tsa_blog.html?raw";
 import postReact2shellToyLab from "../posts/react2shell-toy-lab.html?raw";
 import postKernelSurfaceAudit from "../posts/kernel_surface_audit_blog.html?raw";
+import postCve202226318 from "../posts/cve-2022-26318-re-blog.html?raw";
 
 export const posts = {
   "firmware_llm_annotator": {
@@ -28,6 +29,11 @@ export const posts = {
     title: "Who Can Touch Your Kernel? Auditing /boot/vmlinuz-* on Linux",
     slug: "kernel_surface_audit_blog",
     content: postKernelSurfaceAudit,
+  },
+  "cve-2022-26318-re-blog": {
+    title: "Reverse-Engineering CVE-2022-26318 (WatchGuard Firebox/XTM): From Network Trace to Root Cause (Non-Weaponized)",
+    slug: "cve-2022-26318-re-blog",
+    content: postCve202226318,
   },
   "react2shell-toy-lab": {
     title: "From React2Shell to Toy Labs: Understanding Insecure Deserialization with a Tiny \"Fake Flight\" Server",
