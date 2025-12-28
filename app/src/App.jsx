@@ -6,6 +6,7 @@ import BlogsPage from "./pages/Blogs";
 import PostPage from "./pages/Post";
 import ProjectsPage from "./pages/ProjectsPage";
 import CertificationsPage from "./pages/CertificationsPage";
+import CveMapPage from "./pages/CveMap";
 import ContactStrip from "./components/ContactStrip";
 import ScrollProgress from "./components/ScrollProgress";
 import BackToTop from "./components/BackToTop";
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/certifications" element={<CertificationsPage />} />
             <Route path="/blog/:slug" element={<PostPage />} />
+            <Route path="/cve-map" element={<CveMapPage />} />
             <Route path="*" element={<HomePage />} />
           </Routes>
         </main>

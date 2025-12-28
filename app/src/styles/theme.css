@@ -1554,3 +1554,135 @@ article {
     transform: translateY(8px);
   }
 }
+
+/* CVE MAP */
+.cve-map-layout {
+  padding: clamp(2rem, 5vw, 3rem) 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.cve-map-controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.cve-map-guidelines {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+  color: var(--text-muted);
+  display: grid;
+  gap: 0.3rem;
+}
+
+.cve-map-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.cve-map-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.cve-map-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(242, 211, 95, 0.08), rgba(75, 111, 163, 0.08));
+  box-shadow: var(--shadow);
+  padding: 0.5rem;
+}
+
+.cve-map-viz {
+  width: 100%;
+  height: 100%;
+}
+
+.cve-map-viz svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.cve-drawer {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 100px;
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+}
+
+.cve-drawer__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cve-drawer__body {
+  margin-top: 0.6rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.cve-title {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.cve-meta {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.cve-meta .kev {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: #ff6b6b;
+  color: #e63946;
+}
+
+.cve-links ul {
+  padding-left: 1.1rem;
+  margin: 0.25rem 0 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.breadcrumb {
+  color: var(--text-muted);
+  margin: 0.25rem 0 0;
+}
+
+.card-placeholder {
+  padding: 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .cve-map-content {
+    grid-template-columns: 1fr;
+  }
+  .cve-drawer {
+    position: static;
+    max-height: none;
+  }
+}

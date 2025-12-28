@@ -7,6 +7,7 @@ export default function Navbar({ onToggleTheme, theme }) {
   const isBlog = location.pathname === "/blogs";
   const isProjectsPage = location.pathname.startsWith("/projects");
   const isCertsPage = location.pathname.startsWith("/certifications");
+  const isCveMap = location.pathname.startsWith("/cve-map");
   const isContact = location.hash === "#contact" || location.pathname === "/contact";
 
   const handleAnchorClick = (event, id) => {
@@ -56,6 +57,11 @@ export default function Navbar({ onToggleTheme, theme }) {
           <li>
             <Link to="/blogs" className={isBlog ? "active" : ""}>
               Blog
+            </Link>
+          </li>
+          <li>
+            <Link to="/cve-map" className={isCveMap ? "active" : ""}>
+              CVE Map
             </Link>
           </li>
           <li>
