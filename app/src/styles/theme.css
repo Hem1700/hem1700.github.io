@@ -77,6 +77,21 @@ body::after {
   mix-blend-mode: screen;
 }
 
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+  background: radial-gradient(circle at 20% 20%, rgba(98, 243, 255, 0.12), transparent 35%),
+    radial-gradient(circle at 80% 30%, rgba(255, 97, 216, 0.12), transparent 32%),
+    conic-gradient(from 45deg, rgba(98, 243, 255, 0.08), rgba(255, 97, 216, 0.08), rgba(98, 243, 255, 0.08));
+  filter: blur(40px);
+  opacity: 0.35;
+  animation: drift 26s ease-in-out infinite alternate;
+  mix-blend-mode: screen;
+  z-index: 0;
+}
+
 main {
   flex: 1;
 }
@@ -106,6 +121,7 @@ h6 {
   letter-spacing: 0.01em;
   color: var(--text-strong);
   text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(98, 243, 255, 0.35), 0 0 12px rgba(255, 97, 216, 0.25);
 }
 
 section {
@@ -262,15 +278,41 @@ section {
   opacity: 0.4;
 }
 
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(98, 243, 255, 0.05) 0%, transparent 35%, rgba(255, 97, 216, 0.08) 70%, transparent 100%);
+  mix-blend-mode: screen;
+  animation: sweep 8s linear infinite;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .hero h1 {
   font-size: clamp(2.4rem, 4.8vw, 3.6rem);
   margin-bottom: 1.25rem;
   letter-spacing: 0.04em;
+  position: relative;
+  isolation: isolate;
 }
 
 .hero .highlight {
   color: var(--accent);
   text-shadow: 0 0 22px rgba(98, 243, 255, 0.8), 0 0 18px rgba(255, 97, 216, 0.6);
+}
+
+.hero h1::after {
+  content: attr(data-glitch);
+  position: absolute;
+  inset: 0;
+  color: var(--accent-strong);
+  mix-blend-mode: screen;
+  clip-path: polygon(0 2%, 100% 0, 100% 40%, 0 38%);
+  opacity: 0.38;
+  transform: translate(2px, -2px);
+  animation: glitchShift 3.5s infinite ease-in-out;
+  pointer-events: none;
 }
 
 .hero-ctas {
@@ -526,6 +568,7 @@ section {
   border-color: var(--accent-strong);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45), 0 0 24px rgba(98, 243, 255, 0.4);
   filter: saturate(1.3);
+  animation: flicker 1.2s infinite;
 }
 
 /* ABOUT */
@@ -566,6 +609,65 @@ section {
   pointer-events: none;
   background: linear-gradient(120deg, rgba(98, 243, 255, 0.05), transparent 45%, rgba(255, 97, 216, 0.08));
   mix-blend-mode: screen;
+}
+
+@keyframes drift {
+  0% {
+    transform: translate3d(-8px, -6px, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(6px, 10px, 0) rotate(3deg);
+  }
+  100% {
+    transform: translate3d(10px, -8px, 0) rotate(-3deg);
+  }
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateX(-20%);
+  }
+  100% {
+    transform: translateX(20%);
+  }
+}
+
+@keyframes glitchShift {
+  0%,
+  100% {
+    clip-path: polygon(0 2%, 100% 0, 100% 40%, 0 38%);
+    transform: translate(2px, -2px);
+  }
+  25% {
+    clip-path: polygon(0 60%, 100% 56%, 100% 76%, 0 80%);
+    transform: translate(-2px, 1px);
+  }
+  50% {
+    clip-path: polygon(0 20%, 100% 22%, 100% 32%, 0 28%);
+    transform: translate(1px, -1px);
+  }
+  75% {
+    clip-path: polygon(0 70%, 100% 66%, 100% 90%, 0 94%);
+    transform: translate(-1px, 2px);
+  }
+}
+
+@keyframes flicker {
+  0%,
+  19%,
+  21%,
+  23%,
+  25%,
+  54%,
+  56%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  24%,
+  55% {
+    opacity: 0.35;
+  }
 }
 
 /* EXPERIENCE / IMPACT CARDS */
@@ -807,6 +909,7 @@ section {
   box-shadow: 0 18px 32px rgba(0, 0, 0, 0.25);
   transform: rotate(-0.3deg);
   position: relative;
+  overflow: hidden;
 }
 
 .project-row::before {
@@ -821,6 +924,15 @@ section {
   border-bottom: none;
   border-radius: 8px 8px 0 0;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+.project-row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(98, 243, 255, 0.06), transparent 60%, rgba(255, 97, 216, 0.08));
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
 .project-title-link {

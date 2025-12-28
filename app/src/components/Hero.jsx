@@ -10,7 +10,7 @@ export default function Hero({ data }) {
         <div className="hero-copy">
           <div className="hero-badge">Assistant to the Regional Security Engineer</div>
           <h1>
-            Hello, I'm <span className="highlight">{data.highlight}</span>.
+            <span data-glitch={`Hello, I'm ${data.highlight}.`}>Hello, I'm <span className="highlight">{data.highlight}</span>.</span>
           </h1>
           <div className="hero-descriptors">
             <span className="pill">Security Engineer</span>
