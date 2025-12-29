@@ -20,7 +20,7 @@ export default function ContactStrip() {
           <p className="pill">Let’s talk</p>
           <h2>Signal received. Drop a note and let’s build secure systems.</h2>
           <p className="contact-blurb">Let’s connect to collaborate on security engineering or privacy-focused initiatives.</p>
-          {copied && <p className="contact-blurb">Copied. Threat level: Midnight.</p>}
+          {copied && <p className="contact-blurb">Copied. Channel armed with end-to-end noise.</p>}
         </div>
         <div className="contact-actions">
           <button className="button primary" onClick={copyEmail} type="button">

@@ -8,7 +8,7 @@ export default function Hero({ data }) {
     <header className={`hero reveal ${visible ? "visible" : ""}`} id="home" ref={ref}>
       <div className="hero-content container">
         <div className="hero-copy">
-          <div className="hero-badge">Assistant to the Regional Security Engineer</div>
+          <div className="hero-badge">Operator: Hem Parekh // Signal Node 3100</div>
           <h1>
             <span data-glitch={`Hello, I'm ${data.highlight}.`}>Hello, I'm <span className="highlight">{data.highlight}</span>.</span>
           </h1>
@@ -16,7 +16,7 @@ export default function Hero({ data }) {
             <span className="pill">Security Engineer</span>
             <span className="pill">Pen Tester</span>
           </div>
-          <p className="hero-funfact">Signal: encryption by default. Noise: everything else.</p>
+          <p className="hero-funfact">Low-trust runtime. Intrusions logged, anomalies hunted.</p>
           <p>{data.blurb}</p>
           <div className="hero-ctas">
             <Link className="button primary clipboard" to="/projects">

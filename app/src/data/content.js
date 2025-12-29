@@ -11,16 +11,13 @@ export const hero = {
   highlight: "Hem Parekh",
   image: "/images/heading_image.webp",
   blurb:
-    "I’m a Security Engineer & Pen Tester, enthusiastic about building robust software and hunting vulnerabilities.",
+    "Security engineer and pen tester building hardened systems, staging exploit labs, and mapping attack surfaces before adversaries do.",
 };
 
 export const about = {
   title: "ABOUT ME",
   image: "/images/profile.jpeg",
-  text: `I’m Hem Parekh, a Security Engineer and Pen Tester who thrives on building robust software 
-        and unearthing vulnerabilities. I blend engineering expertise with a hacker’s curiosity to design 
-        secure solutions. Outside of code and exploits, I enjoy blogging about my discoveries and advocating 
-        for a safer digital world.`,
+  text: `I’m Hem Parekh, a Security Engineer and Pen Tester who thrives on building resilient software and unearthing vulnerabilities. I blend engineering discipline with a hacker’s curiosity to design secure systems and to stress-test the ones that already exist. When I’m not pulling threads on a bug, I’m writing up what I find so other defenders can move faster.`,
 };
 
 export const experience = [
@@ -194,8 +191,8 @@ export const certifications = [
 ];
 
 export const blogIntro = {
-  title: "Hi there 👋, welcome to my Blog",
-  subtitle: "This is where I talk about my projects and everything that I find interesting in Cybersecurity.",
+  title: "Ops Log // Latest Signals",
+  subtitle: "Field notes from exploit labs, CVE hunts, and defensive experiments.",
   social: [
     { href: "#", icon: "fab fa-twitter" },
     { href: "#", icon: "fab fa-linkedin-in" },

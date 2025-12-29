@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -14,6 +15,36 @@ import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!((e.ctrlKey || e.metaKey) && e.shiftKey)) return;
+      const key = e.key.toLowerCase();
+      if (key === "r") {
+        e.preventDefault();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("hud:reset-layout", { detail: "all" }));
+          try {
+            Object.keys(localStorage)
+              .filter((k) => k.startsWith("hud:"))
+              .forEach((k) => localStorage.removeItem(k));
+          } catch (err) {
+            // ignore
+          }
+        }
+      }
+      if (key === "s") {
+        e.preventDefault();
+        document.body.classList.toggle("hud-scanlines-off");
+      }
+      if (key === "n") {
+        e.preventDefault();
+        document.body.classList.toggle("hud-noise-off");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <Router>

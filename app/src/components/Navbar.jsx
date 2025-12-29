@@ -31,7 +31,7 @@ export default function Navbar({ onToggleTheme, theme }) {
     <nav className="navbar">
       <div className="container nav-container">
         <div className="logo">
-          <i className="fas fa-mug-hot mug-icon" aria-hidden="true" /> Portfolio | Hem Parekh
+          <i className="fas fa-satellite-dish mug-icon" aria-hidden="true" /> Hem Parekh // Ops HUD
         </div>
         <ul className="nav-links">
           <li>
@@ -71,7 +71,7 @@ export default function Navbar({ onToggleTheme, theme }) {
           </li>
         </ul>
         <button className="theme-toggle" id="themeToggle" onClick={onToggleTheme}>
-          Conference Room Lights: {theme === "dark" ? "On" : "Off"}
+          HUD Glow: {theme === "dark" ? "On" : "Off"}
         </button>
       </div>
     </nav>

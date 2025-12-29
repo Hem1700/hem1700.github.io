@@ -13,7 +13,7 @@ const meta = {
       "Pen Testing": false,
     },
     tools: ["AWS", "Splunk", "Python", "Terraform"],
-    outcome: "Cut data exposure paths; embedded privacy-by-design across services. Declared 'World’s Best Pen Tester' (self-awarded mug).",
+    outcome: "Cut data exposure paths; embedded privacy-by-design across services. Built repeatable reviews and automated kill-switches.",
     actions: [],
   },
   "Cybersecurity Engineer Intern": {
