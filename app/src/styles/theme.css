@@ -1894,12 +1894,12 @@ article {
   padding: 0.5rem;
 }
 
-.cve-map-viz {
+.cve-mindmap {
   width: 100%;
   height: 100%;
 }
 
-.cve-map-viz svg {
+.cve-mindmap svg {
   width: 100%;
   height: auto;
   display: block;

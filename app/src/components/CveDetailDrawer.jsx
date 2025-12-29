@@ -20,6 +20,13 @@ export default function CveDetailDrawer({ cve, onClose }) {
             <span className="pill">Year: {cve.year}</span>
           </div>
           <p>{cve.summary}</p>
+          {cve.metrics ? (
+            <div className="cve-meta extra">
+              <span className="pill">Total in cluster: {cve.metrics.total || "–"}</span>
+              <span className="pill">Latest: {cve.metrics.latestYear || "–"}</span>
+              <span className="pill">Max CVSS: {cve.metrics.maxCvss || "–"}</span>
+            </div>
+          ) : null}
           {cve.references?.length ? (
             <div className="cve-links">
               <h4>References</h4>

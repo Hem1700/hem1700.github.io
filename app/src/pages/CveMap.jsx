@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import CveCirclePack from "../components/CveCirclePack";
 import CveDetailDrawer from "../components/CveDetailDrawer";
 import HudWindow from "../components/HudWindow";
+import CveMindMap from "../components/CveMindMap";
 import { buildFilteredHierarchy, cveMapSummary, findCveById } from "../data/cveMapData";
 
 export default function CveMapPage() {
@@ -170,7 +170,7 @@ export default function CveMapPage() {
           </div>
           <div className="cve-map-content">
             <div className="cve-map-card">
-              <CveCirclePack
+              <CveMindMap
                 key={resetKey}
                 data={data}
                 onSelectCve={handleSelectCve}
