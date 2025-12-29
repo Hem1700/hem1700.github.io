@@ -10,12 +10,12 @@ export default function HudWindow({
   initialSize,
 }) {
   const internalId = useId();
-  const windowId = id || `hud-${internalId}`;
+  const windowId = id || `window-${internalId}`;
 
   const { nodeRef, handleRef, resizerRef, position, size, isDragging, isResizing } = useDraggableWindow(
     initialPosition,
     initialSize,
-    `hud:${windowId}`,
+    `hud:window:${windowId}`,
   );
 
   return (

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -11,10 +11,61 @@ import CveMapPage from "./pages/CveMap";
 import ContactStrip from "./components/ContactStrip";
 import ScrollProgress from "./components/ScrollProgress";
 import BackToTop from "./components/BackToTop";
+import HotkeyOverlay from "./components/HotkeyOverlay";
 import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
+  const [scanlinesOn, setScanlinesOn] = useState(true);
+  const [noiseOn, setNoiseOn] = useState(true);
+
+  const applyHudPrefs = useCallback(
+    (nextScanlines, nextNoise) => {
+      const body = document.body;
+      if (!body) return;
+      if (nextScanlines) body.classList.remove("hud-scanlines-off");
+      else body.classList.add("hud-scanlines-off");
+
+      if (nextNoise) body.classList.remove("hud-noise-off");
+      else body.classList.add("hud-noise-off");
+    },
+    [],
+  );
+
+  useEffect(() => {
+    try {
+      const savedScanlines = localStorage.getItem("hud:scanlines") !== "off";
+      const savedNoise = localStorage.getItem("hud:noise") !== "off";
+      setScanlinesOn(savedScanlines);
+      setNoiseOn(savedNoise);
+      applyHudPrefs(savedScanlines, savedNoise);
+    } catch (e) {
+      applyHudPrefs(true, true);
+    }
+  }, [applyHudPrefs]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("hud:scanlines", scanlinesOn ? "on" : "off");
+      localStorage.setItem("hud:noise", noiseOn ? "on" : "off");
+    } catch (e) {
+      // ignore
+    }
+    applyHudPrefs(scanlinesOn, noiseOn);
+  }, [scanlinesOn, noiseOn, applyHudPrefs]);
+
+  const resetLayout = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("hud:reset-layout", { detail: "all" }));
+      try {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("hud:window:") || k.startsWith("hud:"))
+          .forEach((k) => localStorage.removeItem(k));
+      } catch (err) {
+        // ignore
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -22,29 +73,20 @@ export default function App() {
       const key = e.key.toLowerCase();
       if (key === "r") {
         e.preventDefault();
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("hud:reset-layout", { detail: "all" }));
-          try {
-            Object.keys(localStorage)
-              .filter((k) => k.startsWith("hud:"))
-              .forEach((k) => localStorage.removeItem(k));
-          } catch (err) {
-            // ignore
-          }
-        }
+        resetLayout();
       }
       if (key === "s") {
         e.preventDefault();
-        document.body.classList.toggle("hud-scanlines-off");
+        setScanlinesOn((prev) => !prev);
       }
       if (key === "n") {
         e.preventDefault();
-        document.body.classList.toggle("hud-noise-off");
+        setNoiseOn((prev) => !prev);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [resetLayout]);
 
   return (
     <Router>
@@ -65,6 +107,13 @@ export default function App() {
         <ContactStrip />
         <Footer />
         <BackToTop />
+        <HotkeyOverlay
+          scanlinesOn={scanlinesOn}
+          noiseOn={noiseOn}
+          onToggleScanlines={() => setScanlinesOn((v) => !v)}
+          onToggleNoise={() => setNoiseOn((v) => !v)}
+          onResetLayout={resetLayout}
+        />
       </div>
     </Router>
   );
