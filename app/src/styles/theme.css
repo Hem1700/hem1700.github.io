@@ -1830,6 +1830,18 @@ article {
   padding: 4.5rem 1rem 2rem;
 }
 
+.mindmap-stage.mindmap-shell {
+  max-width: none;
+  margin: 0 auto;
+}
+
+.blog-welcome-section.compact.overlay {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding-bottom: 0.4rem;
+}
+
 .mindmap-canvas {
   min-height: 78vh;
 }

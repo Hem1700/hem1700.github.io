@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import CveDetailDrawer from "../components/CveDetailDrawer";
-import HudWindow from "../components/HudWindow";
 import CveMindMap from "../components/CveMindMap";
 import { buildFilteredHierarchy, cveMapSummary, findCveById } from "../data/cveMapData";
 
@@ -82,25 +81,23 @@ export default function CveMapPage() {
           </div>
         )}
       </div>
-      <div className="mindmap-stage">
-        <HudWindow title="CVE Mind Map" subtitle="zoom + expand" initialSize={{ width: 1280 }}>
-          <header className="blog-welcome-section compact">
-            <div className="container text-center">
-              <h1>{cveMapSummary.headline}</h1>
-              <p className="blog-subtitle">{cveMapSummary.datasetHint}</p>
-            </div>
-          </header>
-          <div className="mindmap-canvas">
-            <CveMindMap
-              key={resetKey}
-              data={data}
-              onSelectCve={handleSelectCve}
-              onFocusPath={setFocusPath}
-              highlightId={highlightId}
-              onHover={setHovered}
-            />
+      <div className="mindmap-stage mindmap-shell">
+        <header className="blog-welcome-section compact overlay">
+          <div className="container text-center">
+            <h1>{cveMapSummary.headline}</h1>
+            <p className="blog-subtitle">{cveMapSummary.datasetHint}</p>
           </div>
-        </HudWindow>
+        </header>
+        <div className="mindmap-canvas">
+          <CveMindMap
+            key={resetKey}
+            data={data}
+            onSelectCve={handleSelectCve}
+            onFocusPath={setFocusPath}
+            highlightId={highlightId}
+            onHover={setHovered}
+          />
+        </div>
       </div>
       <CveDetailDrawer cve={selectedCve} onClose={() => setSelectedCve(null)} />
     </div>
