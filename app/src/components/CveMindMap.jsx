@@ -62,8 +62,15 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
   const [expanded, setExpanded] = useState(new Set());
   const [positions, setPositions] = useState({ nodes: [], links: [] });
   const [zoomTransform, setZoomTransform] = useState(d3.zoomIdentity);
+  const draggingId = useRef(null);
+  const pointerIdRef = useRef(null);
 
   const { nodes, links } = useMemo(() => flattenHierarchy(data, expanded), [data, expanded]);
+  const nodesById = useMemo(() => {
+    const m = new Map();
+    positions.nodes.forEach((n) => m.set(n.id, n));
+    return m;
+  }, [positions.nodes]);
 
   // recompute focus path when highlight changes
   useEffect(() => {
@@ -113,7 +120,13 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
 
     for (let i = 0; i < 200; i += 1) sim.tick();
 
-    setPositions({ nodes: [...nodes], links: [...links] });
+    setPositions({
+      nodes: [...sim.nodes()],
+      links: links.map((l) => ({
+        source: l.source.id,
+        target: l.target.id,
+      })),
+    });
 
     return () => sim.stop();
   }, [nodes, links]);
@@ -127,6 +140,45 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
     svg.call(zoom);
     return () => svg.on(".zoom", null);
   }, []);
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return () => {};
+
+    const getCoords = (e) => {
+      const rect = svg.getBoundingClientRect();
+      const x = (e.clientX - rect.left - zoomTransform.x) / zoomTransform.k;
+      const y = (e.clientY - rect.top - zoomTransform.y) / zoomTransform.k;
+      return { x, y };
+    };
+
+    const onPointerMove = (e) => {
+      if (!draggingId.current) return;
+      const { x, y } = getCoords(e);
+      const id = draggingId.current;
+      setPositions((prev) => {
+        const nodesNext = prev.nodes.map((n) => (n.id === id ? { ...n, x, y } : n));
+        return { ...prev, nodes: nodesNext };
+      });
+    };
+
+    const onPointerUp = (e) => {
+      if (pointerIdRef.current !== null) {
+        svg.releasePointerCapture(pointerIdRef.current);
+      }
+      draggingId.current = null;
+      pointerIdRef.current = null;
+    };
+
+    svg.addEventListener("pointermove", onPointerMove);
+    svg.addEventListener("pointerup", onPointerUp);
+    svg.addEventListener("pointerleave", onPointerUp);
+    return () => {
+      svg.removeEventListener("pointermove", onPointerMove);
+      svg.removeEventListener("pointerup", onPointerUp);
+      svg.removeEventListener("pointerleave", onPointerUp);
+    };
+  }, [zoomTransform]);
 
   const toggleExpand = (node) => {
     const id = node.id;
@@ -167,10 +219,10 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
           {positions.links.map((link) => (
             <line
               key={`${link.source.id}-${link.target.id}`}
-              x1={link.source.x}
-              y1={link.source.y}
-              x2={link.target.x}
-              y2={link.target.y}
+              x1={nodesById.get(link.source)?.x}
+              y1={nodesById.get(link.source)?.y}
+              x2={nodesById.get(link.target)?.x}
+              y2={nodesById.get(link.target)?.y}
               stroke="rgba(123,247,211,0.35)"
               strokeWidth={1.5}
               strokeDasharray={link.target.type === "collapsed" ? "4 4" : "0"}
@@ -186,6 +238,12 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
                 transform={`translate(${node.x},${node.y})`}
                 className={`mindmap-node ${node.type}`}
                 onClick={() => handleClick(node)}
+                onPointerDown={(e) => {
+                  draggingId.current = node.id;
+                  pointerIdRef.current = e.pointerId;
+                  svgRef.current?.setPointerCapture(e.pointerId);
+                  e.stopPropagation();
+                }}
                 onMouseEnter={() => onHover?.(node)}
                 onMouseLeave={() => onHover?.(null)}
                 style={{ cursor: node.type === "cve" ? "pointer" : "grab" }}
