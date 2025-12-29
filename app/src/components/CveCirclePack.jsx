@@ -8,7 +8,7 @@ function getColor(depth) {
   return palette[idx];
 }
 
-export default function CveCirclePack({ data, onSelectCve, onFocusPath }) {
+export default function CveCirclePack({ data, onSelectCve, onFocusPath, highlightId, onHover }) {
   const diameter = 760;
   const [root, setRoot] = useState(null);
   const [nodes, setNodes] = useState([]);
@@ -70,15 +70,32 @@ export default function CveCirclePack({ data, onSelectCve, onFocusPath }) {
             const fill = isLeaf ? "#1f2430" : getColor(depth);
             const textColor = isLeaf ? "#f2f2f2" : "#1f2430";
             const showLabel = r > 30;
+            const isHighlighted = highlightId && node.data.id?.toLowerCase() === highlightId.toLowerCase();
             return (
               <g
                 key={`${node.data.name}-${node.depth}-${node.x}-${node.y}`}
                 className={`cve-node depth-${depth} ${isLeaf ? "leaf" : "branch"}`}
                 transform={`translate(${x},${y})`}
                 onClick={() => handleClick(node)}
+                onMouseEnter={() =>
+                  onHover?.({
+                    name: node.data.name,
+                    type: node.data.nodeType || (node.children ? "group" : "cve"),
+                    metrics: node.data.metrics,
+                    info: node.data,
+                  })
+                }
+                onMouseLeave={() => onHover?.(null)}
                 style={{ cursor: "pointer" }}
               >
-                <circle r={r} fill={fill} fillOpacity={isLeaf ? 0.9 : 0.7} stroke="#1f2430" strokeOpacity={0.08} />
+                <circle
+                  r={r}
+                  fill={fill}
+                  fillOpacity={isLeaf ? 0.9 : 0.7}
+                  stroke={isHighlighted ? "#ffdd70" : "#1f2430"}
+                  strokeWidth={isHighlighted ? 3 : 1.2}
+                  strokeOpacity={isHighlighted ? 0.9 : 0.15}
+                />
                 {showLabel && (
                   <text textAnchor="middle" dy="0.35em" fontSize={Math.min(18, r / 4)} fill={textColor}>
                     {node.data.name}

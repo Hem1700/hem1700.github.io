@@ -1,7 +1,7 @@
 // Sample, lightweight CVE hierarchy for the zoomable mind-map demo.
 // In production you would generate this from NVD/NIST feeds and your own aggregations.
 
-const sampleData = [
+export const sampleData = [
   {
     id: "cloud",
     name: "Cloud",
@@ -253,3 +253,81 @@ export const cveMapSummary = {
   headline: "Zoom into technologies and see clustered CVEs. Click a CVE to open its details.",
   datasetHint: "Demo dataset; wire NVD feeds + your own aggregations for production.",
 };
+
+export function buildFilteredHierarchy(filters = {}) {
+  const {
+    severities = ["Critical", "High", "Medium", "Low"],
+    minCvss = 0,
+    minYear = 0,
+    kevOnly = false,
+  } = filters;
+
+  const matches = (cve) => {
+    const severityOk = severities.includes(cve.severity);
+    const yearOk = Number(cve.year) >= Number(minYear || 0);
+    const cvssOk = Number(cve.cvss || 0) >= Number(minCvss || 0);
+    const kevOk = kevOnly ? Boolean(cve.kev) : true;
+    return severityOk && yearOk && cvssOk && kevOk;
+  };
+
+  const domains = sampleData
+    .map((domain) => {
+      const technologies = domain.technologies
+        .map((tech) => {
+          const clusters = tech.clusters
+            .map((cluster) => {
+              const cves = (cluster.cves || []).filter(matches);
+              if (!cves.length) return null;
+              return { ...cluster, cves };
+            })
+            .filter(Boolean);
+          if (!clusters.length) return null;
+          return { ...tech, clusters };
+        })
+        .filter(Boolean);
+      if (!technologies.length) return null;
+      return { ...domain, technologies };
+    })
+    .filter(Boolean);
+
+  return {
+    name: "CVE Map",
+    children: domains.map((domain) => ({
+      ...domain,
+      name: domain.name,
+      children: domain.technologies.map((tech) => ({
+        ...tech,
+        name: tech.name,
+        children: tech.clusters.map((cluster) => ({
+          ...cluster,
+          name: cluster.label,
+          children: cluster.cves.map((cve) => ({
+            ...cve,
+            name: `${cve.id}`,
+            value: cve.cvss || 1,
+            nodeType: "cve",
+          })),
+          nodeType: "cluster",
+        })),
+        nodeType: "technology",
+      })),
+      nodeType: "domain",
+    })),
+    nodeType: "root",
+  };
+}
+
+export function findCveById(id) {
+  for (const domain of sampleData) {
+    for (const tech of domain.technologies) {
+      for (const cluster of tech.clusters) {
+        for (const cve of cluster.cves) {
+          if (cve.id.toLowerCase() === id.toLowerCase()) {
+            return cve;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
