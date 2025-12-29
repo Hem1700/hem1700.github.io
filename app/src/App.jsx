@@ -11,7 +11,6 @@ import CveMapPage from "./pages/CveMap";
 import ContactStrip from "./components/ContactStrip";
 import ScrollProgress from "./components/ScrollProgress";
 import BackToTop from "./components/BackToTop";
-import HotkeyOverlay from "./components/HotkeyOverlay";
 import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
@@ -107,13 +106,6 @@ export default function App() {
         <ContactStrip />
         <Footer />
         <BackToTop />
-        <HotkeyOverlay
-          scanlinesOn={scanlinesOn}
-          noiseOn={noiseOn}
-          onToggleScanlines={() => setScanlinesOn((v) => !v)}
-          onToggleNoise={() => setNoiseOn((v) => !v)}
-          onResetLayout={resetLayout}
-        />
       </div>
     </Router>
   );
