@@ -61,6 +61,7 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
   const svgRef = useRef(null);
   const [expanded, setExpanded] = useState(new Set());
   const [positions, setPositions] = useState({ nodes: [], links: [] });
+  const [zoomTransform, setZoomTransform] = useState(d3.zoomIdentity);
 
   const { nodes, links } = useMemo(() => flattenHierarchy(data, expanded), [data, expanded]);
 
@@ -117,6 +118,16 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
     return () => sim.stop();
   }, [nodes, links]);
 
+  useEffect(() => {
+    const svg = d3.select(svgRef.current);
+    const zoom = d3
+      .zoom()
+      .scaleExtent([0.6, 2.5])
+      .on("zoom", (event) => setZoomTransform(event.transform));
+    svg.call(zoom);
+    return () => svg.on(".zoom", null);
+  }, []);
+
   const toggleExpand = (node) => {
     const id = node.id;
     if (!id) return;
@@ -152,7 +163,7 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
             </feMerge>
           </filter>
         </defs>
-        <g>
+        <g transform={`translate(${zoomTransform.x},${zoomTransform.y}) scale(${zoomTransform.k})`}>
           {positions.links.map((link) => (
             <line
               key={`${link.source.id}-${link.target.id}`}
@@ -165,8 +176,6 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
               strokeDasharray={link.target.type === "collapsed" ? "4 4" : "0"}
             />
           ))}
-        </g>
-        <g>
           {positions.nodes.map((node) => {
             const r = node.type === "cve" ? 14 : node.type === "cluster" ? 18 : 24;
             const isHighlight = highlightId && node.id?.toLowerCase() === highlightId.toLowerCase();

@@ -1807,6 +1807,11 @@ article {
   flex-wrap: wrap;
 }
 
+.mindmap-hint {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
 .mindmap-search input {
   flex: 1;
   min-width: 240px;

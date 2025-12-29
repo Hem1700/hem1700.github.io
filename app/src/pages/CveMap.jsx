@@ -50,6 +50,9 @@ export default function CveMapPage() {
           <p className="pill">Mind Map</p>
           <span className="breadcrumb">{focusPath.length ? focusPath.join(" / ") : "CVE Map"}</span>
         </div>
+        <p className="mindmap-hint">
+          Drag to explore, scroll/pinch to zoom, click nodes to expand/collapse, click CVEs for details.
+        </p>
         <form className="mindmap-search" onSubmit={handleSearch}>
           <input
             type="text"
