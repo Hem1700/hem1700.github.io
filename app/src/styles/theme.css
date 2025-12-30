@@ -85,6 +85,13 @@ body {
   mix-blend-mode: screen;
 }
 
+.glow-off .matrix-rain {
+  opacity: 0.04;
+}
+
+.glow-off .hud-scanline {
+  opacity: 0;
+}
 body::after {
   content: "";
   position: fixed;
@@ -2146,6 +2153,11 @@ body.hud-noise-off::after {
   padding: 0.85rem 0;
 }
 
+.nav-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
 .logo {
   display: inline-flex;
   align-items: center;
