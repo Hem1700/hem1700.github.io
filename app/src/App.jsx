@@ -11,6 +11,7 @@ import CveMapPage from "./pages/CveMap";
 import ContactStrip from "./components/ContactStrip";
 import ScrollProgress from "./components/ScrollProgress";
 import BackToTop from "./components/BackToTop";
+import MatrixRain from "./components/MatrixRain";
 import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
@@ -90,6 +91,7 @@ export default function App() {
   return (
     <Router>
       <div className="app-shell">
+        <MatrixRain />
         <ScrollProgress />
         <Navbar onToggleTheme={toggleTheme} theme={theme} />
         <main>
