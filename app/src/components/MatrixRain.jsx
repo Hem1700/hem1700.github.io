@@ -13,25 +13,32 @@ export default function MatrixRain() {
     let height = (canvas.height = window.innerHeight);
     const fontSize = 16;
     let columns = Math.floor(width / fontSize);
-    let drops = Array(columns).fill(1);
-    const charset = "アカサタナハマヤラワ0123456789日田由止育宇禾水火木金土文";
+    let drops = Array.from({ length: columns }, () => ({ y: Math.random() * 20, speed: 1 + Math.random() * 2 }));
+    const charset = "アカサタナハマヤラワ0123456789日田由止育宇禾水火木金土文ﾊﾐﾋﾑﾍﾎｱｶｻﾀﾅﾊﾏ";
 
     const draw = () => {
-      ctx.fillStyle = "rgba(2, 3, 4, 0.12)";
+      ctx.fillStyle = "rgba(2, 3, 4, 0.08)";
       ctx.fillRect(0, 0, width, height);
 
-      ctx.fillStyle = "rgba(57, 255, 20, 0.75)";
       ctx.font = `${fontSize}px "IBM Plex Mono", monospace`;
 
-      drops.forEach((y, idx) => {
+      drops.forEach((drop, idx) => {
         const text = charset[Math.floor(Math.random() * charset.length)];
         const x = idx * fontSize;
-        ctx.fillText(text, x, y * fontSize);
+        const y = drop.y * fontSize;
 
-        if (y * fontSize > height && Math.random() > 0.975) {
-          drops[idx] = 0;
+        // head
+        ctx.fillStyle = "rgba(57, 255, 20, 0.9)";
+        ctx.fillText(text, x, y);
+        // tail glow
+        ctx.fillStyle = "rgba(57, 255, 20, 0.25)";
+        ctx.fillText(text, x, y - fontSize);
+
+        drop.y += drop.speed;
+        if (drop.y * fontSize > height && Math.random() > 0.96) {
+          drop.y = 0;
+          drop.speed = 1 + Math.random() * 2;
         }
-        drops[idx] = y + 1;
       });
       rafRef.current = requestAnimationFrame(draw);
     };
@@ -40,7 +47,7 @@ export default function MatrixRain() {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
       columns = Math.floor(width / fontSize);
-      drops = Array(columns).fill(1);
+      drops = Array.from({ length: columns }, () => ({ y: Math.random() * 20, speed: 1 + Math.random() * 2 }));
     };
 
     window.addEventListener("resize", onResize);

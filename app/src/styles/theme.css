@@ -71,6 +71,11 @@ body {
   overflow-x: hidden;
 }
 
+.app-shell {
+  position: relative;
+  z-index: 1;
+}
+
 .matrix-rain {
   position: fixed;
   inset: 0;
@@ -2004,33 +2009,12 @@ h6 {
 
 .hud-window {
   padding: 0;
-  background: linear-gradient(135deg, rgba(10, 16, 26, 0.9), rgba(9, 14, 24, 0.92));
+  background: linear-gradient(135deg, rgba(5, 12, 10, 0.94), rgba(6, 14, 12, 0.96));
   border: 1px solid var(--border);
   border-radius: 16px;
   position: relative;
-  box-shadow: var(--shadow), 0 0 30px rgba(53, 214, 255, 0.16);
+  box-shadow: var(--shadow), 0 0 30px rgba(0, 225, 138, 0.18);
   overflow: hidden;
-  transition: transform 0.12s ease, box-shadow 0.2s ease;
-}
-
-.hud-window.dragging {
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 48px rgba(123, 247, 211, 0.35);
-  cursor: grabbing;
-}
-
-.hud-window.resizing {
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 48px rgba(255, 221, 112, 0.25);
-}
-
-.hud-window::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: 1px dashed rgba(123, 247, 211, 0.25);
-  border-radius: 16px;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  opacity: 0.6;
 }
 
 .hud-window__chrome {
@@ -2120,18 +2104,6 @@ h6 {
 .hud-window header {
   padding: 0;
   margin: 0;
-}
-
-.hud-window__resizer {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  bottom: 8px;
-  right: 10px;
-  border-bottom: 2px solid rgba(123, 247, 211, 0.5);
-  border-right: 2px solid rgba(123, 247, 211, 0.5);
-  cursor: nwse-resize;
-  opacity: 0.75;
 }
 
 .hud-scanline {

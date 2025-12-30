@@ -62,8 +62,6 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
   const [expanded, setExpanded] = useState(new Set());
   const [positions, setPositions] = useState({ nodes: [], links: [] });
   const [zoomTransform, setZoomTransform] = useState(d3.zoomIdentity);
-  const draggingId = useRef(null);
-  const pointerIdRef = useRef(null);
 
   const { nodes, links } = useMemo(() => flattenHierarchy(data, expanded), [data, expanded]);
   const nodesById = useMemo(() => {
@@ -141,45 +139,6 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
     return () => svg.on(".zoom", null);
   }, []);
 
-  useEffect(() => {
-    const svg = svgRef.current;
-    if (!svg) return () => {};
-
-    const getCoords = (e) => {
-      const rect = svg.getBoundingClientRect();
-      const x = (e.clientX - rect.left - zoomTransform.x) / zoomTransform.k;
-      const y = (e.clientY - rect.top - zoomTransform.y) / zoomTransform.k;
-      return { x, y };
-    };
-
-    const onPointerMove = (e) => {
-      if (!draggingId.current) return;
-      const { x, y } = getCoords(e);
-      const id = draggingId.current;
-      setPositions((prev) => {
-        const nodesNext = prev.nodes.map((n) => (n.id === id ? { ...n, x, y } : n));
-        return { ...prev, nodes: nodesNext };
-      });
-    };
-
-    const onPointerUp = (e) => {
-      if (pointerIdRef.current !== null) {
-        svg.releasePointerCapture(pointerIdRef.current);
-      }
-      draggingId.current = null;
-      pointerIdRef.current = null;
-    };
-
-    svg.addEventListener("pointermove", onPointerMove);
-    svg.addEventListener("pointerup", onPointerUp);
-    svg.addEventListener("pointerleave", onPointerUp);
-    return () => {
-      svg.removeEventListener("pointermove", onPointerMove);
-      svg.removeEventListener("pointerup", onPointerUp);
-      svg.removeEventListener("pointerleave", onPointerUp);
-    };
-  }, [zoomTransform]);
-
   const toggleExpand = (node) => {
     const id = node.id;
     if (!id) return;
@@ -238,15 +197,9 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
                 transform={`translate(${node.x},${node.y})`}
                 className={`mindmap-node ${node.type}`}
                 onClick={() => handleClick(node)}
-                onPointerDown={(e) => {
-                  draggingId.current = node.id;
-                  pointerIdRef.current = e.pointerId;
-                  svgRef.current?.setPointerCapture(e.pointerId);
-                  e.stopPropagation();
-                }}
                 onMouseEnter={() => onHover?.(node)}
                 onMouseLeave={() => onHover?.(null)}
-                style={{ cursor: node.type === "cve" ? "pointer" : "grab" }}
+                style={{ cursor: "pointer" }}
               >
                 <circle
                   r={r}
