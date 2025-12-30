@@ -8,7 +8,11 @@ export default function CertificationsPage() {
         <ul className="terminal-list">
           {certifications.map((c) => (
             <li key={c.title}>
-              {c.title} — {c.details}
+              <a href={c.href} target="_blank" rel="noreferrer">
+                {c.title}
+              </a>
+              {" — "}
+              {c.details}
             </li>
           ))}
         </ul>
