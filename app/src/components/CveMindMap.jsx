@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 
 const typeColors = {
-  domain: "#00e18a",
-  technology: "#39ff14",
-  cluster: "#22d3ee",
-  cve: "#8ef3b4",
+  domain: "#00ff41",
+  technology: "#00ff41",
+  cluster: "#00ff41",
+  cve: "#00ff41",
 };
 
 function flattenHierarchy(root, expanded) {
@@ -182,8 +182,8 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
               y1={nodesById.get(link.source)?.y}
               x2={nodesById.get(link.target)?.x}
               y2={nodesById.get(link.target)?.y}
-              stroke="rgba(0, 225, 138, 0.45)"
-              strokeWidth={1.5}
+              stroke="rgba(0, 255, 65, 0.35)"
+              strokeWidth={1}
               strokeDasharray={link.target.type === "collapsed" ? "4 4" : "0"}
             />
           ))}
@@ -204,12 +204,12 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
                 <circle
                   r={r}
                   fill={fill}
-                  fillOpacity={isHighlight ? 1 : 0.8}
-                  stroke={isHighlight ? "#ffdd70" : "rgba(255,255,255,0.15)"}
-                  strokeWidth={isHighlight ? 3 : 1}
+                  fillOpacity={isHighlight ? 1 : 0.7}
+                  stroke={isHighlight ? "#00ff41" : "rgba(255,255,255,0.12)"}
+                  strokeWidth={isHighlight ? 2 : 1}
                   filter="url(#glow)"
                 />
-                <text textAnchor="middle" dy="0.35em" fontSize={11} fill="#0a101a">
+                <text textAnchor="middle" dy="0.35em" fontSize={11} fill="#000000">
                   {node.type === "collapsed" ? "+" : node.name}
                 </text>
               </g>
