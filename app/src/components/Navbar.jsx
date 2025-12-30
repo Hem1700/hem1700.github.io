@@ -31,7 +31,7 @@ export default function Navbar({ onToggleTheme, theme }) {
     <nav className="navbar">
       <div className="container nav-container">
         <div className="logo">
-          <i className="fas fa-satellite-dish mug-icon" aria-hidden="true" /> Hem Parekh // Ops HUD
+          <i className="fas fa-satellite-dish mug-icon" aria-hidden="true" /> Matrix Security Ops | Hem Parekh
         </div>
         <ul className="nav-links">
           <li>

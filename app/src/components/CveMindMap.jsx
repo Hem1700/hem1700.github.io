@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 
 const typeColors = {
-  domain: "#7bf7d3",
-  technology: "#ffdd70",
-  cluster: "#8fd6ff",
-  cve: "#ff9fb5",
+  domain: "#00e18a",
+  technology: "#39ff14",
+  cluster: "#22d3ee",
+  cve: "#8ef3b4",
 };
 
 function flattenHierarchy(root, expanded) {
@@ -223,7 +223,7 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
               y1={nodesById.get(link.source)?.y}
               x2={nodesById.get(link.target)?.x}
               y2={nodesById.get(link.target)?.y}
-              stroke="rgba(123,247,211,0.35)"
+              stroke="rgba(0, 225, 138, 0.45)"
               strokeWidth={1.5}
               strokeDasharray={link.target.type === "collapsed" ? "4 4" : "0"}
             />
