@@ -69,7 +69,7 @@ body {
 .app-shell {
   position: relative;
   z-index: 1;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.85);
 }
 
 .matrix-rain {
@@ -79,7 +79,7 @@ body {
   height: 100%;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.35;
+  opacity: 0.18;
   mix-blend-mode: screen;
 }
 
@@ -2303,12 +2303,13 @@ body.hud-noise-off::after {
   color: var(--accent);
   font-family: var(--mono);
   letter-spacing: 0.08em;
-  text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+  text-shadow: none;
 }
 
 .terminal-body {
   color: var(--text-strong);
-  text-shadow: 0 0 6px rgba(0, 255, 65, 0.3);
+  text-shadow: none;
+  line-height: 1.6;
 }
 
 .terminal-divider {
