@@ -26,7 +26,9 @@ bio: ${hero.blurb}`}
         <p className="terminal-text">{about.text}</p>
         <div className="terminal-list inline">
           {socialLinks.map((link) => (
-            <span key={link.href}>{link.label}</span>
+            <a key={link.href} href={link.href} target="_blank" rel="noreferrer">
+              {link.label}
+            </a>
           ))}
         </div>
       </TerminalSection>
