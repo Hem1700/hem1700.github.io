@@ -8,7 +8,7 @@ export default function Hero({ data }) {
     <header className={`hero reveal ${visible ? "visible" : ""}`} id="home" ref={ref}>
       <div className="hero-content container">
         <div className="hero-copy">
-          <div className="hero-badge">Ops Console: Hem Parekh // Access Granted</div>
+          <div className="hero-badge">Operator: Hem Parekh // Access Granted</div>
           <h1>
             <span data-glitch={`Hello, I'm ${data.highlight}.`}>Hello, I'm <span className="highlight">{data.highlight}</span>.</span>
           </h1>

@@ -19,7 +19,7 @@ export default function HudWindow({
           </div>
           <div className="hud-window__meta">
             <span className="hud-chip">{subtitle || "interactive"}</span>
-            <span className="hud-chip ghost">matrix-synced</span>
+            <span className="hud-chip ghost">live feed</span>
           </div>
         </div>
         <div className="hud-window__body">
