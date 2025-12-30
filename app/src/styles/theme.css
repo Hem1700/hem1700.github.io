@@ -2108,8 +2108,8 @@ h6 {
   inset: 0;
   pointer-events: none;
   background-image: var(--crt-lines);
-  opacity: 0.08;
-  animation: scanlineSweep 6s linear infinite;
+  opacity: 0.05;
+  animation: scanlineSweep 12s linear infinite;
 }
 
 body.hud-scanlines-off .hud-scanline {

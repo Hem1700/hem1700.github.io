@@ -13,7 +13,7 @@ export default function MatrixRain() {
     let height = (canvas.height = window.innerHeight);
     const fontSize = 16;
     let columns = Math.floor(width / fontSize);
-    let drops = Array.from({ length: columns }, () => ({ y: Math.random() * 20, speed: 0.4 + Math.random() * 0.8 }));
+    let drops = Array.from({ length: columns }, () => ({ y: Math.random() * 20, speed: 0.2 + Math.random() * 0.5 }));
     const charset = "アカサタナハマヤラワ0123456789日田由止育宇禾水火木金土文ﾊﾐﾋﾑﾍﾎｱｶｻﾀﾅﾊﾏ";
 
     const draw = () => {
@@ -37,7 +37,7 @@ export default function MatrixRain() {
         drop.y += drop.speed;
         if (drop.y * fontSize > height && Math.random() > 0.96) {
           drop.y = 0;
-          drop.speed = 0.4 + Math.random() * 0.8;
+          drop.speed = 0.2 + Math.random() * 0.5;
         }
       });
       rafRef.current = requestAnimationFrame(draw);
