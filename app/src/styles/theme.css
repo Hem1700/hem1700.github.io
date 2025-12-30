@@ -1,43 +1,44 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap");
 
 :root {
-  --bg-body: #04060c;
-  --bg-surface: #0a1222;
-  --bg-subtle: #0e1930;
-  --text-strong: #e8f5ff;
-  --text-muted: #7ea0c0;
-  --accent: #5cf0c5;
-  --accent-strong: #26d0ff;
+  --bg-body: #020304;
+  --bg-surface: #07100f;
+  --bg-subtle: #0a1514;
+  --text-strong: #dfffe4;
+  --text-muted: #7fa58c;
+  --accent: #39ff14;
+  --accent-strong: #00e18a;
   --accent-glow: #4ade80;
-  --border: rgba(38, 208, 255, 0.32);
-  --shadow: 0 30px 64px rgba(0, 0, 0, 0.7);
+  --border: rgba(0, 225, 138, 0.35);
+  --shadow: 0 30px 64px rgba(0, 0, 0, 0.72);
   --radius: 14px;
-  --gradient: linear-gradient(135deg, rgba(92, 240, 197, 0.42), rgba(38, 208, 255, 0.42));
+  --gradient: linear-gradient(135deg, rgba(57, 255, 20, 0.42), rgba(0, 225, 138, 0.38));
   --mono: "IBM Plex Mono", "Space Mono", monospace;
   --display: "Rajdhani", "IBM Plex Mono", system-ui;
-  --panel: rgba(7, 12, 22, 0.94);
-  --panel-contrast: rgba(10, 16, 28, 0.96);
-  --grid: #0b1426;
-  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.58' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
-  --glow: 0 0 32px rgba(38, 208, 255, 0.3), 0 0 18px rgba(92, 240, 197, 0.22);
-  --crt-lines: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 1px, transparent 2px);
+  --panel: rgba(5, 12, 10, 0.92);
+  --panel-contrast: rgba(8, 16, 14, 0.96);
+  --grid: #08110f;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  --matrix-rain: repeating-linear-gradient(180deg, rgba(0, 255, 140, 0.14) 0px, transparent 18px, rgba(0, 255, 140, 0.08) 36px, transparent 54px);
+  --glow: 0 0 28px rgba(57, 255, 20, 0.32), 0 0 18px rgba(0, 225, 138, 0.22);
+  --crt-lines: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 1px, transparent 2px);
 }
 
 body.dark {
-  --bg-body: #04060c;
-  --bg-surface: #0a1222;
-  --bg-subtle: #0e1930;
-  --text-strong: #e8f5ff;
-  --text-muted: #7ea0c0;
-  --accent: #5cf0c5;
-  --accent-strong: #26d0ff;
+  --bg-body: #020304;
+  --bg-surface: #07100f;
+  --bg-subtle: #0a1514;
+  --text-strong: #dfffe4;
+  --text-muted: #7fa58c;
+  --accent: #39ff14;
+  --accent-strong: #00e18a;
   --accent-glow: #4ade80;
-  --border: rgba(38, 208, 255, 0.32);
-  --shadow: 0 30px 64px rgba(0, 0, 0, 0.7);
-  --gradient: linear-gradient(135deg, rgba(92, 240, 197, 0.42), rgba(38, 208, 255, 0.42));
-  --panel: rgba(7, 12, 22, 0.94);
-  --panel-contrast: rgba(10, 16, 28, 0.96);
-  --grid: #0b1426;
+  --border: rgba(0, 225, 138, 0.35);
+  --shadow: 0 30px 64px rgba(0, 0, 0, 0.72);
+  --gradient: linear-gradient(135deg, rgba(57, 255, 20, 0.42), rgba(0, 225, 138, 0.38));
+  --panel: rgba(5, 12, 10, 0.92);
+  --panel-contrast: rgba(8, 16, 14, 0.96);
+  --grid: #08110f;
 }
 
 * {
@@ -55,12 +56,12 @@ body {
   font-family: var(--mono);
   background-color: var(--bg-body);
   background-image:
-    radial-gradient(circle at 12% 18%, rgba(38, 208, 255, 0.12), transparent 26%),
-    radial-gradient(circle at 78% 12%, rgba(92, 240, 197, 0.14), transparent 32%),
-    radial-gradient(circle at 72% 78%, rgba(38, 208, 255, 0.08), transparent 24%),
-    linear-gradient(90deg, rgba(16, 27, 46, 0.8) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(16, 27, 46, 0.8) 1px, transparent 1px);
-  background-size: auto, auto, auto, 44px 44px, 44px 44px;
+    radial-gradient(circle at 12% 18%, rgba(57, 255, 20, 0.12), transparent 26%),
+    radial-gradient(circle at 78% 12%, rgba(0, 225, 138, 0.14), transparent 32%),
+    radial-gradient(circle at 72% 78%, rgba(57, 255, 20, 0.08), transparent 24%),
+    linear-gradient(90deg, rgba(10, 18, 14, 0.8) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(10, 18, 14, 0.8) 1px, transparent 1px);
+  background-size: auto, auto, auto, 42px 42px, 42px 42px;
   color: var(--text-strong);
   line-height: 1.7;
   display: flex;
@@ -75,10 +76,12 @@ body::after {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image: var(--noise);
-  opacity: 0.18;
+  background-image: var(--matrix-rain), var(--noise);
+  background-size: 180px 360px, auto;
+  background-repeat: repeat;
+  opacity: 0.35;
   mix-blend-mode: screen;
-  animation: noiseShift 5s steps(2, end) infinite;
+  animation: matrixFall 18s linear infinite, noiseShift 5s steps(2, end) infinite;
 }
 
 body::before {
@@ -686,6 +689,15 @@ section {
   }
   100% {
     transform: translate3d(-8px, 12px, 0);
+  }
+}
+
+@keyframes matrixFall {
+  0% {
+    background-position: 0 -400px, 0 0;
+  }
+  100% {
+    background-position: 0 0, -8px 12px;
   }
 }
 
@@ -1976,7 +1988,7 @@ h3,
 h4,
 h5,
 h6 {
-  text-shadow: 0 0 18px rgba(123, 247, 211, 0.28), 0 0 12px rgba(53, 214, 255, 0.22);
+  text-shadow: 0 0 18px rgba(57, 255, 20, 0.24), 0 0 12px rgba(0, 225, 138, 0.2);
 }
 
 .hud-window {
