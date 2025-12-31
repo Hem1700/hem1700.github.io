@@ -29,6 +29,13 @@ export default function CveDetailDrawer({ cve, onClose }) {
                 <span className="pill">Max CVSS: {cve.metrics.maxCvss || "–"}</span>
               </div>
             ) : null}
+            {cve.href ? (
+              <div className="cve-links">
+                <a href={cve.href} target="_blank" rel="noreferrer">
+                  Open blog post
+                </a>
+              </div>
+            ) : null}
             {cve.references?.length ? (
               <div className="cve-links">
                 <h4>References</h4>

@@ -254,6 +254,33 @@ export const cveMapSummary = {
   datasetHint: "Demo dataset; wire NVD feeds + your own aggregations for production.",
 };
 
+// Build a simple hierarchy from CVE-like entries (id, title, year, severity, href)
+export function buildBlogCveHierarchy(entries = []) {
+  const groupedByYear = entries.reduce((acc, entry) => {
+    const year = entry.year || "Unknown";
+    if (!acc[year]) acc[year] = [];
+    acc[year].push(entry);
+    return acc;
+  }, {});
+
+  return {
+    name: "CVE Map",
+    children: Object.keys(groupedByYear)
+      .sort((a, b) => b.localeCompare(a))
+      .map((year) => ({
+        id: `year-${year}`,
+        name: year,
+        nodeType: "cluster",
+        children: groupedByYear[year].map((cve) => ({
+          ...cve,
+          name: cve.id || cve.title,
+          value: 1,
+          nodeType: "cve",
+        })),
+      })),
+  };
+}
+
 export function buildFilteredHierarchy(filters = {}) {
   const {
     severities = ["Critical", "High", "Medium", "Low"],

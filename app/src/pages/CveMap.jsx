@@ -1,16 +1,38 @@
 import { useMemo, useState } from "react";
 import CveDetailDrawer from "../components/CveDetailDrawer";
 import CveMindMap from "../components/CveMindMap";
-import { buildFilteredHierarchy, cveMapSummary, findCveById } from "../data/cveMapData";
+import { blogs } from "../data/content";
+import { buildBlogCveHierarchy, cveMapSummary } from "../data/cveMapData";
 
 export default function CveMapPage() {
-  const [filters] = useState({
-    severities: ["Critical", "High", "Medium", "Low"],
-    minCvss: 0,
-    minYear: 2024,
-    kevOnly: false,
-  });
-  const data = useMemo(() => buildFilteredHierarchy(filters), [filters]);
+  const blogCves = useMemo(() => {
+    const isCveLike = (title) => title.toUpperCase().includes("CVE");
+    const parseYear = (dateStr) => {
+      if (!dateStr) return "Unknown";
+      const parsed = new Date(dateStr);
+      const year = parsed.getFullYear();
+      return Number.isFinite(year) ? String(year) : "Unknown";
+    };
+
+    return blogs
+      .filter((b) => isCveLike(b.title))
+      .map((b) => {
+        const idMatch = b.title.match(/CVE[-–](\d{4})[-–]?([\d]+)/i);
+        const id = idMatch ? `CVE-${idMatch[1]}-${idMatch[2]}` : b.slug.toUpperCase();
+        return {
+          id,
+          title: b.title,
+          severity: "Info",
+          cvss: 0,
+          year: parseYear(b.date),
+          kev: false,
+          summary: b.excerpt,
+          href: b.href || `/blog/${b.slug}`,
+        };
+      });
+  }, []);
+
+  const data = useMemo(() => buildBlogCveHierarchy(blogCves), [blogCves]);
   const [selectedCve, setSelectedCve] = useState(null);
   const [focusPath, setFocusPath] = useState([]);
   const [resetKey, setResetKey] = useState(0);
@@ -34,13 +56,11 @@ export default function CveMapPage() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (!search.trim()) return;
-    const cve = findCveById(search.trim());
-    if (cve) {
-      setSelectedCve(cve);
-      setHighlightId(cve.id);
-    } else {
-      setHighlightId("");
-    }
+    const target = blogCves.find((c) => c.id.toLowerCase() === search.trim().toLowerCase());
+    if (target) {
+      setSelectedCve(target);
+      setHighlightId(target.id);
+    } else setHighlightId("");
   };
 
   return (
