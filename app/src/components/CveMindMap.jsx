@@ -9,7 +9,15 @@ const typeColors = {
 export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, onHover, onFocusPath }) {
   const svgRef = useRef(null);
   const [zoomTransform, setZoomTransform] = useState(d3.zoomIdentity);
-  const dragRef = useRef({ id: null, offset: [0, 0], pointerId: null, mode: "node", base: null });
+  const dragRef = useRef({
+    id: null,
+    offset: [0, 0],
+    pointerId: null,
+    mode: "node",
+    base: null,
+    startScreen: [0, 0],
+    active: false,
+  });
   const [positions, setPositions] = useState({});
 
   const layout = useMemo(() => {
@@ -193,8 +201,9 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
       offset: [gx - current.x, gy - current.y],
       mode: "node",
       base: null,
+      startScreen: [event.clientX, event.clientY],
+      active: false,
     };
-    svgRef.current.setPointerCapture(event.pointerId);
   };
 
   const startDragAll = (event) => {
@@ -211,24 +220,60 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
       offset: [gx, gy],
       mode: "all",
       base,
+      startScreen: [event.clientX, event.clientY],
+      active: false,
     };
-    svgRef.current.setPointerCapture(event.pointerId);
   };
 
   const stopDrag = (event) => {
-    if (!dragRef.current.id || !svgRef.current) return;
-    try {
-      svgRef.current.releasePointerCapture(dragRef.current.pointerId);
-    } catch (err) {
-      // ignore if already released
+    if (!dragRef.current.id || !svgRef.current) {
+      dragRef.current = {
+        id: null,
+        offset: [0, 0],
+        pointerId: null,
+        mode: "node",
+        base: null,
+        startScreen: [0, 0],
+        active: false,
+      };
+      return;
     }
-    dragRef.current = { id: null, offset: [0, 0], pointerId: null };
+    if (dragRef.current.active) {
+      try {
+        svgRef.current.releasePointerCapture(dragRef.current.pointerId);
+      } catch (err) {
+        // ignore if already released
+      }
+    }
+    dragRef.current = {
+      id: null,
+      offset: [0, 0],
+      pointerId: null,
+      mode: "node",
+      base: null,
+      startScreen: [0, 0],
+      active: false,
+    };
   };
 
   const handlePointerMove = (event) => {
     if (!dragRef.current.id || !svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
     const [gx, gy] = zoomTransform.invert([event.clientX - rect.left, event.clientY - rect.top]);
+    if (!dragRef.current.active) {
+      const [sx, sy] = dragRef.current.startScreen;
+      const dist = Math.hypot(event.clientX - sx, event.clientY - sy);
+      if (dist > 6) {
+        dragRef.current.active = true;
+        try {
+          svgRef.current.setPointerCapture(dragRef.current.pointerId);
+        } catch (err) {
+          // ignore
+        }
+      } else {
+        return;
+      }
+    }
     if (dragRef.current.mode === "all" && dragRef.current.base) {
       const [sx, sy] = dragRef.current.offset;
       const dx = gx - sx;
@@ -258,11 +303,6 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
         ref={svgRef}
         viewBox="0 0 960 640"
         role="presentation"
-        onPointerDown={(e) => {
-          if (e.altKey) {
-            startDragAll(e);
-          }
-        }}
         onPointerMove={handlePointerMove}
         onPointerUp={stopDrag}
         onPointerCancel={stopDrag}
@@ -386,7 +426,13 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
                 key={node.id}
                 transform={`translate(${node.x},${node.y})`}
                 className={`mindmap-node ${node.type}`}
-                onPointerDown={(e) => startDrag(node, e)}
+                onPointerDown={(e) => {
+                  if (e.altKey) {
+                    startDragAll(e);
+                  } else {
+                    startDrag(node, e);
+                  }
+                }}
                 onClick={() => handleClick(node)}
                 onMouseEnter={() => {
                   if (onHover) {
