@@ -2,45 +2,45 @@
 
 :root {
   --bg-body: #000000;
-  --bg-surface: rgba(0, 0, 0, 0.85);
-  --bg-subtle: rgba(0, 0, 0, 0.7);
-  --text-strong: #c8ffc8;
-  --text-muted: #6faf6f;
-  --accent: #00ff41;
-  --accent-strong: #00ff41;
-  --accent-glow: #00ff41;
-  --border: rgba(0, 255, 65, 0.35);
+  --bg-surface: rgba(0, 0, 0, 0.9);
+  --bg-subtle: rgba(0, 0, 0, 0.8);
+  --text-strong: #e5e5e5;
+  --text-muted: #a0a0a0;
+  --accent: #c0c0c0;
+  --accent-strong: #d5d5d5;
+  --accent-glow: #c0c0c0;
+  --border: rgba(192, 192, 192, 0.25);
   --shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
   --radius: 0px;
   --gradient: none;
   --mono: "IBM Plex Mono", "Space Mono", monospace;
   --display: "IBM Plex Mono", "Space Mono", monospace;
-  --panel: rgba(0, 0, 0, 0.85);
+  --panel: rgba(0, 0, 0, 0.9);
   --panel-contrast: rgba(0, 0, 0, 0.92);
-  --grid: #001300;
+  --grid: #0a0a0a;
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
-  --matrix-rain: repeating-linear-gradient(180deg, rgba(0, 255, 140, 0.14) 0px, transparent 18px, rgba(0, 255, 140, 0.08) 36px, transparent 54px);
-  --glow: 0 0 28px rgba(57, 255, 20, 0.32), 0 0 18px rgba(0, 225, 138, 0.22);
-  --crt-lines: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 1px, transparent 2px);
-  --rain-opacity: 0.18;
+  --matrix-rain: repeating-linear-gradient(180deg, rgba(180, 180, 180, 0.18) 0px, transparent 18px, rgba(180, 180, 180, 0.1) 36px, transparent 54px);
+  --glow: none;
+  --crt-lines: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 1px, transparent 2px);
+  --rain-opacity: 0.12;
 }
 
 body.dark {
-  --bg-body: #020304;
-  --bg-surface: #07100f;
-  --bg-subtle: #0a1514;
-  --text-strong: #dfffe4;
-  --text-muted: #7fa58c;
-  --accent: #39ff14;
-  --accent-strong: #00e18a;
-  --accent-glow: #4ade80;
-  --border: rgba(0, 225, 138, 0.35);
-  --shadow: 0 30px 64px rgba(0, 0, 0, 0.72);
-  --gradient: linear-gradient(135deg, rgba(57, 255, 20, 0.42), rgba(0, 225, 138, 0.38));
-  --panel: rgba(5, 12, 10, 0.92);
-  --panel-contrast: rgba(8, 16, 14, 0.96);
-  --grid: #08110f;
-  --rain-opacity: 0.05;
+  --bg-body: #000000;
+  --bg-surface: rgba(0, 0, 0, 0.9);
+  --bg-subtle: rgba(0, 0, 0, 0.8);
+  --text-strong: #e5e5e5;
+  --text-muted: #a0a0a0;
+  --accent: #c0c0c0;
+  --accent-strong: #d5d5d5;
+  --accent-glow: #c0c0c0;
+  --border: rgba(192, 192, 192, 0.25);
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  --gradient: none;
+  --panel: rgba(0, 0, 0, 0.9);
+  --panel-contrast: rgba(0, 0, 0, 0.92);
+  --grid: #0a0a0a;
+  --rain-opacity: 0.12;
 }
 
 * {
@@ -334,6 +334,7 @@ section {
   letter-spacing: 0.04em;
   position: relative;
   isolation: isolate;
+  text-shadow: none;
 }
 
 .hero .highlight {

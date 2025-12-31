@@ -17,7 +17,7 @@ export default function MatrixRain() {
     const charset = "アカサタナハマヤラワ0123456789日田由止育宇禾水火木金土文ﾊﾐﾋﾑﾍﾎｱｶｻﾀﾅﾊﾏ";
 
     const draw = () => {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
       ctx.fillRect(0, 0, width, height);
 
       ctx.font = `${fontSize}px "IBM Plex Mono", monospace`;
@@ -28,10 +28,10 @@ export default function MatrixRain() {
         const y = drop.y * fontSize;
 
         // head
-        ctx.fillStyle = "rgba(57, 255, 20, 0.9)";
+        ctx.fillStyle = "rgba(200, 200, 200, 0.9)";
         ctx.fillText(text, x, y);
-        // tail glow
-        ctx.fillStyle = "rgba(57, 255, 20, 0.25)";
+        // tail
+        ctx.fillStyle = "rgba(200, 200, 200, 0.18)";
         ctx.fillText(text, x, y - fontSize);
 
         drop.y += drop.speed;
