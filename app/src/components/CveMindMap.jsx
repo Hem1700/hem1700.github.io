@@ -9,7 +9,7 @@ const typeColors = {
 export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, onHover, onFocusPath }) {
   const svgRef = useRef(null);
   const [zoomTransform, setZoomTransform] = useState(d3.zoomIdentity);
-  const dragRef = useRef({ id: null, offset: [0, 0], pointerId: null });
+  const dragRef = useRef({ id: null, offset: [0, 0], pointerId: null, mode: "node", base: null });
   const [positions, setPositions] = useState({});
 
   const layout = useMemo(() => {
@@ -51,6 +51,7 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
       const innerRadius = 80 + Math.min(60, cves.length * 2);
       rooms.push({
         id: `${groupId}-room`,
+        anchor: groupId,
         x: gx,
         y: gy,
         r: innerRadius + 26,
@@ -190,6 +191,26 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
       id: node.id,
       pointerId: event.pointerId,
       offset: [gx - current.x, gy - current.y],
+      mode: "node",
+      base: null,
+    };
+    svgRef.current.setPointerCapture(event.pointerId);
+  };
+
+  const startDragAll = (event) => {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const [gx, gy] = zoomTransform.invert([event.clientX - rect.left, event.clientY - rect.top]);
+    const base = {};
+    displayNodes.forEach((n) => {
+      base[n.id] = { x: n.x, y: n.y };
+    });
+    dragRef.current = {
+      id: "__all__",
+      pointerId: event.pointerId,
+      offset: [gx, gy],
+      mode: "all",
+      base,
     };
     svgRef.current.setPointerCapture(event.pointerId);
   };
@@ -208,6 +229,19 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
     if (!dragRef.current.id || !svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
     const [gx, gy] = zoomTransform.invert([event.clientX - rect.left, event.clientY - rect.top]);
+    if (dragRef.current.mode === "all" && dragRef.current.base) {
+      const [sx, sy] = dragRef.current.offset;
+      const dx = gx - sx;
+      const dy = gy - sy;
+      setPositions(() => {
+        const next = {};
+        Object.entries(dragRef.current.base).forEach(([id, pos]) => {
+          next[id] = { x: pos.x + dx, y: pos.y + dy };
+        });
+        return next;
+      });
+      return;
+    }
     const [ox, oy] = dragRef.current.offset;
     const nx = gx - ox;
     const ny = gy - oy;
@@ -224,6 +258,11 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
         ref={svgRef}
         viewBox="0 0 960 640"
         role="presentation"
+        onPointerDown={(e) => {
+          if (e.altKey) {
+            startDragAll(e);
+          }
+        }}
         onPointerMove={handlePointerMove}
         onPointerUp={stopDrag}
         onPointerCancel={stopDrag}
@@ -239,41 +278,46 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
           </filter>
         </defs>
         <g transform={`translate(${zoomTransform.x},${zoomTransform.y}) scale(${zoomTransform.k})`}>
-          {layout.rooms.map((room) => (
-            <g key={room.id} className="mindmap-room">
-              <circle
-                cx={room.x}
-                cy={room.y}
-                r={room.r}
-                fill="rgba(255,255,255,0.02)"
-                stroke="rgba(200,200,200,0.08)"
-                strokeWidth="1.2"
-              />
-              <g className="glyph-ring" transform-origin={`${room.x} ${room.y}`}>
-                {Array.from({ length: 12 }).map((_, idx) => {
-                  const a = (idx / 12) * Math.PI * 2;
-                  const r1 = room.glyphR;
-                  const r2 = r1 + 8;
-                  const x1 = room.x + Math.cos(a) * r1;
-                  const y1 = room.y + Math.sin(a) * r1;
-                  const x2 = room.x + Math.cos(a) * r2;
-                  const y2 = room.y + Math.sin(a) * r2;
-                  return (
-                    <line
-                      key={`${room.id}-tick-${idx}`}
-                      x1={x1}
-                      y1={y1}
-                      x2={x2}
-                      y2={y2}
-                      stroke="rgba(200,200,200,0.4)"
-                      strokeWidth={idx % 3 === 0 ? 1.3 : 0.7}
-                      opacity={0.7}
-                    />
-                  );
-                })}
+          {layout.rooms.map((room) => {
+            const anchorNode = nodesById.get(room.anchor || room.id);
+            const rx = anchorNode?.x ?? room.x;
+            const ry = anchorNode?.y ?? room.y;
+            return (
+              <g key={room.id} className="mindmap-room">
+                <circle
+                  cx={rx}
+                  cy={ry}
+                  r={room.r}
+                  fill="rgba(255,255,255,0.02)"
+                  stroke="rgba(200,200,200,0.08)"
+                  strokeWidth="1.2"
+                />
+                <g className="glyph-ring" transform-origin={`${rx} ${ry}`}>
+                  {Array.from({ length: 12 }).map((_, idx) => {
+                    const a = (idx / 12) * Math.PI * 2;
+                    const r1 = room.glyphR;
+                    const r2 = r1 + 8;
+                    const x1 = rx + Math.cos(a) * r1;
+                    const y1 = ry + Math.sin(a) * r1;
+                    const x2 = rx + Math.cos(a) * r2;
+                    const y2 = ry + Math.sin(a) * r2;
+                    return (
+                      <line
+                        key={`${room.id}-tick-${idx}`}
+                        x1={x1}
+                        y1={y1}
+                        x2={x2}
+                        y2={y2}
+                        stroke="rgba(200,200,200,0.4)"
+                        strokeWidth={idx % 3 === 0 ? 1.3 : 0.7}
+                        opacity={0.7}
+                      />
+                    );
+                  })}
+                </g>
               </g>
-            </g>
-          ))}
+            );
+          })}
           {threadLinksYear.map((thread, idx) => {
             const source = nodesById.get(thread.source);
             const target = nodesById.get(thread.target);
