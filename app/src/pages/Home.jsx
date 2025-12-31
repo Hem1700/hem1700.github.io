@@ -12,7 +12,7 @@ bio: ${hero.blurb}`}
         </pre>
       </TerminalSection>
 
-      <TerminalSection title="experience">
+      <TerminalSection title="experience" id="experience">
         <ul className="terminal-list">
           {experience.map((item) => (
             <li key={`${item.role}-${item.range}`}>
@@ -22,7 +22,7 @@ bio: ${hero.blurb}`}
         </ul>
       </TerminalSection>
 
-      <TerminalSection title="about">
+      <TerminalSection title="about" id="about">
         <p className="terminal-text">{about.text}</p>
         <div className="terminal-list inline">
           {socialLinks.map((link) => (
