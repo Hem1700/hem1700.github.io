@@ -9,6 +9,8 @@ const typeColors = {
 export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, onHover, onFocusPath }) {
   const svgRef = useRef(null);
   const [zoomTransform, setZoomTransform] = useState(d3.zoomIdentity);
+  const dragRef = useRef({ id: null, offset: [0, 0], pointerId: null });
+  const [positions, setPositions] = useState({});
 
   const layout = useMemo(() => {
     if (!data?.children?.length) {
@@ -75,15 +77,32 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
     return { nodes, links, rooms, center, width, height };
   }, [data]);
 
+  useEffect(() => {
+    const next = {};
+    layout.nodes.forEach((n) => {
+      next[n.id] = { x: n.x, y: n.y };
+    });
+    setPositions(next);
+  }, [layout]);
+
+  const displayNodes = useMemo(
+    () =>
+      layout.nodes.map((n) => {
+        const override = positions[n.id];
+        return override ? { ...n, x: override.x, y: override.y } : n;
+      }),
+    [layout.nodes, positions]
+  );
+
   const nodesById = useMemo(() => {
     const m = new Map();
-    layout.nodes.forEach((n) => m.set(n.id, n));
+    displayNodes.forEach((n) => m.set(n.id, n));
     return m;
-  }, [layout.nodes]);
+  }, [displayNodes]);
 
   const buildThreads = (groupBy) => {
     const buckets = new Map();
-    layout.nodes
+    displayNodes
       .filter((n) => n.type === "cve")
       .forEach((n) => {
         const key = groupBy(n);
@@ -123,8 +142,8 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
     return threads;
   };
 
-  const threadLinksYear = useMemo(() => buildThreads((n) => n.info?.year || "Unknown"), [layout.nodes, layout.center]);
-  const threadLinksSeverity = useMemo(() => buildThreads((n) => n.info?.severity || "Info"), [layout.nodes, layout.center]);
+  const threadLinksYear = useMemo(() => buildThreads((n) => n.info?.year || "Unknown"), [displayNodes, layout.center]);
+  const threadLinksSeverity = useMemo(() => buildThreads((n) => n.info?.severity || "Info"), [displayNodes, layout.center]);
 
   useEffect(() => {
     if (!highlightId || !data) return;
@@ -162,9 +181,54 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
     }
   };
 
+  const startDrag = (node, event) => {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const [gx, gy] = zoomTransform.invert([event.clientX - rect.left, event.clientY - rect.top]);
+    const current = nodesById.get(node.id) || node;
+    dragRef.current = {
+      id: node.id,
+      pointerId: event.pointerId,
+      offset: [gx - current.x, gy - current.y],
+    };
+    svgRef.current.setPointerCapture(event.pointerId);
+  };
+
+  const stopDrag = (event) => {
+    if (!dragRef.current.id || !svgRef.current) return;
+    try {
+      svgRef.current.releasePointerCapture(dragRef.current.pointerId);
+    } catch (err) {
+      // ignore if already released
+    }
+    dragRef.current = { id: null, offset: [0, 0], pointerId: null };
+  };
+
+  const handlePointerMove = (event) => {
+    if (!dragRef.current.id || !svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const [gx, gy] = zoomTransform.invert([event.clientX - rect.left, event.clientY - rect.top]);
+    const [ox, oy] = dragRef.current.offset;
+    const nx = gx - ox;
+    const ny = gy - oy;
+    const nodeId = dragRef.current.id;
+    setPositions((prev) => ({
+      ...prev,
+      [nodeId]: { x: nx, y: ny },
+    }));
+  };
+
   return (
     <div className="cve-mindmap">
-      <svg ref={svgRef} viewBox="0 0 960 640" role="presentation">
+      <svg
+        ref={svgRef}
+        viewBox="0 0 960 640"
+        role="presentation"
+        onPointerMove={handlePointerMove}
+        onPointerUp={stopDrag}
+        onPointerCancel={stopDrag}
+        onPointerLeave={stopDrag}
+      >
         <defs>
           <filter id="glow">
             <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
@@ -269,7 +333,7 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
               strokeWidth={hoveredId && (link.source === hoveredId || link.target === hoveredId) ? 2.2 : 1}
             />
           ))}
-          {layout.nodes.map((node) => {
+          {displayNodes.map((node) => {
             const r = node.type === "cve" ? 11 : 18;
             const isHighlight = highlightId && node.id?.toLowerCase() === highlightId.toLowerCase();
             const fill = typeColors[node.type] || "#d5d5d5";
@@ -278,6 +342,7 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
                 key={node.id}
                 transform={`translate(${node.x},${node.y})`}
                 className={`mindmap-node ${node.type}`}
+                onPointerDown={(e) => startDrag(node, e)}
                 onClick={() => handleClick(node)}
                 onMouseEnter={() => {
                   if (onHover) {
