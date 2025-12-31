@@ -5,7 +5,6 @@ import { blogs } from "../data/content";
 import { buildBlogCveHierarchy, cveMapSummary } from "../data/cveMapData";
 
 export default function CveMapPage() {
-  const searchRef = useRef(null);
   const [groupMode, setGroupMode] = useState("year");
   const blogCves = useMemo(() => {
     const isCveLike = (title) => title.toUpperCase().includes("CVE");
@@ -39,7 +38,6 @@ export default function CveMapPage() {
   const [focusPath, setFocusPath] = useState([]);
   const [resetKey, setResetKey] = useState(0);
   const [hovered, setHovered] = useState(null);
-  const [search, setSearch] = useState("");
   const [hoverPreview, setHoverPreview] = useState(null);
   const [highlightId, setHighlightId] = useState("");
 
@@ -52,32 +50,10 @@ export default function CveMapPage() {
     setSelectedCve(null);
     setFocusPath([]);
     setResetKey((k) => k + 1);
-    setSearch("");
     setHighlightId("");
     setFocusPath([]);
     setGroupMode("year");
   };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!search.trim()) return;
-    const target = blogCves.find((c) => c.id.toLowerCase() === search.trim().toLowerCase());
-    if (target) {
-      setSelectedCve(target);
-      setHighlightId(target.id);
-    } else setHighlightId("");
-  };
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "/" && document.activeElement?.tagName !== "INPUT") {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
 
   return (
     <div className="cve-fullscreen">
@@ -89,21 +65,11 @@ export default function CveMapPage() {
         <p className="mindmap-hint">
           Drag to explore, scroll/pinch to zoom, click nodes to expand/collapse, click CVEs for details.
         </p>
-        <form className="mindmap-search" onSubmit={handleSearch}>
-          <input
-            ref={searchRef}
-            type="text"
-            placeholder="Search CVE ID (e.g., CVE-2025-12020)"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button type="submit" className="button ghost">
-            Highlight
-          </button>
+        <div className="mindmap-actions">
           <button type="button" className="button ghost" onClick={handleReset}>
             Reset
           </button>
-        </form>
+        </div>
         <div className="mindmap-toggle">
           <span className="pill">Group by</span>
           <button
