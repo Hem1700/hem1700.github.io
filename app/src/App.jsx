@@ -15,7 +15,7 @@ import MatrixRain from "./components/MatrixRain";
 import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
-  const { theme, toggleTheme, glowOn, toggleGlow } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const [scanlinesOn, setScanlinesOn] = useState(true);
   const [noiseOn, setNoiseOn] = useState(true);
 
@@ -93,7 +93,7 @@ export default function App() {
       <div className="app-shell">
         <MatrixRain />
         <ScrollProgress />
-        <Navbar onToggleTheme={toggleTheme} onToggleGlow={toggleGlow} glowOn={glowOn} theme={theme} />
+        <Navbar onToggleTheme={toggleTheme} theme={theme} />
         <main>
           <Routes>
             <Route path="/" element={<HomePage />} />

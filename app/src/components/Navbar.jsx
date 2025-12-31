@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, Link } from "react-router-dom";
 
-export default function Navbar({ onToggleTheme, onToggleGlow, glowOn, theme }) {
+export default function Navbar({ onToggleTheme, theme }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -70,14 +70,9 @@ export default function Navbar({ onToggleTheme, onToggleGlow, glowOn, theme }) {
             </a>
           </li>
         </ul>
-        <div className="nav-actions">
-          <button className="theme-toggle" id="themeToggle" onClick={onToggleGlow}>
-            HUD Glow: {glowOn ? "On" : "Off"}
-          </button>
-          <button className="theme-toggle" id="themeTheme" onClick={onToggleTheme}>
-            Theme: {theme === "dark" ? "Dark" : "Light"}
-          </button>
-        </div>
+        <button className="theme-toggle" id="themeTheme" onClick={onToggleTheme}>
+          Theme: {theme === "dark" ? "Dark" : "Light"}
+        </button>
       </div>
     </nav>
   );
