@@ -35,15 +35,25 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
     const height = 640;
     const center = { x: width / 2, y: height / 2 };
     const groups = data.children;
-    const groupRadius = Math.min(width, height) / 2 - 120;
     const nodes = [];
     const links = [];
     const rooms = [];
 
+    const cols = Math.max(2, Math.ceil(Math.sqrt(groups.length)));
+    const rows = Math.ceil(groups.length / cols);
+    const spacingX = width / (cols + 1);
+    const spacingY = height / (rows + 1);
+
+    const jitter = (i, magnitude) => {
+      const s = Math.sin(i * 12.9898) * 43758.5453;
+      return (s - Math.floor(s) - 0.5) * magnitude;
+    };
+
     groups.forEach((group, idx) => {
-      const angle = (idx / groups.length) * Math.PI * 2;
-      const gx = center.x + Math.cos(angle) * groupRadius;
-      const gy = center.y + Math.sin(angle) * groupRadius;
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      const gx = spacingX * (col + 1) + jitter(idx, spacingX * 0.18);
+      const gy = spacingY * (row + 1) + jitter(idx + 7, spacingY * 0.22);
       const groupId = group.id || group.name || `group-${idx}`;
       const groupNode = {
         id: groupId,
@@ -56,7 +66,7 @@ export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, 
       nodes.push(groupNode);
 
       const cves = group.children || [];
-      const innerRadius = 80 + Math.min(60, cves.length * 2);
+      const innerRadius = 70 + Math.min(70, cves.length * 3);
       rooms.push({
         id: `${groupId}-room`,
         anchor: groupId,
