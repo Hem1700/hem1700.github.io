@@ -70,6 +70,9 @@ export default function CveMapPage() {
 
   return (
     <div className="cve-fullscreen">
+      <div className="mindmap-badge" aria-hidden="true">
+        <span className="badge-bracket">[</span> CVE MIND MAP <span className="badge-bracket">]</span>
+      </div>
       <div className="mindmap-stage mindmap-shell">
         <div className="mode-icon-bar" aria-hidden="true">
           <button

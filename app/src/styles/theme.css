@@ -1834,6 +1834,23 @@ article {
   animation: drift 22s ease-in-out infinite alternate;
 }
 
+.mindmap-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  color: rgba(220, 220, 220, 0.7);
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.6));
+}
+
+.mindmap-badge .badge-bracket {
+  color: rgba(255, 255, 255, 0.4);
+}
+
 .mindmap-stage {
   padding: 4.5rem 1rem 2rem;
   position: relative;
