@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CveDetailDrawer from "../components/CveDetailDrawer";
 import CveMindMap from "../components/CveMindMap";
 import { blogs } from "../data/content";
 import { buildBlogCveHierarchy, cveMapSummary } from "../data/cveMapData";
 
 export default function CveMapPage() {
+  const searchRef = useRef(null);
+  const [groupMode, setGroupMode] = useState("year");
   const blogCves = useMemo(() => {
     const isCveLike = (title) => title.toUpperCase().includes("CVE");
     const parseYear = (dateStr) => {
@@ -32,12 +34,13 @@ export default function CveMapPage() {
       });
   }, []);
 
-  const data = useMemo(() => buildBlogCveHierarchy(blogCves), [blogCves]);
+  const data = useMemo(() => buildBlogCveHierarchy(blogCves, groupMode), [blogCves, groupMode]);
   const [selectedCve, setSelectedCve] = useState(null);
   const [focusPath, setFocusPath] = useState([]);
   const [resetKey, setResetKey] = useState(0);
   const [hovered, setHovered] = useState(null);
   const [search, setSearch] = useState("");
+  const [hoverPreview, setHoverPreview] = useState(null);
   const [highlightId, setHighlightId] = useState("");
 
   const handleSelectCve = (cve) => {
@@ -51,6 +54,8 @@ export default function CveMapPage() {
     setResetKey((k) => k + 1);
     setSearch("");
     setHighlightId("");
+    setFocusPath([]);
+    setGroupMode("year");
   };
 
   const handleSearch = (e) => {
@@ -62,6 +67,17 @@ export default function CveMapPage() {
       setHighlightId(target.id);
     } else setHighlightId("");
   };
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <div className="cve-fullscreen">
@@ -75,6 +91,7 @@ export default function CveMapPage() {
         </p>
         <form className="mindmap-search" onSubmit={handleSearch}>
           <input
+            ref={searchRef}
             type="text"
             placeholder="Search CVE ID (e.g., CVE-2025-12020)"
             value={search}
@@ -87,6 +104,23 @@ export default function CveMapPage() {
             Reset
           </button>
         </form>
+        <div className="mindmap-toggle">
+          <span className="pill">Group by</span>
+          <button
+            type="button"
+            className={`button ghost ${groupMode === "year" ? "active" : ""}`}
+            onClick={() => setGroupMode("year")}
+          >
+            Year
+          </button>
+          <button
+            type="button"
+            className={`button ghost ${groupMode === "severity" ? "active" : ""}`}
+            onClick={() => setGroupMode("severity")}
+          >
+            Severity
+          </button>
+        </div>
         {hovered && (
           <div className="mindmap-hover">
             <div className="hover-title">{hovered.name}</div>
@@ -118,8 +152,35 @@ export default function CveMapPage() {
             onSelectCve={handleSelectCve}
             onFocusPath={setFocusPath}
             highlightId={highlightId}
-            onHover={setHovered}
+            onHover={(payload) => {
+              setHovered(payload?.node || null);
+              if (payload && payload.screen) {
+                setHoverPreview({
+                  name: payload.node.name,
+                  title: payload.node.info?.title || payload.node.name,
+                  href: payload.node.info?.href,
+                  x: payload.screen.x,
+                  y: payload.screen.y,
+                });
+              } else {
+                setHoverPreview(null);
+              }
+            }}
+            hoveredId={hovered?.id}
           />
+          {hoverPreview && (
+            <div
+              className="mindmap-preview"
+              style={{ left: hoverPreview.x, top: hoverPreview.y }}
+            >
+              <div className="preview-title">{hoverPreview.title}</div>
+              {hoverPreview.href ? (
+                <a href={hoverPreview.href} target="_blank" rel="noreferrer">
+                  open blog
+                </a>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
       <CveDetailDrawer cve={selectedCve} onClose={() => setSelectedCve(null)} />

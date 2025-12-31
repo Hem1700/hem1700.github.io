@@ -1846,6 +1846,13 @@ article {
   flex-wrap: wrap;
 }
 
+.mindmap-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .mindmap-hint {
   color: var(--text-muted);
   font-size: 0.95rem;
@@ -1888,6 +1895,7 @@ article {
 
 .mindmap-canvas {
   min-height: 78vh;
+  position: relative;
 }
 
 .mindmap-hover .hover-meta {
@@ -1895,6 +1903,22 @@ article {
   gap: 0.35rem;
   flex-wrap: wrap;
   margin-top: 0.35rem;
+}
+
+.mindmap-preview {
+  position: absolute;
+  transform: translate(-50%, -120%);
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  color: var(--text-strong);
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+.mindmap-preview .preview-title {
+  font-weight: 600;
 }
 
 .cve-mindmap {

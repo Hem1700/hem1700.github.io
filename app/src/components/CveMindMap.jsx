@@ -57,7 +57,7 @@ function flattenHierarchy(root, expanded) {
   return { nodes, links };
 }
 
-export default function CveMindMap({ data, onSelectCve, highlightId, onHover, onFocusPath }) {
+export default function CveMindMap({ data, onSelectCve, highlightId, hoveredId, onHover, onFocusPath }) {
   const svgRef = useRef(null);
   const [expanded, setExpanded] = useState(new Set());
   const [positions, setPositions] = useState({ nodes: [], links: [] });
@@ -183,7 +183,7 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
               x2={nodesById.get(link.target)?.x}
               y2={nodesById.get(link.target)?.y}
               stroke="rgba(0, 255, 65, 0.35)"
-              strokeWidth={1}
+              strokeWidth={hoveredId && (link.source.id === hoveredId || link.target.id === hoveredId) ? 2 : 1}
               strokeDasharray={link.target.type === "collapsed" ? "4 4" : "0"}
             />
           ))}
@@ -197,7 +197,19 @@ export default function CveMindMap({ data, onSelectCve, highlightId, onHover, on
                 transform={`translate(${node.x},${node.y})`}
                 className={`mindmap-node ${node.type}`}
                 onClick={() => handleClick(node)}
-                onMouseEnter={() => onHover?.(node)}
+                onMouseEnter={() => {
+                  if (onHover) {
+                    const [sx, sy] = zoomTransform.apply([node.x, node.y]);
+                    const rect = svgRef.current?.getBoundingClientRect();
+                    onHover({
+                      node,
+                      screen: {
+                        x: rect ? rect.left + sx : sx,
+                        y: rect ? rect.top + sy : sy,
+                      },
+                    });
+                  }
+                }}
                 onMouseLeave={() => onHover?.(null)}
                 style={{ cursor: "pointer" }}
               >

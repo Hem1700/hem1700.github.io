@@ -255,23 +255,32 @@ export const cveMapSummary = {
 };
 
 // Build a simple hierarchy from CVE-like entries (id, title, year, severity, href)
-export function buildBlogCveHierarchy(entries = []) {
-  const groupedByYear = entries.reduce((acc, entry) => {
-    const year = entry.year || "Unknown";
-    if (!acc[year]) acc[year] = [];
-    acc[year].push(entry);
+export function buildBlogCveHierarchy(entries = [], mode = "year") {
+  const keyFor = (entry) => {
+    if (mode === "severity") return entry.severity || "Info";
+    return entry.year || "Unknown";
+  };
+
+  const grouped = entries.reduce((acc, entry) => {
+    const key = keyFor(entry);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(entry);
     return acc;
   }, {});
 
+  const sorter = mode === "severity"
+    ? (a, b) => a.localeCompare(b)
+    : (a, b) => b.localeCompare(a);
+
   return {
     name: "CVE Map",
-    children: Object.keys(groupedByYear)
-      .sort((a, b) => b.localeCompare(a))
-      .map((year) => ({
-        id: `year-${year}`,
-        name: year,
+    children: Object.keys(grouped)
+      .sort(sorter)
+      .map((key) => ({
+        id: `${mode}-${key}`,
+        name: key,
         nodeType: "cluster",
-        children: groupedByYear[year].map((cve) => ({
+        children: grouped[key].map((cve) => ({
           ...cve,
           name: cve.id || cve.title,
           value: 1,
