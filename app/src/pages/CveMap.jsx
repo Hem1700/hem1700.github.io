@@ -57,60 +57,7 @@ export default function CveMapPage() {
 
   return (
     <div className="cve-fullscreen">
-      <div className="mindmap-controls">
-        <div className="mindmap-path">
-          <p className="pill">Mind Map</p>
-          <span className="breadcrumb">{focusPath.length ? focusPath.join(" / ") : "CVE Map"}</span>
-        </div>
-        <p className="mindmap-hint">
-          Drag to explore, scroll/pinch to zoom, click nodes to expand/collapse, click CVEs for details.
-        </p>
-        <div className="mindmap-actions">
-          <button type="button" className="button ghost" onClick={handleReset}>
-            Reset
-          </button>
-        </div>
-        <div className="mindmap-toggle">
-          <span className="pill">Group by</span>
-          <button
-            type="button"
-            className={`button ghost ${groupMode === "year" ? "active" : ""}`}
-            onClick={() => setGroupMode("year")}
-          >
-            Year
-          </button>
-          <button
-            type="button"
-            className={`button ghost ${groupMode === "severity" ? "active" : ""}`}
-            onClick={() => setGroupMode("severity")}
-          >
-            Severity
-          </button>
-        </div>
-        {hovered && (
-          <div className="mindmap-hover">
-            <div className="hover-title">{hovered.name}</div>
-            <div className="hover-meta">
-              <span className="pill">{hovered.type}</span>
-              {hovered.metrics?.total ? <span className="pill">Total: {hovered.metrics.total}</span> : null}
-              {hovered.metrics?.kev ? <span className="pill">KEV: {hovered.metrics.kev}</span> : null}
-              {hovered.metrics?.maxCvss ? <span className="pill">Max CVSS: {hovered.metrics.maxCvss}</span> : null}
-              {hovered.metrics?.latestYear ? <span className="pill">Latest: {hovered.metrics.latestYear}</span> : null}
-              {hovered.info?.severity ? <span className="pill">Severity: {hovered.info.severity}</span> : null}
-              {hovered.info?.cvss ? <span className="pill">CVSS: {hovered.info.cvss}</span> : null}
-              {hovered.info?.year ? <span className="pill">Year: {hovered.info.year}</span> : null}
-              {hovered.info?.kev ? <span className="pill kev">KEV</span> : null}
-            </div>
-          </div>
-        )}
-      </div>
       <div className="mindmap-stage mindmap-shell">
-        <header className="blog-welcome-section compact overlay">
-          <div className="container text-center">
-            <h1>{cveMapSummary.headline}</h1>
-            <p className="blog-subtitle">{cveMapSummary.datasetHint}</p>
-          </div>
-        </header>
         <div className="mindmap-canvas">
           <CveMindMap
             key={resetKey}
