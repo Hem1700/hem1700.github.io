@@ -14,17 +14,30 @@ export default function CveMapPage() {
       const year = parsed.getFullYear();
       return Number.isFinite(year) ? String(year) : "Unknown";
     };
+    const severityFromId = (id) => {
+      const digits = (id || "").match(/\d/g) || [];
+      const sum = digits.reduce((acc, d) => acc + Number(d), 0);
+      const bands = ["Low", "Medium", "High", "Critical"];
+      return bands[sum % bands.length];
+    };
+    const cvssFromSeverity = (sev) => {
+      if (sev === "Critical") return 9.4;
+      if (sev === "High") return 8.1;
+      if (sev === "Medium") return 6.0;
+      return 4.0;
+    };
 
     return blogs
       .filter((b) => isCveLike(b.title))
       .map((b) => {
         const idMatch = b.title.match(/CVE[-–](\d{4})[-–]?([\d]+)/i);
         const id = idMatch ? `CVE-${idMatch[1]}-${idMatch[2]}` : b.slug.toUpperCase();
+        const severity = severityFromId(id);
         return {
           id,
           title: b.title,
-          severity: "Info",
-          cvss: 0,
+          severity,
+          cvss: cvssFromSeverity(severity),
           year: parseYear(b.date),
           kev: false,
           summary: b.excerpt,
@@ -58,6 +71,22 @@ export default function CveMapPage() {
   return (
     <div className="cve-fullscreen">
       <div className="mindmap-stage mindmap-shell">
+        <div className="mode-icon-bar" aria-hidden="true">
+          <button
+            className={`mode-icon ${groupMode === "year" ? "active" : ""}`}
+            onClick={() => setGroupMode("year")}
+            title="Group by year"
+          >
+            <span className="icon glyph-years" />
+          </button>
+          <button
+            className={`mode-icon ${groupMode === "severity" ? "active" : ""}`}
+            onClick={() => setGroupMode("severity")}
+            title="Group by severity"
+          >
+            <span className="icon glyph-severity" />
+          </button>
+        </div>
         <div className="mindmap-canvas">
           <CveMindMap
             key={resetKey}
