@@ -69,66 +69,77 @@ export default function CveMapPage() {
   };
 
   return (
-    <div className="cve-fullscreen">
-      <div className="mindmap-watermark" aria-hidden="true">
-        CVE // MIND MAP
-      </div>
-      <div className="mindmap-stage mindmap-shell">
-        <div className="mode-icon-bar" aria-hidden="true">
-          <button
-            className={`mode-icon ${groupMode === "year" ? "active" : ""}`}
-            onClick={() => setGroupMode("year")}
-            title="Group by year"
-          >
-            <span className="icon glyph-years" />
-          </button>
-          <button
-            className={`mode-icon ${groupMode === "severity" ? "active" : ""}`}
-            onClick={() => setGroupMode("severity")}
-            title="Group by severity"
-          >
-            <span className="icon glyph-severity" />
-          </button>
-        </div>
-        <div className="mindmap-canvas">
-          <CveMindMap
-            key={resetKey}
-            data={data}
-            onSelectCve={handleSelectCve}
-            onFocusPath={setFocusPath}
-            highlightId={highlightId}
-            onHover={(payload) => {
-              setHovered(payload?.node || null);
-              if (payload && payload.screen) {
-                setHoverPreview({
-                  name: payload.node.name,
-                  title: payload.node.info?.title || payload.node.name,
-                  href: payload.node.info?.href,
-                  x: payload.screen.x,
-                  y: payload.screen.y,
-                });
-              } else {
-                setHoverPreview(null);
-              }
-            }}
-            hoveredId={hovered?.id}
-          />
-          {hoverPreview && (
-            <div
-              className="mindmap-preview"
-              style={{ left: hoverPreview.x, top: hoverPreview.y }}
-            >
-              <div className="preview-title">{hoverPreview.title}</div>
-              {hoverPreview.href ? (
-                <a href={hoverPreview.href} target="_blank" rel="noreferrer">
-                  open blog
-                </a>
-              ) : null}
+    <>
+      <section className="section">
+        <div className="container">
+          <div className="section-header">
+            <div>
+              <div className="eyebrow">CVE map</div>
+              <h2 className="section-title">Mind map explorer</h2>
+              <p className="section-subtitle">{cveMapSummary.headline}</p>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      </section>
+      <section className="section">
+        <div className="container cve-layout">
+          <div className="cve-shell">
+            <div className="mode-icon-bar" aria-hidden="true">
+              <button
+                className={`mode-icon ${groupMode === "year" ? "active" : ""}`}
+                onClick={() => setGroupMode("year")}
+                title="Group by year"
+                type="button"
+              >
+                <span className="icon glyph-years" />
+              </button>
+              <button
+                className={`mode-icon ${groupMode === "severity" ? "active" : ""}`}
+                onClick={() => setGroupMode("severity")}
+                title="Group by severity"
+                type="button"
+              >
+                <span className="icon glyph-severity" />
+              </button>
+            </div>
+            <div className="mindmap-canvas">
+              <CveMindMap
+                key={resetKey}
+                data={data}
+                onSelectCve={handleSelectCve}
+                onFocusPath={setFocusPath}
+                highlightId={highlightId}
+                onHover={(payload) => {
+                  setHovered(payload?.node || null);
+                  if (payload && payload.screen) {
+                    setHoverPreview({
+                      name: payload.node.name,
+                      title: payload.node.info?.title || payload.node.name,
+                      href: payload.node.info?.href,
+                      x: payload.screen.x,
+                      y: payload.screen.y,
+                    });
+                  } else {
+                    setHoverPreview(null);
+                  }
+                }}
+                hoveredId={hovered?.id}
+              />
+              {hoverPreview && (
+                <div className="mindmap-preview" style={{ left: hoverPreview.x, top: hoverPreview.y }}>
+                  <div className="preview-title">{hoverPreview.title}</div>
+                  {hoverPreview.href ? (
+                    <a href={hoverPreview.href} target="_blank" rel="noreferrer">
+                      open blog
+                    </a>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
       <CveDetailDrawer cve={selectedCve} onClose={() => setSelectedCve(null)} />
-    </div>
+    </>
   );
 }

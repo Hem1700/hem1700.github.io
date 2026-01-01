@@ -127,11 +127,11 @@ export default function Experience({ items }) {
   const [sectionRef, sectionVisible] = useReveal(0.1);
 
   return (
-    <section className={`experience reveal ${sectionVisible ? "visible" : ""}`} id="experience" ref={sectionRef}>
+    <section className={`section experience reveal ${sectionVisible ? "visible" : ""}`} id="experience" ref={sectionRef}>
       <div className="container">
         <div className="section-header">
           <div>
-            <h2>EXPERIENCE</h2>
+            <h2 className="section-title">Experience</h2>
             <p className="section-subtitle">Field reports from building and breaking systems.</p>
           </div>
         </div>

@@ -1,20 +1,21 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import TerminalSection from "../components/TerminalSection";
-import { blogs } from "../data/content";
+import BlogIntro from "../components/BlogIntro";
+import BlogList from "../components/BlogList";
+import BlogSearch from "../components/BlogSearch";
+import { blogIntro, blogs } from "../data/content";
 
 export default function BlogsPage() {
+  const [filteredPosts, setFilteredPosts] = useState(blogs);
+
   return (
-    <div className="terminal-feed">
-      <TerminalSection title="blogs">
-        <ul className="terminal-list">
-          {blogs.map((b) => (
-            <li key={b.slug}>
-              <Link to={`/blog/${b.slug}`}>{b.title}</Link> — {b.excerpt}
-            </li>
-          ))}
-        </ul>
-      </TerminalSection>
-    </div>
+    <>
+      <BlogIntro data={blogIntro} />
+      <section className="section">
+        <div className="container">
+          <BlogSearch posts={blogs} onFilter={setFilteredPosts} />
+          <BlogList posts={filteredPosts} wrap={false} />
+        </div>
+      </section>
+    </>
   );
 }

@@ -1,19 +1,19 @@
 import Projects from "../components/Projects";
-import TerminalSection from "../components/TerminalSection";
 import { projects } from "../data/content";
 
 export default function ProjectsPage() {
   return (
-    <div className="terminal-feed">
-      <TerminalSection title="projects">
-        <ul className="terminal-list">
-          {projects.map((p) => (
-            <li key={p.title}>
-              {p.title} — {p.description}
-            </li>
-          ))}
-        </ul>
-      </TerminalSection>
-    </div>
+    <section className="section">
+      <div className="container">
+        <div className="section-header">
+          <div>
+            <div className="eyebrow">Featured work</div>
+            <h2 className="section-title">Projects</h2>
+            <p className="section-subtitle">Deployment dossiers and offensive prototypes.</p>
+          </div>
+        </div>
+        <Projects items={projects} showHeader={false} showViewAll={false} showFilters showFeatured wrap={false} />
+      </div>
+    </section>
   );
 }

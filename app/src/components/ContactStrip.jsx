@@ -17,9 +17,11 @@ export default function ContactStrip() {
     <section className="contact-strip" id="contact">
       <div className="container contact-grid">
         <div>
-          <p className="pill">Let’s talk</p>
-          <h2>Signal received. Drop a note and let’s build secure systems.</h2>
-          <p className="contact-blurb">Let’s connect to collaborate on security engineering or privacy-focused initiatives.</p>
+          <div className="eyebrow">Lets talk</div>
+          <h2 className="section-title">Signal received. Lets build secure systems.</h2>
+          <p className="contact-blurb">
+            Ready to collaborate on security engineering, privacy, or threat research? Drop a note and we will map the next move.
+          </p>
           {copied && <p className="contact-blurb">Copied. Channel armed with end-to-end noise.</p>}
         </div>
         <div className="contact-actions">

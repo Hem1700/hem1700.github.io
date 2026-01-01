@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-export default function BlogSearch({ posts, onFilter }) {
+export default function BlogSearch({ posts = [], onFilter }) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -8,9 +8,12 @@ export default function BlogSearch({ posts, onFilter }) {
     return posts.filter((post) => post.title.toLowerCase().includes(query.toLowerCase()) || post.excerpt.toLowerCase().includes(query.toLowerCase()));
   }, [query, posts]);
 
+  useEffect(() => {
+    onFilter?.(filtered);
+  }, [filtered, onFilter]);
+
   const handleChange = (e) => {
     setQuery(e.target.value);
-    onFilter(filtered);
   };
 
   return (

@@ -4,7 +4,7 @@ import CertBadge from "./CertBadge";
 
 const domains = ["All", "Security", "Cloud", "Networking"];
 
-export default function Certifications({ items, showViewAll = false, showHeader = true }) {
+export default function Certifications({ items = [], showViewAll = false, showHeader = true, wrap = true }) {
   const [filter, setFilter] = useState("All");
   const [page, setPage] = useState(1);
   const pageSize = 5;
@@ -20,70 +20,83 @@ export default function Certifications({ items, showViewAll = false, showHeader 
     setPage(1);
   };
 
-  return (
-    <section className="certifications" id="certs">
-      <div className="container">
-        {showHeader && (
-          <div className="section-header">
-            <div>
-              <h2>CERTIFICATIONS</h2>
-            </div>
-            {showViewAll && (
-              <div className="section-actions">
-                <Link className="link-button" to="/certifications">
-                  View all certifications
-                </Link>
-              </div>
-            )}
+  const content = (
+    <>
+      {showHeader && (
+        <div className="section-header">
+          <div>
+            <h2 className="section-title">Certifications</h2>
           </div>
-        )}
-        {showHeader && (
-          <div className="filter-chips">
-            {domains.map((domain) => (
-              <button key={domain} className={`chip ${domain === filter ? "active" : ""}`} type="button" onClick={() => handleFilter(domain)}>
-                {domain}
-              </button>
-            ))}
-          </div>
-        )}
-        <div className="cert-list">
-          {pageItems.map((item) => (
-            <div className="cert-row" key={item.title}>
-              <div className="cert-row-meta">
-                <div className="cert-row-badge">
-                  <CertBadge issuer={item.issuer} />
-                </div>
-                <div className="cert-row-tags">
-                  <span className="pill">{item.domain}</span>
-                  <span className="pill">{item.issuer}</span>
-                </div>
-              </div>
-              <div className="cert-row-body">
-                <div className="cert-row-title">{item.title}</div>
-                <p className="cert-row-details">{item.details}</p>
-              </div>
-              <div className="cert-row-cta">
-                <a href={item.href} className="view-credentials" target="_blank" rel="noreferrer">
-                  View
-                </a>
-              </div>
+          {showViewAll && (
+            <div className="section-actions">
+              <Link className="link-button" to="/certifications">
+                View all certifications
+              </Link>
             </div>
+          )}
+        </div>
+      )}
+      {showHeader && (
+        <div className="filter-chips">
+          {domains.map((domain) => (
+            <button
+              key={domain}
+              className={`chip ${domain === filter ? "active" : ""}`}
+              type="button"
+              onClick={() => handleFilter(domain)}
+            >
+              {domain}
+            </button>
           ))}
         </div>
-        {totalPages > 1 && (
-          <div className="blog-pagination project-pagination">
-            <button className="pill" disabled={page === 1} onClick={() => setPage(Math.max(1, page - 1))}>
-              Previous
-            </button>
-            <span className="blog-page-indicator">
-              Page {page} of {totalPages}
-            </span>
-            <button className="pill" disabled={page === totalPages} onClick={() => setPage(Math.min(totalPages, page + 1))}>
-              Next
-            </button>
+      )}
+      <div className="cert-list">
+        {pageItems.map((item) => (
+          <div className="cert-row" key={item.title}>
+            <div className="cert-row-meta">
+              <div className="cert-row-badge">
+                <CertBadge issuer={item.issuer} />
+              </div>
+              <div className="cert-row-tags">
+                <span className="pill">{item.domain}</span>
+                <span className="pill">{item.issuer}</span>
+              </div>
+            </div>
+            <div className="cert-row-body">
+              <div className="cert-row-title">{item.title}</div>
+              <p className="cert-row-details">{item.details}</p>
+            </div>
+            <div className="cert-row-cta">
+              <a href={item.href} className="view-credentials" target="_blank" rel="noreferrer">
+                View
+              </a>
+            </div>
           </div>
-        )}
+        ))}
       </div>
+      {totalPages > 1 && (
+        <div className="blog-pagination project-pagination">
+          <button className="pill" disabled={page === 1} onClick={() => setPage(Math.max(1, page - 1))} type="button">
+            Previous
+          </button>
+          <span className="blog-page-indicator">
+            Page {page} of {totalPages}
+          </span>
+          <button className="pill" disabled={page === totalPages} onClick={() => setPage(Math.min(totalPages, page + 1))} type="button">
+            Next
+          </button>
+        </div>
+      )}
+    </>
+  );
+
+  if (!wrap) {
+    return <div className="certifications">{content}</div>;
+  }
+
+  return (
+    <section className="section certifications" id="certs">
+      <div className="container">{content}</div>
     </section>
   );
 }

@@ -1,22 +1,19 @@
-import TerminalSection from "../components/TerminalSection";
+import Certifications from "../components/Certifications";
 import { certifications } from "../data/content";
 
 export default function CertificationsPage() {
   return (
-    <div className="terminal-feed">
-      <TerminalSection title="certifications">
-        <ul className="terminal-list">
-          {certifications.map((c) => (
-            <li key={c.title}>
-              <a href={c.href} target="_blank" rel="noreferrer">
-                {c.title}
-              </a>
-              {" — "}
-              {c.details}
-            </li>
-          ))}
-        </ul>
-      </TerminalSection>
-    </div>
+    <section className="section">
+      <div className="container">
+        <div className="section-header">
+          <div>
+            <div className="eyebrow">Recognitions</div>
+            <h2 className="section-title">Certifications</h2>
+            <p className="section-subtitle">Professional credentials across security, cloud, and networking.</p>
+          </div>
+        </div>
+        <Certifications items={certifications} showHeader={false} wrap={false} />
+      </div>
+    </section>
   );
 }

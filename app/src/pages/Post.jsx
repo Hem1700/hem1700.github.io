@@ -125,7 +125,7 @@ export default function PostPage() {
 
   if (!postEntry) {
     return (
-      <main className="blog-post-content container">
+      <main className="section blog-post-content container">
         <h2>Post not found</h2>
         <p>Signal lost. Let’s go back.</p>
         <Link to="/blogs" className="view-credentials">
@@ -143,7 +143,7 @@ export default function PostPage() {
           {meta && <p className="blog-post-date">{meta.date} · {meta.readTime}</p>}
         </div>
       </header>
-      <main className="blog-post-content container">
+      <main className="section blog-post-content container">
         <article dangerouslySetInnerHTML={{ __html: content }} />
         <section className="comments">
           <div className="container">

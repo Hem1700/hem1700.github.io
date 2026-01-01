@@ -1,4 +1,4 @@
-const filters = ["All", "Security Tools", "Research", "Web", "Desktop", "Cloud", "Automation"];
+const filters = ["All", "Security", "Research", "Web", "Desktop", "Cloud", "Automation", "Cryptography", "Toolkit"];
 
 export default function ProjectFilters({ activeFilter, onFilterChange }) {
   return (

@@ -6,37 +6,34 @@ export default function Hero({ data }) {
 
   return (
     <header className={`hero reveal ${visible ? "visible" : ""}`} id="home" ref={ref}>
-      <div className="hero-content container">
+      <div className="container hero-grid">
         <div className="hero-copy">
-          <div className="hero-badge">Operator: Hem Parekh // Access Granted</div>
-          <h1>
-            <span data-glitch={`Hello, I'm ${data.highlight}.`}>Hello, I'm <span className="highlight">{data.highlight}</span>.</span>
-          </h1>
-          <div className="hero-descriptors">
-            <span className="pill">Security Engineer</span>
-            <span className="pill">Pen Tester</span>
-            <span className="pill">Threat Hunter</span>
+          <div className="eyebrow">Security engineer // pen tester</div>
+          <div className="hero-lines mbm">
+            <h1 className="hero-display">A different</h1>
+            <h1 className="hero-display">security</h1>
+            <h1 className="hero-display">approach</h1>
           </div>
-          <p className="hero-funfact">Low-trust runtime. Intrusions logged, anomalies hunted.</p>
-          <p>{data.blurb}</p>
-          <div className="hero-ctas">
-            <Link className="button primary clipboard" to="/projects">
+          <p className="hero-lead">{data.blurb}</p>
+          <div className="hero-actions">
+            <Link className="button primary" to="/projects">
               View Projects
             </Link>
-            <Link className="button ghost clipboard" to="/certifications">
-              View Certificates
+            <Link className="button ghost" to="/certifications">
+              View Certifications
             </Link>
           </div>
-          <div className="scroll-down-arrow">
-            <a href="#about" className="arrow-link">
-              <span>&#8595;</span>
-            </a>
+          <div className="hero-meta">
+            <span className="pill">Threat Hunting</span>
+            <span className="pill">Application Security</span>
+            <span className="pill">Privacy</span>
           </div>
         </div>
-        <div className="hero-photo-card">
-          <div className="polaroid">
-            <img src={data.image} className="heading-image glitch" alt="Heading" />
+        <div className="hero-visual">
+          <div className="hero-image-frame">
+            <img src={data.image} alt={data.highlight} />
           </div>
+          <div className="hero-card">Operator {data.highlight}</div>
         </div>
       </div>
     </header>

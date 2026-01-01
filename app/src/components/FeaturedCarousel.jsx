@@ -32,10 +32,10 @@ export default function FeaturedCarousel({ items }) {
       </div>
       {items.length > 1 && (
         <div className="featured-controls">
-          <button type="button" onClick={prev} className="button ghost">
+          <button type="button" onClick={prev} className="button ghost" aria-label="Previous">
             ←
           </button>
-          <button type="button" onClick={next} className="button ghost">
+          <button type="button" onClick={next} className="button ghost" aria-label="Next">
             →
           </button>
         </div>
