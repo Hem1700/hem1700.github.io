@@ -30,7 +30,7 @@ export default function Navbar({ onToggleTheme, theme }) {
     { label: "Projects", to: "/projects" },
     { label: "Certs", to: "/certifications" },
     { label: "Blog", to: "/blogs" },
-    { label: "CVE Map", to: "/cve-map" },
+    { label: "Security Games", to: "/cve-map" },
     { label: "Contact", anchor: "contact" },
   ];
 

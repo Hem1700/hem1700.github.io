@@ -139,7 +139,7 @@ export default function CveVaultBreach({ entries = [] }) {
       <div className="vault-stage">
         <div className="vault-lock">
           <div className="vault-notch">
-            <span>Breach window</span>
+            <span className="vault-notch-label">Breach window</span>
           </div>
           <div className="vault-rings">
             {positions.map((pos, idx) => (

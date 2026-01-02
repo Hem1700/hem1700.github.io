@@ -2045,15 +2045,44 @@ body.dark .vault-stage {
   position: absolute;
   top: 6%;
   left: 50%;
-  transform: translateX(-50%);
-  padding: 0.3rem 0.8rem;
+  transform: translateX(-50%) translateZ(70px) rotateX(10deg);
+  padding: 0.45rem 1.3rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0.55));
   text-transform: uppercase;
   letter-spacing: 0.2em;
   font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.5),
+    inset 0 2px 6px rgba(255, 255, 255, 0.25),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.6);
+  transform-style: preserve-3d;
+}
+
+.vault-notch-label {
+  position: relative;
+  z-index: 2;
+  display: block;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.vault-notch::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 65%;
+  width: 78%;
+  height: 10px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%) translateZ(-6px);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7), rgba(10, 10, 10, 0.95));
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 12px rgba(255, 100, 47, 0.4);
+  z-index: 1;
+  pointer-events: none;
 }
 
 .vault-notch::after {
@@ -2061,10 +2090,14 @@ body.dark .vault-stage {
   position: absolute;
   top: 100%;
   left: 50%;
-  width: 1px;
-  height: 2.2rem;
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateX(-50%);
+  width: 70px;
+  height: 40px;
+  transform: translateX(-50%) translateZ(-20px);
+  background: radial-gradient(ellipse at top, rgba(255, 100, 47, 0.4), transparent 70%);
+  opacity: 0.65;
+  filter: blur(3px);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .vault-rings {
