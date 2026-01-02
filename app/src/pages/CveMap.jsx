@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import CveNodeHunt from "../components/CveNodeHunt";
-import CveVaultBreach from "../components/CveVaultBreach";
+import CveSignalBeacon from "../components/CveSignalBeacon";
+import CvePacketIntercept from "../components/CvePacketIntercept";
+import CveMalwareMaze from "../components/CveMalwareMaze";
 import { blogs } from "../data/content";
 
 export default function CveMapPage() {
@@ -50,13 +52,27 @@ export default function CveMapPage() {
       label: "Node Hunt",
       subtitle: "Track the intruder through the grid. Ping, trace, and isolate the target.",
     },
-    "vault-breach": {
-      label: "Vault Breach",
-      subtitle: "Rotate the lock rings until the cipher glyphs align.",
+    "signal-beacon": {
+      label: "Signal Beacon",
+      subtitle: "Rotate the beacon and lock onto the hidden signal band.",
+    },
+    "packet-intercept": {
+      label: "Packet Intercept",
+      subtitle: "Scan traffic lanes and intercept the malicious payload.",
+    },
+    "malware-maze": {
+      label: "Malware Maze",
+      subtitle: "Navigate the wireframe maze and quarantine the infected node.",
     },
   };
 
   const activeCopy = gameCopy[gameMode] || gameCopy["node-hunt"];
+  const ActiveGame = {
+    "node-hunt": CveNodeHunt,
+    "signal-beacon": CveSignalBeacon,
+    "packet-intercept": CvePacketIntercept,
+    "malware-maze": CveMalwareMaze,
+  }[gameMode] || CveNodeHunt;
 
   return (
     <section className="section">
@@ -64,11 +80,11 @@ export default function CveMapPage() {
         <div className="section-header">
           <div>
             <div className="eyebrow">Security Games</div>
-            <h2 className="section-title">CVE Games</h2>
+            <h2 className="section-title">Security Games</h2>
             <p className="section-subtitle">{activeCopy.subtitle}</p>
           </div>
           <div className="section-actions">
-            <div className="cve-game-toggle" role="tablist" aria-label="CVE games">
+            <div className="cve-game-toggle" role="tablist" aria-label="Security games">
               <button
                 type="button"
                 role="tab"
@@ -81,21 +97,35 @@ export default function CveMapPage() {
               <button
                 type="button"
                 role="tab"
-                aria-selected={gameMode === "vault-breach"}
-                className={gameMode === "vault-breach" ? "active" : ""}
-                onClick={() => setGameMode("vault-breach")}
+                aria-selected={gameMode === "signal-beacon"}
+                className={gameMode === "signal-beacon" ? "active" : ""}
+                onClick={() => setGameMode("signal-beacon")}
               >
-                {gameCopy["vault-breach"].label}
+                {gameCopy["signal-beacon"].label}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={gameMode === "packet-intercept"}
+                className={gameMode === "packet-intercept" ? "active" : ""}
+                onClick={() => setGameMode("packet-intercept")}
+              >
+                {gameCopy["packet-intercept"].label}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={gameMode === "malware-maze"}
+                className={gameMode === "malware-maze" ? "active" : ""}
+                onClick={() => setGameMode("malware-maze")}
+              >
+                {gameCopy["malware-maze"].label}
               </button>
             </div>
           </div>
         </div>
         <div className="cve-hunt-shell">
-          {gameMode === "vault-breach" ? (
-            <CveVaultBreach entries={cveEntries} />
-          ) : (
-            <CveNodeHunt entries={cveEntries} />
-          )}
+          <ActiveGame entries={cveEntries} />
         </div>
       </div>
     </section>

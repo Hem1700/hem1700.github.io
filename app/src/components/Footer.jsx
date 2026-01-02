@@ -15,7 +15,7 @@ export default function Footer() {
           <br />
           <Link to="/blogs">Blog</Link>
           <br />
-          <Link to="/cve-map">CVE Map</Link>
+          <Link to="/cve-map">Security Games</Link>
         </div>
         <div>
           <h4>Connect</h4>
