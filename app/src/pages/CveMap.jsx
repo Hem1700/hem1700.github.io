@@ -117,7 +117,6 @@ export default function CveMapPage() {
                     setHoverPreview(null);
                   }
                 }}
-                hoveredId={hovered?.id}
               />
               {hoverPreview && (
                 <div className="mindmap-preview" style={{ left: hoverPreview.x, top: hoverPreview.y }}>
