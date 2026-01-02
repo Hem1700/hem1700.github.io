@@ -271,6 +271,16 @@ export default function CveNodeHunt({ entries = [] }) {
           </div>
           <div className={`terminal-status ${status}`}>{status === "found" ? "SECURED" : "ACTIVE"}</div>
         </div>
+        <div className="hunt-onboarding">
+          <div className="onboarding-title">How to play</div>
+          <div className="onboarding-steps">
+            <div>1. SCAN to get the quadrant.</div>
+            <div>2. PING A1 for heat distance.</div>
+            <div>3. TRACE B2 for direction.</div>
+            <div>4. ISOLATE when you are confident.</div>
+          </div>
+          <div className="onboarding-hint">Try: SCAN, PING B2, TRACE C4, ISOLATE D5.</div>
+        </div>
         <div className="terminal-log" ref={logRef}>
           {log.map((line, idx) => (
             <div key={`${line.type}-${idx}`} className={`terminal-line ${line.type}`}>
