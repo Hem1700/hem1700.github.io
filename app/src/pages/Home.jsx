@@ -41,8 +41,7 @@ export default function HomePage() {
       <section className="section">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title">Trusted by</h2>
-            <h2 className="section-title">Teams</h2>
+            <h2 className="section-title">Experience</h2>
           </div>
           <div className="logo-grid">
             {trustedBy.map((org) => (
