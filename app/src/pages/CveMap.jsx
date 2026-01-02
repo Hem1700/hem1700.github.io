@@ -63,7 +63,7 @@ export default function CveMapPage() {
       <div className="container">
         <div className="section-header">
           <div>
-            <div className="eyebrow">CVE map</div>
+            <div className="eyebrow">Security Games</div>
             <h2 className="section-title">CVE Games</h2>
             <p className="section-subtitle">{activeCopy.subtitle}</p>
           </div>
