@@ -250,12 +250,12 @@ body.dark .orb-canvas {
 }
 
 .mbm {
-  mix-blend-mode: difference;
-  color: var(--main-light);
+  mix-blend-mode: normal;
+  color: var(--main-dark);
 }
 
 body.dark .mbm {
-  mix-blend-mode: normal;
+  color: var(--main-light);
 }
 
 .pill {
