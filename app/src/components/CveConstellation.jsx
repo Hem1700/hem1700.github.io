@@ -108,9 +108,9 @@ export default function CveConstellation({ data, onSelectCve, onHover, highlight
     }, {});
 
     const lineMaterial = new THREE.LineBasicMaterial({
-      color: new THREE.Color("#1d1d1d"),
+      color: new THREE.Color("#9b2c2c"),
       transparent: true,
-      opacity: 0.16,
+      opacity: 0.18,
     });
 
     const groupGeometry = new THREE.SphereGeometry(0.26, 32, 32);
@@ -210,8 +210,8 @@ export default function CveConstellation({ data, onSelectCve, onHover, highlight
       groupMaterial.emissive.set(groupColor);
       groupMaterial.opacity = isDark ? 0.85 : 0.9;
 
-      lineMaterial.color.set(groupColor);
-      lineMaterial.opacity = isDark ? 0.22 : 0.16;
+      lineMaterial.color.set(isDark ? "#ff7b6b" : "#9b2c2c");
+      lineMaterial.opacity = isDark ? 0.25 : 0.18;
 
       starMaterial.color.set(groupColor);
       starMaterial.opacity = isDark ? 0.5 : 0.35;

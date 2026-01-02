@@ -250,7 +250,7 @@ export function buildCveHierarchy() {
 }
 
 export const cveMapSummary = {
-  headline: "Drag to rotate the 3D constellation and click a CVE node to open its details.",
+  headline: "Drag the constellation, then match each case file to the correct CVE node.",
   datasetHint: "Demo dataset; wire NVD feeds + your own aggregations for production.",
 };
 

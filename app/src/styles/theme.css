@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Special+Elite&display=swap");
 
 :root {
   --main-dark: #1d1d1d;
@@ -20,6 +20,7 @@
   --shadow: 0 40px 80px rgba(0, 0, 0, 0.18);
   --font-display: "Space Grotesk", sans-serif;
   --font-body: "Manrope", sans-serif;
+  --font-case: "Special Elite", serif;
 }
 
 * {
@@ -1340,6 +1341,140 @@ body.dark .footer {
 .cve-layout {
   display: grid;
   gap: 2rem;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.case-panel {
+  position: sticky;
+  top: 120px;
+  padding: 1.6rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--light-grey);
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.7), rgba(241, 240, 236, 0.4)),
+    repeating-linear-gradient(90deg, rgba(29, 29, 29, 0.04), rgba(29, 29, 29, 0.04) 1px, transparent 1px, transparent 12px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+body.dark .case-panel {
+  border-color: var(--dark-grey);
+  background:
+    linear-gradient(140deg, rgba(37, 37, 37, 0.7), rgba(29, 29, 29, 0.5)),
+    repeating-linear-gradient(90deg, rgba(229, 228, 224, 0.08), rgba(229, 228, 224, 0.08) 1px, transparent 1px, transparent 12px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.32);
+}
+
+.case-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.case-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 1.1rem;
+  letter-spacing: 0.12em;
+}
+
+.case-progress {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  opacity: 0.7;
+}
+
+.case-number {
+  margin-top: 1.4rem;
+  font-family: var(--font-case);
+  font-size: 1.2rem;
+}
+
+.case-stamp {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.6rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgba(166, 33, 33, 0.8);
+  color: rgba(166, 33, 33, 0.95);
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  border-radius: 999px;
+}
+
+body.dark .case-stamp {
+  border-color: rgba(255, 118, 107, 0.9);
+  color: rgba(255, 118, 107, 0.9);
+}
+
+.case-meta {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.6rem;
+  font-family: var(--font-case);
+}
+
+.case-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  opacity: 0.6;
+}
+
+.case-value {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.case-brief {
+  margin-top: 1rem;
+  font-family: var(--font-case);
+  font-size: 0.95rem;
+  opacity: 0.75;
+}
+
+.case-message,
+.case-hint {
+  margin-top: 0.7rem;
+  font-family: var(--font-case);
+  font-size: 0.85rem;
+}
+
+.case-hint {
+  opacity: 0.75;
+}
+
+.case-actions {
+  margin-top: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.case-log {
+  margin-top: 1.4rem;
+}
+
+.case-log-list {
+  margin-top: 0.4rem;
+  display: grid;
+  gap: 0.3rem;
+  font-family: var(--font-case);
+}
+
+.case-log-item,
+.case-log-empty {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.case-empty {
+  margin-top: 1rem;
+  font-family: var(--font-case);
 }
 
 .cve-shell {
@@ -1657,6 +1792,14 @@ body.dark .cve-modal__card {
   .hero-card {
     position: static;
     margin-top: 1rem;
+  }
+
+  .cve-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .case-panel {
+    position: static;
   }
 
   .project-row,
