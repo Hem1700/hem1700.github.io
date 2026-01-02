@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import About from "../components/About";
 import BlogList from "../components/BlogList";
 import Certifications from "../components/Certifications";
-import Experience from "../components/Experience";
 import Hero from "../components/Hero";
 import Projects from "../components/Projects";
 import { about, blogs, certifications, experience, hero, projects, socialLinks } from "../data/content";
@@ -56,7 +55,6 @@ export default function HomePage() {
       </section>
 
       <About data={about} socials={socialLinks} />
-      <Experience items={experience} />
       <Projects items={projects} showViewAll showHeader showFilters={false} />
 
       <section className="section">

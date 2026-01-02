@@ -250,7 +250,7 @@ export function buildCveHierarchy() {
 }
 
 export const cveMapSummary = {
-  headline: "Zoom into technologies and see clustered CVEs. Click a CVE to open its details.",
+  headline: "Drag to rotate the 3D constellation and click a CVE node to open its details.",
   datasetHint: "Demo dataset; wire NVD feeds + your own aggregations for production.",
 };
 

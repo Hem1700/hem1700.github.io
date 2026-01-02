@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import CveDetailDrawer from "../components/CveDetailDrawer";
-import CveMindMap from "../components/CveMindMap";
+import CveConstellation from "../components/CveConstellation";
 import { blogs } from "../data/content";
 import { buildBlogCveHierarchy, cveMapSummary } from "../data/cveMapData";
 
@@ -48,9 +48,7 @@ export default function CveMapPage() {
 
   const data = useMemo(() => buildBlogCveHierarchy(blogCves, groupMode), [blogCves, groupMode]);
   const [selectedCve, setSelectedCve] = useState(null);
-  const [focusPath, setFocusPath] = useState([]);
   const [resetKey, setResetKey] = useState(0);
-  const [hovered, setHovered] = useState(null);
   const [hoverPreview, setHoverPreview] = useState(null);
   const [highlightId, setHighlightId] = useState("");
 
@@ -61,10 +59,8 @@ export default function CveMapPage() {
 
   const handleReset = () => {
     setSelectedCve(null);
-    setFocusPath([]);
     setResetKey((k) => k + 1);
     setHighlightId("");
-    setFocusPath([]);
     setGroupMode("year");
   };
 
@@ -103,14 +99,12 @@ export default function CveMapPage() {
               </button>
             </div>
             <div className="mindmap-canvas">
-              <CveMindMap
+              <CveConstellation
                 key={resetKey}
                 data={data}
                 onSelectCve={handleSelectCve}
-                onFocusPath={setFocusPath}
                 highlightId={highlightId}
                 onHover={(payload) => {
-                  setHovered(payload?.node || null);
                   if (payload && payload.screen) {
                     setHoverPreview({
                       name: payload.node.name,
