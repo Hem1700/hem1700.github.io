@@ -33,7 +33,6 @@ export default function Hero({ data }) {
           <div className="hero-image-frame">
             <img src={data.image} alt={data.highlight} />
           </div>
-          <div className="hero-card">Operator {data.highlight}</div>
         </div>
       </div>
     </header>
