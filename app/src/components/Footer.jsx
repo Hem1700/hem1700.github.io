@@ -27,15 +27,6 @@ export default function Footer() {
             </div>
           ))}
         </div>
-        <div>
-          <h4>Base</h4>
-          <div>Seattle, WA</div>
-          <div>Remote friendly</div>
-        </div>
-        <div>
-          <h4>Contact</h4>
-          <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
-        </div>
       </div>
     </footer>
   );
