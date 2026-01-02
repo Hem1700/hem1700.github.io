@@ -1489,6 +1489,159 @@ body.dark .cve-shell {
   border-color: var(--dark-grey);
 }
 
+.cve-game-shell {
+  border: 1px solid var(--light-grey);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  min-height: min(70vh, 720px);
+}
+
+body.dark .cve-game-shell {
+  border-color: var(--dark-grey);
+  background: rgba(37, 37, 37, 0.55);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3);
+}
+
+.cve-game {
+  position: relative;
+  width: 100%;
+  height: min(70vh, 720px);
+  isolation: isolate;
+}
+
+.cve-game__canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  user-select: none;
+}
+
+.cve-game__hud {
+  position: absolute;
+  inset: 1.2rem 1.2rem auto 1.2rem;
+  display: flex;
+  gap: 0.8rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.game-card {
+  pointer-events: auto;
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(6px);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+body.dark .game-card {
+  background: rgba(29, 29, 29, 0.75);
+}
+
+.game-label {
+  opacity: 0.6;
+}
+
+.game-value {
+  font-size: 0.8rem;
+}
+
+.game-toast {
+  position: absolute;
+  left: 1.2rem;
+  bottom: 1.2rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.8);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.65rem;
+  z-index: 2;
+}
+
+body.dark .game-toast {
+  background: rgba(29, 29, 29, 0.75);
+}
+
+.game-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+}
+
+body.dark .game-overlay {
+  background: rgba(29, 29, 29, 0.55);
+}
+
+.game-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.game-overlay-card {
+  max-width: 320px;
+  text-align: center;
+  padding: 1.6rem 1.8rem;
+  border-radius: var(--radius-md);
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.2);
+}
+
+body.dark .game-overlay-card {
+  background: rgba(29, 29, 29, 0.85);
+}
+
+.game-overlay-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 1.1rem;
+}
+
+.game-overlay-text {
+  margin: 0.6rem 0 1rem;
+  opacity: 0.75;
+}
+
+.game-controls {
+  position: absolute;
+  inset: auto 1.2rem 1.2rem auto;
+  display: none;
+  gap: 0.5rem;
+  z-index: 2;
+}
+
+@media (pointer: coarse) {
+  .game-controls {
+    display: flex;
+  }
+
+  .cve-game__hud {
+    inset: 1rem;
+    flex-wrap: wrap;
+  }
+}
+
 .cve-mindmap {
   width: 100%;
   overflow: hidden;
