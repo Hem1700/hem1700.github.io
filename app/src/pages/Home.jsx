@@ -8,7 +8,7 @@ import Projects from "../components/Projects";
 import { about, blogs, certifications, experience, hero, projects, socialLinks } from "../data/content";
 
 export default function HomePage() {
-  const trustedBy = Array.from(new Set(experience.map((item) => item.org)));
+  const experienceHighlights = experience;
   const featuredBlogs = blogs.slice(0, 3);
 
   return (
@@ -44,9 +44,11 @@ export default function HomePage() {
             <h2 className="section-title">Experience</h2>
           </div>
           <div className="logo-grid">
-            {trustedBy.map((org) => (
-              <div className="logo-card" key={org}>
-                {org}
+            {experienceHighlights.map((item) => (
+              <div className="logo-card" key={`${item.org}-${item.role}`}>
+                <div className="logo-role">{item.role}</div>
+                <div className="logo-org">{item.org}</div>
+                <div className="logo-range">{item.range}</div>
               </div>
             ))}
           </div>

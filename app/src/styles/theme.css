@@ -769,15 +769,34 @@ body.dark .hero-card {
   padding: 1.2rem 1.4rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--light-grey);
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.7rem;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
 }
 
 body.dark .logo-card {
   border-color: var(--dark-grey);
+}
+
+.logo-role {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.65rem;
+  opacity: 0.6;
+}
+
+.logo-org {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.95rem;
+}
+
+.logo-range {
+  font-size: 0.75rem;
+  opacity: 0.6;
 }
 
 .about {
