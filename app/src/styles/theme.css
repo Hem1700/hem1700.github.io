@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Special+Elite&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Special+Elite&family=Space+Mono:wght@400;700&display=swap");
 
 :root {
   --main-dark: #1d1d1d;
@@ -21,6 +21,7 @@
   --font-display: "Space Grotesk", sans-serif;
   --font-body: "Manrope", sans-serif;
   --font-case: "Special Elite", serif;
+  --font-code: "Space Mono", monospace;
 }
 
 * {
@@ -1489,6 +1490,306 @@ body.dark .cve-shell {
   border-color: var(--dark-grey);
 }
 
+.cve-hunt-shell {
+  border: 1px solid var(--light-grey);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.08);
+  padding: clamp(1.2rem, 2vw, 1.8rem);
+}
+
+body.dark .cve-hunt-shell {
+  border-color: var(--dark-grey);
+  background: rgba(37, 37, 37, 0.55);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3);
+}
+
+.hunt-layout {
+  display: grid;
+  gap: 1.8rem;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+}
+
+.hunt-terminal {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #101010;
+  color: #e5e4e0;
+  padding: 1.2rem 1.4rem 1.4rem;
+  font-family: var(--font-code);
+  display: grid;
+  gap: 1rem;
+  min-height: 420px;
+}
+
+body.dark .hunt-terminal {
+  border-color: var(--dark-grey);
+  background: #0b0b0b;
+}
+
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.terminal-title {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.85rem;
+}
+
+.terminal-subtitle {
+  opacity: 0.6;
+  font-size: 0.75rem;
+}
+
+.terminal-status {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.terminal-status.found {
+  color: #ff642f;
+}
+
+.terminal-log {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 0.9rem;
+  height: 280px;
+  overflow-y: auto;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.terminal-line {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+.terminal-line.command {
+  color: #facb0e;
+  opacity: 0.9;
+}
+
+.terminal-line.success {
+  color: #ff642f;
+}
+
+.terminal-line.warning {
+  color: #facb0e;
+}
+
+.terminal-line.error {
+  color: #ff7b6b;
+}
+
+.terminal-line.hint {
+  color: #78bae6;
+}
+
+.terminal-input {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.terminal-prompt {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.terminal-input input {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 0.5rem 0.8rem;
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.terminal-input input::placeholder {
+  color: rgba(229, 228, 224, 0.5);
+}
+
+.hunt-board {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.hunt-intel {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--light-grey);
+  padding: 1rem 1.2rem;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+body.dark .hunt-intel {
+  border-color: var(--dark-grey);
+  background: rgba(29, 29, 29, 0.7);
+}
+
+.intel-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.intel-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.6rem;
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+}
+
+.hunt-grid {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.grid-row {
+  display: grid;
+  grid-template-columns: 38px repeat(5, minmax(36px, 1fr));
+  gap: 0.4rem;
+}
+
+.grid-cell {
+  border-radius: 0.45rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.4rem 0.2rem;
+  text-align: center;
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.grid-cell.header {
+  background: transparent;
+  border: none;
+  font-family: var(--font-display);
+  letter-spacing: 0.12em;
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+body.dark .grid-cell {
+  border-color: rgba(229, 228, 224, 0.12);
+  background: rgba(29, 29, 29, 0.8);
+}
+
+.grid-cell.cell {
+  font-weight: 700;
+}
+
+.grid-cell.cell.unknown {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+body.dark .grid-cell.cell.unknown {
+  color: rgba(229, 228, 224, 0.35);
+}
+
+.grid-cell.cell.ping {
+  color: #facb0e;
+}
+
+.grid-cell.cell.trace {
+  color: #78bae6;
+}
+
+.grid-cell.cell.miss {
+  color: #ff7b6b;
+}
+
+.grid-cell.cell.hit {
+  color: #ff642f;
+  box-shadow: 0 0 20px rgba(255, 100, 47, 0.35);
+}
+
+.heat-direct,
+.heat-hot {
+  background: rgba(255, 100, 47, 0.2);
+}
+
+.heat-warm {
+  background: rgba(250, 203, 14, 0.2);
+}
+
+.heat-cool {
+  background: rgba(120, 186, 230, 0.2);
+}
+
+.heat-cold {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+body.dark .heat-cold {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.hunt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-family: var(--font-code);
+}
+
+.legend-symbol {
+  display: inline-flex;
+  width: 1.1rem;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.hunt-result {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--light-grey);
+  padding: 1rem 1.2rem;
+  background: rgba(255, 255, 255, 0.75);
+  display: grid;
+  gap: 0.4rem;
+}
+
+body.dark .hunt-result {
+  border-color: var(--dark-grey);
+  background: rgba(29, 29, 29, 0.75);
+}
+
+.hunt-result-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.hunt-result-id {
+  font-family: var(--font-code);
+  font-size: 1rem;
+}
+
+.hunt-result-text {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
 .cve-game-shell {
   border: 1px solid var(--light-grey);
   border-radius: var(--radius-md);
@@ -1945,6 +2246,14 @@ body.dark .cve-modal__card {
   .hero-card {
     position: static;
     margin-top: 1rem;
+  }
+
+  .hunt-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hunt-terminal {
+    min-height: auto;
   }
 
   .cve-layout {

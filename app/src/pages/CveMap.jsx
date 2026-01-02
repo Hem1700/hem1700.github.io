@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import CveRunnerGame from "../components/CveRunnerGame";
+import CveNodeHunt from "../components/CveNodeHunt";
 import { blogs } from "../data/content";
 
 export default function CveMapPage() {
@@ -38,6 +38,7 @@ export default function CveMapPage() {
           year: parseYear(b.date),
           kev: false,
           summary: b.excerpt,
+          href: b.href || `/blog/${b.slug}`,
         };
       });
   }, []);
@@ -48,14 +49,14 @@ export default function CveMapPage() {
         <div className="section-header">
           <div>
             <div className="eyebrow">CVE map</div>
-            <h2 className="section-title">CVE Runner</h2>
+            <h2 className="section-title">Node Hunt</h2>
             <p className="section-subtitle">
-              Patch the vulnerabilities. Dodge the breaches. Keep the system alive.
+              Track the intruder through the grid. Ping, trace, and isolate the target.
             </p>
           </div>
         </div>
-        <div className="cve-game-shell">
-          <CveRunnerGame entries={cveEntries} />
+        <div className="cve-hunt-shell">
+          <CveNodeHunt entries={cveEntries} />
         </div>
       </div>
     </section>
