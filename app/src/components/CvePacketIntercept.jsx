@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const LANES = ["Alpha", "Bravo", "Charlie"];
+const DIFFICULTY_SETTINGS = {
+  easy: { scanBase: 3, scanAfterMiss: 2, missPenaltyAt: 3, captureGoal: 2 },
+  standard: { scanBase: 2, scanAfterMiss: 1, missPenaltyAt: 2, captureGoal: 3 },
+  hard: { scanBase: 2, scanAfterMiss: 1, missPenaltyAt: 1, captureGoal: 4 },
+};
+
+const getSettings = (difficulty) => DIFFICULTY_SETTINGS[difficulty] || DIFFICULTY_SETTINGS.standard;
+const getScanBudget = (misses, settings) =>
+  misses >= settings.missPenaltyAt ? settings.scanAfterMiss : settings.scanBase;
 
 const pickEntry = (entries) => {
   if (!entries.length) {
@@ -40,21 +49,26 @@ const buildRound = (signature) => {
   return { packets, maliciousLane };
 };
 
-const initialLog = () => [
+const initialLog = (settings) => [
   { type: "system", text: "PACKET INTERCEPT // Traffic control engaged." },
   { type: "system", text: "Inspect lanes, then intercept the hostile payload." },
+  {
+    type: "info",
+    text: `Scan budget: ${settings.scanBase} per round. Misses drop it to ${settings.scanAfterMiss}.`,
+  },
 ];
 
-export default function CvePacketIntercept({ entries = [] }) {
+export default function CvePacketIntercept({ entries = [], difficulty = "standard" }) {
+  const settings = getSettings(difficulty);
   const [entry, setEntry] = useState(() => pickEntry(entries));
   const [signature, setSignature] = useState(() => signatureFromEntry(entry));
   const [round, setRound] = useState(() => buildRound(signature));
   const [inspected, setInspected] = useState(() => LANES.map(() => false));
-  const [scansLeft, setScansLeft] = useState(2);
   const [captures, setCaptures] = useState(0);
   const [misses, setMisses] = useState(0);
+  const [scansLeft, setScansLeft] = useState(() => getScanBudget(0, settings));
   const [status, setStatus] = useState("active");
-  const [log, setLog] = useState(() => initialLog());
+  const [log, setLog] = useState(() => initialLog(settings));
   const [lastResult, setLastResult] = useState(null);
   const logRef = useRef(null);
 
@@ -80,22 +94,22 @@ export default function CvePacketIntercept({ entries = [] }) {
     setSignature(nextSignature);
     setRound(buildRound(nextSignature));
     setInspected(LANES.map(() => false));
-    setScansLeft(2);
     setCaptures(0);
     setMisses(0);
+    setScansLeft(getScanBudget(0, settings));
     setLastResult(null);
     setStatus("active");
-    setLog([...initialLog(), { type: "system", text: "New traffic signature loaded." }]);
-  }, [entries]);
+    setLog([...initialLog(settings), { type: "system", text: "New traffic signature loaded." }]);
+  }, [entries, difficulty]);
 
   const appendLog = (text, type = "info") => {
     setLog((prev) => [...prev, { type, text }]);
   };
 
-  const resetRound = () => {
+  const resetRound = (nextMisses = misses) => {
     setRound(buildRound(signature));
     setInspected(LANES.map(() => false));
-    setScansLeft(2);
+    setScansLeft(getScanBudget(nextMisses, settings));
     setLastResult(null);
   };
 
@@ -106,12 +120,12 @@ export default function CvePacketIntercept({ entries = [] }) {
     setSignature(nextSignature);
     setRound(buildRound(nextSignature));
     setInspected(LANES.map(() => false));
-    setScansLeft(2);
     setCaptures(0);
     setMisses(0);
+    setScansLeft(getScanBudget(0, settings));
     setLastResult(null);
     setStatus("active");
-    setLog([...initialLog(), { type: "system", text: "New case file opened." }]);
+    setLog([...initialLog(settings), { type: "system", text: "New case file opened." }]);
   };
 
   const handleInspect = (laneIndex) => {
@@ -134,16 +148,18 @@ export default function CvePacketIntercept({ entries = [] }) {
       const nextCaptures = captures + 1;
       setCaptures(nextCaptures);
       appendLog(`Intercept success on ${LANES[laneIndex].toUpperCase()}.`, "success");
-      if (nextCaptures >= 3) {
+      if (nextCaptures >= settings.captureGoal) {
         setStatus("found");
         appendLog("Threat chain neutralized.", "success");
         return;
       }
+      resetRound(misses);
     } else {
-      setMisses((prev) => prev + 1);
+      const nextMisses = misses + 1;
+      setMisses(nextMisses);
       appendLog(`False positive on ${LANES[laneIndex].toUpperCase()}.`, "warning");
+      resetRound(nextMisses);
     }
-    resetRound();
   };
 
   return (
@@ -171,7 +187,7 @@ export default function CvePacketIntercept({ entries = [] }) {
           </div>
           <div className="intercept-intel-row">
             <span>Captures</span>
-            <span>{captures}/3</span>
+            <span>{captures}/{settings.captureGoal}</span>
           </div>
           <div className="intercept-intel-row">
             <span>Misses</span>
@@ -211,7 +227,7 @@ export default function CvePacketIntercept({ entries = [] }) {
           </div>
         )}
       </div>
-      <div className="intercept-stage">
+      <div className={`intercept-stage ${status === "found" ? "win" : ""}`}>
         <div className="lane-grid">
           {round.packets.map((packet, idx) => {
             const inspectedLane = inspected[idx];

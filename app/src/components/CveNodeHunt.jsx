@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const GRID_SIZE = 5;
+const DIFFICULTY_SETTINGS = {
+  easy: { scanLimit: 3, hintThresholds: [1, 3] },
+  standard: { scanLimit: 2, hintThresholds: [2, 4] },
+  hard: { scanLimit: 1, hintThresholds: [3, 5] },
+};
 const COLUMNS = Array.from({ length: GRID_SIZE }, (_, idx) => String.fromCharCode(65 + idx));
 const stopWords = new Set([
   "reverse",
@@ -71,19 +76,21 @@ const formatHeat = (distance) => {
   return { label: "cold", text: "Signal cold." };
 };
 
-const initialLog = () => [
+const initialLog = (scanLimit) => [
   { type: "system", text: "NODE HUNT // Threat hunting console online." },
   { type: "system", text: "Type HELP to see commands." },
-  { type: "info", text: `Grid ${GRID_SIZE}x${GRID_SIZE} loaded. Signal drift detected.` },
+  { type: "info", text: `Grid ${GRID_SIZE}x${GRID_SIZE} loaded. Scan budget: ${scanLimit}.` },
 ];
 
-export default function CveNodeHunt({ entries = [] }) {
+export default function CveNodeHunt({ entries = [], difficulty = "standard" }) {
+  const settings = DIFFICULTY_SETTINGS[difficulty] || DIFFICULTY_SETTINGS.standard;
   const [grid, setGrid] = useState(() => makeGrid());
   const [target, setTarget] = useState(() => createTarget(entries));
-  const [log, setLog] = useState(() => initialLog());
+  const [log, setLog] = useState(() => initialLog(settings.scanLimit));
   const [input, setInput] = useState("");
   const [attempts, setAttempts] = useState(0);
   const [hintLevel, setHintLevel] = useState(0);
+  const [scansLeft, setScansLeft] = useState(settings.scanLimit);
   const [status, setStatus] = useState("active");
   const logRef = useRef(null);
 
@@ -107,9 +114,14 @@ export default function CveNodeHunt({ entries = [] }) {
     setTarget(createTarget(entries));
     setAttempts(0);
     setHintLevel(0);
+    setScansLeft(settings.scanLimit);
     setStatus("active");
-    setLog([...initialLog(), { type: "system", text: "New hunt initialized." }]);
+    setLog([...initialLog(settings.scanLimit), { type: "system", text: "New hunt initialized." }]);
   };
+
+  useEffect(() => {
+    resetGame();
+  }, [difficulty]);
 
   const parseCoord = (raw) => {
     const match = raw?.toUpperCase().match(/^([A-Z])(\d+)$/);
@@ -122,16 +134,22 @@ export default function CveNodeHunt({ entries = [] }) {
   };
 
   const revealHint = (nextAttempts) => {
-    if (hintLevel === 0 && nextAttempts >= 2) {
+    const [firstHint, secondHint] = settings.hintThresholds;
+    if (hintLevel === 0 && nextAttempts >= firstHint) {
       setHintLevel(1);
       appendLog(`Hint: Signal spikes in row ${target.rowIndex + 1}.`, "hint");
-    } else if (hintLevel === 1 && nextAttempts >= 4) {
+    } else if (hintLevel === 1 && nextAttempts >= secondHint) {
       setHintLevel(2);
       appendLog(`Hint: Signal concentrates in column ${COLUMNS[target.colIndex]}.`, "hint");
     }
   };
 
   const runScan = () => {
+    if (scansLeft <= 0) {
+      appendLog("Scan budget depleted. Use PING or TRACE.", "warning");
+      return;
+    }
+    setScansLeft((prev) => Math.max(prev - 1, 0));
     const vertical = target.rowIndex < GRID_SIZE / 2 ? "NORTH" : "SOUTH";
     const horizontal = target.colIndex < GRID_SIZE / 2 ? "WEST" : "EAST";
     appendLog(`Scan result: signal cluster in ${vertical}-${horizontal} quadrant.`, "info");
@@ -215,7 +233,7 @@ export default function CveNodeHunt({ entries = [] }) {
       return;
     }
     if (cmd === "clear") {
-      setLog([...initialLog(), { type: "system", text: "Console cleared." }]);
+      setLog([...initialLog(settings.scanLimit), { type: "system", text: "Console cleared." }]);
       return;
     }
     if (cmd === "restart") {
@@ -263,7 +281,7 @@ export default function CveNodeHunt({ entries = [] }) {
 
   return (
     <div className="hunt-layout">
-      <div className="hunt-terminal">
+      <div className={`hunt-terminal ${status === "found" ? "win" : ""}`}>
         <div className="terminal-header">
           <div>
             <div className="terminal-title">NODE HUNT</div>
@@ -274,7 +292,7 @@ export default function CveNodeHunt({ entries = [] }) {
         <div className="hunt-onboarding">
           <div className="onboarding-title">How to play</div>
           <div className="onboarding-steps">
-            <div>1. SCAN to get the quadrant.</div>
+            <div>1. SCAN ({settings.scanLimit}x) to get the quadrant.</div>
             <div>2. PING A1 for heat distance.</div>
             <div>3. TRACE B2 for direction.</div>
             <div>4. ISOLATE when you are confident.</div>
@@ -302,7 +320,7 @@ export default function CveNodeHunt({ entries = [] }) {
           </button>
         </form>
       </div>
-      <div className="hunt-board">
+      <div className={`hunt-board ${status === "found" ? "win" : ""}`}>
         <div className="hunt-intel">
           <div className="intel-title">Signal fingerprint</div>
           <div className="intel-row">
@@ -320,6 +338,10 @@ export default function CveNodeHunt({ entries = [] }) {
           <div className="intel-row">
             <span>Attempts</span>
             <span>{attempts}</span>
+          </div>
+          <div className="intel-row">
+            <span>Scans left</span>
+            <span>{scansLeft}</span>
           </div>
         </div>
         <div className="hunt-grid">

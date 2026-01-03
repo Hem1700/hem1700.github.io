@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import CveNodeHunt from "../components/CveNodeHunt";
-import CveSignalBeacon from "../components/CveSignalBeacon";
 import CvePacketIntercept from "../components/CvePacketIntercept";
 import CveMalwareMaze from "../components/CveMalwareMaze";
 import { blogs } from "../data/content";
 
 export default function CveMapPage() {
   const [gameMode, setGameMode] = useState("node-hunt");
+  const [difficulty, setDifficulty] = useState("standard");
   const cveEntries = useMemo(() => {
     const isCveLike = (title) => title.toUpperCase().includes("CVE");
     const parseYear = (dateStr) => {
@@ -52,10 +52,6 @@ export default function CveMapPage() {
       label: "Node Hunt",
       subtitle: "Track the intruder through the grid. Ping, trace, and isolate the target.",
     },
-    "signal-beacon": {
-      label: "Signal Beacon",
-      subtitle: "Rotate the beacon and lock onto the hidden signal band.",
-    },
     "packet-intercept": {
       label: "Packet Intercept",
       subtitle: "Scan traffic lanes and intercept the malicious payload.",
@@ -69,7 +65,6 @@ export default function CveMapPage() {
   const activeCopy = gameCopy[gameMode] || gameCopy["node-hunt"];
   const ActiveGame = {
     "node-hunt": CveNodeHunt,
-    "signal-beacon": CveSignalBeacon,
     "packet-intercept": CvePacketIntercept,
     "malware-maze": CveMalwareMaze,
   }[gameMode] || CveNodeHunt;
@@ -97,15 +92,6 @@ export default function CveMapPage() {
               <button
                 type="button"
                 role="tab"
-                aria-selected={gameMode === "signal-beacon"}
-                className={gameMode === "signal-beacon" ? "active" : ""}
-                onClick={() => setGameMode("signal-beacon")}
-              >
-                {gameCopy["signal-beacon"].label}
-              </button>
-              <button
-                type="button"
-                role="tab"
                 aria-selected={gameMode === "packet-intercept"}
                 className={gameMode === "packet-intercept" ? "active" : ""}
                 onClick={() => setGameMode("packet-intercept")}
@@ -122,10 +108,34 @@ export default function CveMapPage() {
                 {gameCopy["malware-maze"].label}
               </button>
             </div>
+            <div className="cve-difficulty-toggle" role="group" aria-label="Difficulty">
+              <span className="difficulty-label">Difficulty</span>
+              <button
+                type="button"
+                className={difficulty === "easy" ? "active" : ""}
+                onClick={() => setDifficulty("easy")}
+              >
+                Easy
+              </button>
+              <button
+                type="button"
+                className={difficulty === "standard" ? "active" : ""}
+                onClick={() => setDifficulty("standard")}
+              >
+                Standard
+              </button>
+              <button
+                type="button"
+                className={difficulty === "hard" ? "active" : ""}
+                onClick={() => setDifficulty("hard")}
+              >
+                Hard
+              </button>
+            </div>
           </div>
         </div>
         <div className="cve-hunt-shell">
-          <ActiveGame entries={cveEntries} />
+          <ActiveGame entries={cveEntries} difficulty={difficulty} />
         </div>
       </div>
     </section>
