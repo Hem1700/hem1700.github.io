@@ -203,6 +203,15 @@ export const blogIntro = {
 
 export const blogs = [
   {
+    slug: "villager_inside_out",
+    title: "Villager, Inside Out: FastAPI control plane + LLM task graph + MCP tool runner (with code)",
+    href: "/blog/villager_inside_out",
+    excerpt:
+      "A defender-focused teardown of the villager agent stack: FastAPI control plane, task-graph orchestration, MCP tool execution, and the risk model around exposed tools.",
+    date: "January 6, 2026",
+    readTime: "12 min read",
+  },
+  {
     slug: "kernel_surface_audit_blog",
     title: "Who Can Touch Your Kernel? Auditing /boot/vmlinuz-* on Linux",
     href: "/blog/kernel_surface_audit_blog",

@@ -13,8 +13,14 @@ import postTsa from "../posts/transient_scheduler_attacks_tsa_blog.html?raw";
 import postReact2shellToyLab from "../posts/react2shell-toy-lab.html?raw";
 import postKernelSurfaceAudit from "../posts/kernel_surface_audit_blog.html?raw";
 import postCve202226318 from "../posts/cve-2022-26318-re-blog.html?raw";
+import postVillagerInsideOut from "../posts/villager_inside_out.html?raw";
 
 export const posts = {
+  "villager_inside_out": {
+    title: "Villager, Inside Out: FastAPI control plane + LLM task graph + MCP tool runner (with code)",
+    slug: "villager_inside_out",
+    content: postVillagerInsideOut,
+  },
   "firmware_llm_annotator": {
     title: "Firmware Exploration: LLM as Your Annotator",
     slug: "firmware_llm_annotator",

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <div class="blog-text">
+<h1>Villager, Inside Out: FastAPI control plane + LLM task graph + MCP tool runner (with code)</h1>
+<blockquote>
+<p><strong>Scope &amp; intent:</strong> This is a <strong>defender‑focused technical teardown</strong> of the Python package <strong><code>villager</code></strong> (latest pre‑release commonly referenced: <strong>0.2.1rc1</strong>). The goal is to understand <strong>architecture and risk</strong>, not to enable abuse. Use only in authorized environments.</p>
+<p>This blog uses publicly available package metadata (PyPI), a reverse‑engineered GitHub mirror intended “for analysis,” and MCP documentation to explain how the moving parts fit together.</p>
+</blockquote>
+<hr />
+<h2>0) Why Villager is interesting</h2>
+<p>Villager is positioned as an “experimental technology project” on PyPI, shipped as a Python package with dependencies that look like a typical <strong>agent stack</strong> (FastAPI, Typer, LangChain, OpenAI client libs, MCP/FastMCP, etc.).</p>
+<p>At a high level it resembles a common “agentic automation” pattern:</p>
+<ul>
+<li>a <strong>web API</strong> to submit work,</li>
+<li>an <strong>LLM planner/judge</strong> loop to decide steps and completion,</li>
+<li>and a <strong>tool bridge</strong> (MCP) to execute actions in external systems.</li>
+</ul>
+<p>This architecture is the important part: agentic orchestration changes your risk model because <strong>any tool exposed to the agent becomes part of the agent’s attack surface</strong>.</p>
+<hr />
+<h2>1) The big picture architecture</h2>
+<h3>The layers</h3>
+<ol>
+<li>
+<p><strong>Interface layer (FastAPI + CLI)</strong><br />
+   A server exposes endpoints like “create task,” “get status,” “get tree,” “stop task,” “get context.”</p>
+</li>
+<li>
+<p><strong>Scheduler layer (task nodes + branching)</strong><br />
+   A task is represented as a node in a <strong>task graph/tree</strong>, which may branch into subtasks based on LLM output.</p>
+</li>
+<li>
+<p><strong>Execution layer (MCP client)</strong><br />
+   The “hands” are not inside Villager itself; instead it calls <strong>MCP servers</strong> (e.g., browser automation, a controlled environment runner, etc.).</p>
+</li>
+<li>
+<p><strong>(Optional) Local tool-call layer</strong><br />
+   Many agent frameworks also implement internal tool execution (e.g., “call a function by name with JSON args”). In Villager-like systems, this is where risk spikes if the tool set includes <code>subprocess</code> or <code>eval</code> primitives.</p>
+</li>
+</ol>
+<h3>Request lifecycle (conceptual flow)</h3>
+<pre><code class="language-text">Client
+  |
+  |  POST /task   (abstract, description, verification)
+  v
+FastAPI app
+  |
+  |  creates TaskNode and runs it in background
+  v
+TaskNode.execute()
+  |
+  |-- (branching?) -&gt; create child TaskNodes and execute them
+  |
+  |-- else -&gt; run_mcp_agent() -&gt; McpClient.execute(prompt)
+  |
+  |-- judge step -&gt; DONE / TURNING / IMPOSSIBLE (repeat or stop)
+  v
+Client polls:
+  - status
+  - task tree
+  - context transcript
+</code></pre>
+<hr />
+<h2>2) What MCP is and why it’s central here</h2>
+<p><strong>MCP (Model Context Protocol)</strong> is an open protocol for connecting LLM applications to external tools and data sources through a standardized interface. It defines a host/client/server model and protocol semantics. (Think: a “universal adapter” for tools.)</p>
+<p>Villager uses MCP to separate the orchestrator from the actual tool execution environment. This is a big deal:</p>
+<ul>
+<li>It enables powerful workflows without bundling tools inside the package.</li>
+<li>It also means the orchestrator can become a “universal remote” for anything the MCP servers expose.</li>
+</ul>
+<hr />
+<h2>3) The API control plane (FastAPI)</h2>
+<p>This is the “front door” pattern seen in many agent frameworks:</p>
+<ul>
+<li>submit a task,</li>
+<li>poll its status,</li>
+<li>fetch the task tree/graph,</li>
+<li>fetch the transcript/context,</li>
+<li>stop/interrupt execution.</li>
+</ul>
+<h3>Example client requests (generic)</h3>
+<pre><code class="language-bash"># create a task (example: innocuous compliance doc generation)
+curl -s -X POST &quot;http://127.0.0.1:37695/task&quot;   -H &quot;Content-Type: application/json&quot;   -d '{
+    &quot;abstract&quot;: &quot;Summarize our incident response runbook&quot;,
+    &quot;description&quot;: &quot;Use only our internal documents. Output Markdown.&quot;,
+    &quot;verification&quot;: &quot;Includes owners, escalation flow, and contact matrix.&quot;
+  }'
+
+# poll status
+curl -s &quot;http://127.0.0.1:37695/get/task/status?task_id=&lt;TASK_ID&gt;&quot;
+
+# fetch graph/tree
+curl -s &quot;http://127.0.0.1:37695/task/&lt;TASK_ID&gt;/tree&quot;
+
+# fetch context transcript
+curl -s &quot;http://127.0.0.1:37695/task/&lt;TASK_ID&gt;/context&quot;
+</code></pre>
+<blockquote>
+<p><strong>Engineering note:</strong> In prototype designs like this, tasks are often stored in memory (a module‑level dict). In production you’d persist tasks in Redis/DB and make IDs per request.</p>
+</blockquote>
+<hr />
+<h2>4) TaskNode: the planner / executor / judge loop</h2>
+<p>The core idea is a controller loop like:</p>
+<p>1) Ask the LLM: <strong>Should I break this into subtasks?</strong><br />
+2) If yes: create subtasks and run them.<br />
+3) If no: run a “do work” step via tools/MCP.<br />
+4) Ask the LLM: <strong>Is it done?</strong><br />
+5) If not: iterate until max retries or failure.</p>
+<h3>Pseudocode you can recognize in many agent codebases</h3>
+<pre><code class="language-python">class TaskNode:
+    def execute(self):
+        self.status = &quot;PROCESSING&quot;
+
+        branch = self.llm_should_branch(self.abstract, self.description)
+        if branch.need_branching:
+            self.children = [TaskNode(t) for t in branch.tasks]
+            for child in self.children:
+                child.execute()
+
+        output = self.run_mcp_agent()
+        verdict = self.llm_judge(output, self.verification)
+
+        if verdict == &quot;DONE&quot;:
+            self.status = &quot;DONE&quot;
+            return output
+        elif verdict == &quot;TURNING&quot;:
+            return self.retry_loop()
+        else:
+            self.status = &quot;IMPOSSIBLE&quot;
+            return output
+</code></pre>
+<p>This <strong>pattern</strong> is what matters, even if variable names differ.</p>
+<hr />
+<h2>5) MCP client: streaming tool execution</h2>
+<p>A common MCP gateway pattern is:</p>
+<ul>
+<li>send a request (prompt + config),</li>
+<li>consume a stream (SSE / newline‑delimited JSON),</li>
+<li>keep a transcript of messages and tool results.</li>
+</ul>
+<h3>Toy MCP streaming consumer (safe example)</h3>
+<pre><code class="language-python">import json
+import requests
+
+def stream_mcp(base_url: str, payload: dict) -&gt; str:
+    &quot;&quot;&quot;
+    Safe-to-read example of how an HTTP streaming MCP-like gateway might be consumed.
+    (Exact endpoints and schemas vary by implementation.)
+    &quot;&quot;&quot;
+    out = []
+    with requests.post(base_url, json=payload, stream=True, timeout=60) as r:
+        r.raise_for_status()
+        for line in r.iter_lines(decode_unicode=True):
+            if not line:
+                continue
+            evt = json.loads(line)
+            if evt.get(&quot;content&quot;):
+                out.append(evt[&quot;content&quot;])
+            if evt.get(&quot;done&quot;):
+                break
+    return &quot;&quot;.join(out)
+</code></pre>
+<p><strong>Why defenders care:</strong> once this is wired to real tool servers, the orchestrator can cause real-world side effects. Your security posture becomes “how safe are the MCP servers, and how tight is authz?”</p>
+<hr />
+<h2>6) The “in-band tool call” pattern (%%{json}%%)</h2>
+<p>Some agent frameworks support tool calls by asking the model to emit a JSON blob in the middle of text, e.g.:</p>
+<pre><code class="language-text">%%{&quot;name&quot;:&quot;SearchFastMcp&quot;,&quot;parameters&quot;:{&quot;query&quot;:&quot;auth&quot;}}%%
+</code></pre>
+<p>Then code extracts the JSON and runs the corresponding function.</p>
+<h3>Minimal parser + allowlist executor (safe pattern)</h3>
+<pre><code class="language-python">import json, re
+from typing import Any, Callable
+
+TOOL_RX = re.compile(r&quot;%%\s*(\{.*?\})\s*%%&quot;, re.DOTALL)
+
+def extract_tool_calls(text: str) -&gt; list[dict]:
+    calls = []
+    for m in TOOL_RX.finditer(text):
+        calls.append(json.loads(m.group(1)))
+    return calls
+
+def run_tools(calls: list[dict], registry: dict[str, Callable[..., Any]]):
+    results = []
+    for c in calls:
+        name = c.get(&quot;name&quot;)
+        args = c.get(&quot;parameters&quot;) or {}
+        if name not in registry:
+            raise ValueError(f&quot;Tool not allowed: {name}&quot;)
+        results.append(registry[name](**args))
+    return results
+</code></pre>
+<p><strong>Defender takeaway:</strong> the parser is not scary; the <strong>tool registry</strong> is. If the registry includes shell execution, file access, credential access, network scanning, etc., the system must be treated like privileged code.</p>
+<hr />
+<h2>7) The reverse-engineered mirror’s warning: “callbacks” and data egress</h2>
+<p>The GitHub mirror you referenced was created “for analysis” and explicitly warns about multiple potential egress paths (proxying and webhooks).</p>
+<p>Even if you never “use those tools,” defenders should assume:</p>
+<ul>
+<li>imports can have side effects,</li>
+<li>configuration drift happens,</li>
+<li>agents sometimes “discover” and call tools you forgot existed.</li>
+</ul>
+<p><strong>Rule of thumb:</strong> if it can talk to the network, it can leak data—unless you lock down egress.</p>
+<hr />
+<h2>8) How to analyze Villager-like packages safely (with code)</h2>
+<h3>A) Pin exact artifacts and verify hashes</h3>
+<p>1) Download wheels/sdists without executing code.
+2) Verify file hashes against the package index metadata.</p>
+<pre><code class="language-bash">pip download --no-deps villager==0.2.1rc1
+sha256sum villager-0.2.1rc1*.tar.gz villager-0.2.1rc1*.whl
+</code></pre>
+<h3>B) Static scan for dangerous primitives</h3>
+<pre><code class="language-python"># static_scan.py
+import pathlib, re
+
+ROOT = pathlib.Path(&quot;.&quot;)  # point at the extracted sdist folder
+PATTERNS = {
+    &quot;network&quot;: re.compile(r&quot;\b(requests|httpx|urllib3|socket)\b&quot;),
+    &quot;process&quot;: re.compile(r&quot;\b(subprocess\.run|Popen|os\.system)\b&quot;),
+    &quot;eval_exec&quot;: re.compile(r&quot;\b(eval|exec)\b&quot;),
+    &quot;secrets&quot;: re.compile(r&quot;\b(api[_-]?key|token|secret|passwd|password)\b&quot;, re.I),
+}
+
+hits = {k: [] for k in PATTERNS}
+for py in ROOT.rglob(&quot;*.py&quot;):
+    s = py.read_text(errors=&quot;ignore&quot;)
+    for k, rx in PATTERNS.items():
+        if rx.search(s):
+            hits[k].append(str(py))
+
+for k, files in hits.items():
+    print(f&quot;\n[{k}] {len(files)} files&quot;)
+    for f in files[:40]:
+        print(&quot; &quot;, f)
+</code></pre>
+<h3>C) If you must execute: isolate hard</h3>
+<ul>
+<li>run in a throwaway VM/container</li>
+<li>no host mounts (<code>~/.ssh</code>, cloud creds, browser profiles)</li>
+<li>run unprivileged user</li>
+<li><strong>block outbound network</strong> except to a controlled MCP server</li>
+<li>record egress (pcap) for validation</li>
+</ul>
+<hr />
+<h2>9) Building a safer “Villager-like” system (recommended hardening)</h2>
+<p>If you’re rebuilding this idea (and you probably should, instead of installing unknown packages):</p>
+<p>1) <strong>Separate “planner” from “executor”</strong> with clear boundaries<br />
+2) <strong>Never expose “danger primitives”</strong> (shell, eval) directly to the model<br />
+3) <strong>Use structured tool calling</strong> (strict JSON schema, validation, allowlists)<br />
+4) <strong>Implement per-tool authz</strong> (who can call what, with what parameters)<br />
+5) <strong>Add an audit trail</strong> (tool called, args, time, outcome; redact secrets)<br />
+6) <strong>Default-deny egress</strong> and require explicit network allowlists<br />
+7) <strong>Make tasks durable</strong> (DB/queue), enforce per-request UUIDs, add auth to API</p>
+<hr />
+<h2>10) References (copy/paste)</h2>
+<ul>
+<li>PyPI: https://pypi.org/project/villager/</li>
+<li>GitHub mirror (“for analysis”): https://github.com/gregcmartin/villager</li>
+<li>MCP (official): https://modelcontextprotocol.io/</li>
+<li>MCP spec (dated): https://modelcontextprotocol.io/specification/2025-11-25</li>
+<li>FastMCP docs: https://gofastmcp.com/</li>
+<li>FastMCP repo: https://github.com/jlowin/fastmcp</li>
+</ul>
+  </div>
+</body>
+</html>
