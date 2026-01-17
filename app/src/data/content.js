@@ -101,6 +101,13 @@ export const projects = [
     href: "https://github.com/Hem1700/Website-crawler",
     tags: ["Web", "Automation"],
   },
+  {
+    title: "ShellScribe",
+    description:
+      "Offline-first, policy-gated security testing framework with modular plugins, reproducible runs, and evidence-bound reporting for authorized research workflows.",
+    href: "https://github.com/Hem1700/shellscribe",
+    tags: ["Security", "Toolkit", "Automation"],
+  },
 ];
 
 export const certifications = [
