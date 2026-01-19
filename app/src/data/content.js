@@ -217,6 +217,7 @@ export const blogs = [
       "A defender-focused teardown of the villager agent stack: FastAPI control plane, task-graph orchestration, MCP tool execution, and the risk model around exposed tools.",
     date: "January 6, 2026",
     readTime: "12 min read",
+    category: "Research Papers",
   },
   {
     slug: "kernel_surface_audit_blog",
@@ -226,6 +227,7 @@ export const blogs = [
       "A defender’s walkthrough on who should vs. who can modify your kernel image, dangerous root patterns, and a Python-based audit checklist to watch /boot/vmlinuz-*.",
     date: "December 8, 2025",
     readTime: "7 min read",
+    category: "Research Papers",
   },
   {
     slug: "cve-2022-26318-re-blog",
@@ -235,6 +237,7 @@ export const blogs = [
       "Defender-focused RE of CVE-2022-26318: how the /agent/login path reaches wgagent, SAX parsing overflow mechanics, watchpoint-driven proof, and patch/detection guidance without weaponized details.",
     date: "December 28, 2025",
     readTime: "10 min read",
+    category: "CVEs/Libraries",
   },
   {
     slug: "react2shell-toy-lab",
@@ -244,6 +247,7 @@ export const blogs = [
       "Build a tiny \"fake Flight\" Node lab to see how insecure deserialization and thenable handling can lead to RCE, plus a safer variant and takeaways that mirror React2Shell.",
     date: "December 8, 2025",
     readTime: "8 min read",
+    category: "Research Papers",
   },
   {
     slug: "transient_scheduler_attacks_tsa_blog",
@@ -253,6 +257,7 @@ export const blogs = [
       "AMD’s new TSA class abuses false completions in the instruction scheduler to leak data across privilege boundaries. Here’s what TSA is, how an attacker could exploit it, a tiny timing lab to feel the leak, and what defenders should do.",
     date: "December 4, 2025",
     readTime: "8 min read",
+    category: "Research Papers",
   },
   {
     slug: "firmware_llm_annotator",
@@ -262,6 +267,7 @@ export const blogs = [
       "How to use an LLM as a helper for firmware reversing: triaging strings, summarizing decompiled functions, and annotating config blobs while you stay in control of the analysis.",
     date: "November 30, 2025",
     readTime: "5 min read",
+    category: "Research Papers",
   },
   {
     slug: "1001",
@@ -271,6 +277,7 @@ export const blogs = [
       "Kubernetes relies heavily on Role-Based Access Control (RBAC) to manage permissions. However, in early 2024, CVE-2024–1001 was disclosed, revealing how misconfigured RBAC rules in Kubernetes could allow attackers to gain full control over a cluster. This vulnerability emphasizes the risks of poorly defined access policies.",
     date: "September 8, 2024",
     readTime: "3 min read",
+    category: "CVEs/Libraries",
   },
   {
     slug: "0012",
@@ -280,6 +287,7 @@ export const blogs = [
       "CVE-2024–0012, known as the HTTP/2 Rapid Reset Attack, was disclosed, affecting major web servers like Apache and Nginx. This denial-of-service (DoS) vulnerability exploits HTTP/2’s stream management system by abusing the RST_STREAM frame. By overwhelming the server with rapid stream resets, attackers can exhaust resources and disrupt services.",
     date: "September 8, 2024",
     readTime: "3 min read",
+    category: "CVEs/Libraries",
   },
   {
     slug: "40982",
@@ -289,6 +297,7 @@ export const blogs = [
       "A critical vulnerability, CVE-2022–40982, dubbed Downfall, was disclosed. This vulnerability affects Intel x86–64 processors and exploits speculative execution to access sensitive data stored in vector registers. It impacts both consumer CPUs and server-grade Xeon processors, allowing attackers with local access to bypass security boundaries and potentially extract confidential information like encryption keys or passwords.",
     date: "September 8, 2024",
     readTime: "3 min read",
+    category: "CVEs/Libraries",
   },
   {
     slug: "cow",
@@ -298,6 +307,7 @@ export const blogs = [
       "In 2016, a critical vulnerability in the Linux kernel, known as Dirty Cow (CVE-2016–5195), was disclosed. This privilege escalation flaw exploited a race condition in the kernel’s memory management system, allowing attackers to write to read-only memory mappings. The name “Dirty Cow” comes from its exploitation of the Copy-On-Write (COW) mechanism in Linux.",
     date: "September 8, 2024",
     readTime: "3 min read",
+    category: "CVEs/Libraries",
   },
   {
     slug: "symlinks",
@@ -307,6 +317,7 @@ export const blogs = [
       "TIn Linux, symbolic links are essentially shortcuts that point to other files or directories. They allow you to reference a file or directory without duplicating its contents. To know more read the blog.",
     date: "September 8, 2024",
     readTime: "3 min read",
+    category: "Research Papers",
   },
   {
     slug: "23397",
@@ -316,6 +327,7 @@ export const blogs = [
       "This blog will break down the ROBOT attack, provide examples, and discuss mitigations to protect vulnerable systems.",
     date: "September 8, 2024",
     readTime: "3 min read",
+    category: "CVEs/Libraries",
   },
   {
     slug: "0160",
@@ -325,6 +337,7 @@ export const blogs = [
       "Heartbleed’s simplicity and devastating impact exposed the internet’s underlying fragility, and despite extensive efforts to patch affected systems, its ghost still haunts forgotten and neglected systems today. Let’s explore the technical details of this vulnerability, the global chaos it caused, and why it’s still relevant.",
     date: "September 8, 2024",
     readTime: "3 min read",
+    category: "CVEs/Libraries",
   },
   {
     slug: "11882",
@@ -334,6 +347,7 @@ export const blogs = [
       "One of the most notorious among these is CVE-2017–11882, commonly known as the Microsoft Office Memory Corruption Vulnerability. Originating in 2000, this vulnerability remains a frequently exploited entry point for attackers worldwide, from nation-state actors to cyber criminals.",
     date: "October 26 2024",
     readTime: "3 min read",
+    category: "CVEs/Libraries",
   },
   {
     slug: "robot",
@@ -343,6 +357,7 @@ export const blogs = [
       "This blog will break down the ROBOT attack, provide examples, and discuss mitigations to protect vulnerable systems.",
     date: "September 8, 2024",
     readTime: "3 min read",
+    category: "CVEs/Libraries",
   },
   {
     slug: "poodle",
@@ -352,5 +367,6 @@ export const blogs = [
       "This blog provides an in-depth look at Zombie Poodle and Goldendoodle attacks, how they work, and their implications for modern cybersecurity.",
     date: "September 6, 2024",
     readTime: "6 min read",
+    category: "CVEs/Libraries",
   },
 ];
