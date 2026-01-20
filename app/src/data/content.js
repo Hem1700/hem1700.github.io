@@ -210,6 +210,16 @@ export const blogIntro = {
 
 export const blogs = [
   {
+    slug: "llm_multistage_attacks_technical_breakdown_full",
+    title: "On the Feasibility of Using LLMs to Execute Multistage Network Attacks – A Technical Breakdown",
+    href: "/blog/llm_multistage_attacks_technical_breakdown_full",
+    excerpt:
+      "A technical breakdown of why LLMs struggle with multistage network attacks and how the Incalmo framework changes outcomes for autonomous red teaming.",
+    date: "January 20, 2026",
+    readTime: "25 min read",
+    category: "Research Papers",
+  },
+  {
     slug: "villager_inside_out",
     title: "Villager, Inside Out: FastAPI control plane + LLM task graph + MCP tool runner (with code)",
     href: "/blog/villager_inside_out",

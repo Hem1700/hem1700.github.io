@@ -14,8 +14,14 @@ import postReact2shellToyLab from "../posts/react2shell-toy-lab.html?raw";
 import postKernelSurfaceAudit from "../posts/kernel_surface_audit_blog.html?raw";
 import postCve202226318 from "../posts/cve-2022-26318-re-blog.html?raw";
 import postVillagerInsideOut from "../posts/villager_inside_out.html?raw";
+import postLlmMultistageAttacks from "../posts/llm_multistage_attacks_technical_breakdown_full.html?raw";
 
 export const posts = {
+  "llm_multistage_attacks_technical_breakdown_full": {
+    title: "On the Feasibility of Using LLMs to Execute Multistage Network Attacks – A Technical Breakdown",
+    slug: "llm_multistage_attacks_technical_breakdown_full",
+    content: postLlmMultistageAttacks,
+  },
   "villager_inside_out": {
     title: "Villager, Inside Out: FastAPI control plane + LLM task graph + MCP tool runner (with code)",
     slug: "villager_inside_out",
