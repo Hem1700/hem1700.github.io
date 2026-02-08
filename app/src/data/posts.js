@@ -15,8 +15,14 @@ import postKernelSurfaceAudit from "../posts/kernel_surface_audit_blog.html?raw"
 import postCve202226318 from "../posts/cve-2022-26318-re-blog.html?raw";
 import postVillagerInsideOut from "../posts/villager_inside_out.html?raw";
 import postLlmMultistageAttacks from "../posts/llm_multistage_attacks_technical_breakdown_full.html?raw";
+import postLlmAssistedBinaryDiffing from "../posts/llm_assisted_binary_diffing_blog.html?raw";
 
 export const posts = {
+  "llm_assisted_binary_diffing_blog": {
+    title: "LLM-Assisted Binary Diffing: Finding 1-Days Before PoCs Drop",
+    slug: "llm_assisted_binary_diffing_blog",
+    content: postLlmAssistedBinaryDiffing,
+  },
   "llm_multistage_attacks_technical_breakdown_full": {
     title: "On the Feasibility of Using LLMs to Execute Multistage Network Attacks – A Technical Breakdown",
     slug: "llm_multistage_attacks_technical_breakdown_full",

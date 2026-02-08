@@ -210,6 +210,16 @@ export const blogIntro = {
 
 export const blogs = [
   {
+    slug: "llm_assisted_binary_diffing_blog",
+    title: "LLM-Assisted Binary Diffing: Finding 1-Days Before PoCs Drop",
+    href: "/blog/llm_assisted_binary_diffing_blog",
+    excerpt:
+      "When a vendor ships a security patch, the binary tells the story. LLMs compress patch diffing from days to hours; this post walks the full pipeline from acquisition to validation.",
+    date: "February 8, 2026",
+    readTime: "8 min read",
+    category: "Research Papers",
+  },
+  {
     slug: "llm_multistage_attacks_technical_breakdown_full",
     title: "On the Feasibility of Using LLMs to Execute Multistage Network Attacks – A Technical Breakdown",
     href: "/blog/llm_multistage_attacks_technical_breakdown_full",
