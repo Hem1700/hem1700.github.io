@@ -60,6 +60,13 @@ export const experience = [
 
 export const projects = [
   {
+    title: "Raven",
+    description:
+      "An AI-powered offensive security research platform combining autonomous exploit development with intelligent binary analysis. Raven uses a multi-agent system (Scout, Analyst, Weaponizer, Validator) to automate the full security research lifecycle — from binary recon and vulnerability discovery to exploit generation and validation. Built for CTF players, red teamers, and security researchers.",
+    href: "https://github.com/Hem1700/raven",
+    tags: ["Security", "AI", "Toolkit"],
+  },
+  {
     title: "Phish Analyzer Tool",
     description:
       "A patented desktop application designed to analyze and secure against phishing emails, featuring sandbox configurations, advanced security mechanisms, and a user-friendly interface to enhance threat detection and response.",
