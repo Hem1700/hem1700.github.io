@@ -11,22 +11,22 @@ export const hero = {
   highlight: "Hem Parekh",
   image: "/images/heading_image.webp",
   blurb:
-    "Security engineer and pen tester building hardened systems, staging exploit labs, and mapping attack surfaces before adversaries do.",
+    "Security and Privacy Engineer at Amazon — building autonomous security tools, shipping privacy-by-design controls, and finding vulnerabilities before adversaries do.",
 };
 
 export const about = {
   title: "ABOUT ME",
   image: "/images/profile.jpeg",
-  text: `I’m Hem Parekh, a Security Engineer and Pen Tester who thrives on building resilient software and unearthing vulnerabilities. I blend engineering discipline with a hacker’s curiosity to design secure systems and to stress-test the ones that already exist. When I’m not pulling threads on a bug, I’m writing up what I find so other defenders can move faster.`,
+  text: `I’m Hem Parekh, a Security and Privacy Engineer at Amazon working on Devices & Services. I run privacy threat modeling and design reviews, lead incident response for data exposure events, and build internal tooling to automate privacy-by-design controls across product teams. On the side, I build autonomous security tools — including FORGE, a multi-agent pentesting platform, and ShellScribe, an offline security analysis CLI. I blend engineering discipline with a hacker’s curiosity, and I write up what I find so other defenders can move faster.`,
 };
 
 export const experience = [
   {
-    range: "Mar 2025 - Present",
-    role: "Privacy Engineer",
+    range: "Mar 2024 - Present",
+    role: "Security and Privacy Engineer",
     org: "Amazon",
     desc:
-      "Driving privacy-by-design reviews and mitigating data exposure risks across services; partnering with engineering teams to embed controls and streamline compliance.",
+      "Leading privacy threat modeling and design reviews for Devices & Services features; conducting end-to-end privacy incident response; building MCP-powered tooling to automate privacy review workflows and enforce privacy-by-design guardrails; translating GDPR/CCPA requirements into actionable technical controls across product and engineering teams.",
   },
   {
     range: "May 2024 - Dec 2024",
@@ -59,6 +59,13 @@ export const experience = [
 ];
 
 export const projects = [
+  {
+    title: "FORGE",
+    description:
+      "A fully autonomous multi-agent pentesting platform. The Strategic Brain handles semantic app modeling, LLM-powered campaign planning, and attack surface analysis. The Tactical Swarm runs ReAct-driven agents (recon, probe, deep exploit, evasion, fuzzing) that reason and adapt mid-execution using HTTP requests and Docker-hosted security tools (sqlmap, ffuf, nikto). Ships a Live Exploitation Engine: generates weaponized exploit scripts, executes them in isolated Docker containers against real targets, and delivers LLM-judged verdicts (confirmed / failed / inconclusive) with user override. Discovered 226 vulnerabilities in a real-world CLI project during initial testing. Full React dashboard with live WebSocket streaming, CLI tool, and human-in-the-loop gates throughout.",
+    href: "https://github.com/Hem1700/forge",
+    tags: ["Security", "AI", "Automation"],
+  },
   {
     title: "Raven",
     description:
