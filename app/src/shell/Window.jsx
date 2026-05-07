@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { APPS } from "../data/apps";
 
 const GENIE_MS = 420;
+const MIN_W = 360;
+const MIN_H = 220;
+const TOPBAR_H = 30;
 
 // Resolve the dock icon's center (or a fallback bottom-center point) for the
 // genie animation target. Returns the delta from the window's center to the
@@ -65,14 +68,32 @@ export default function Window({
         onMove(
           win.id,
           Math.max(0, drag.wx + (x - drag.x)),
-          Math.max(30, drag.wy + (y - drag.y))
+          Math.max(TOPBAR_H, drag.wy + (y - drag.y))
         );
       } else if (rsz) {
-        onResize(
-          win.id,
-          Math.max(360, rsz.ww + (x - rsz.x)),
-          Math.max(220, rsz.wh + (y - rsz.y))
-        );
+        // 8-direction resize. rsz.dir is one of n/s/e/w/ne/nw/se/sw.
+        const dx = x - rsz.x;
+        const dy = y - rsz.y;
+        let nx = rsz.wx;
+        let ny = rsz.wy;
+        let nw = rsz.ww;
+        let nh = rsz.wh;
+        if (rsz.dir.includes("e")) {
+          nw = Math.max(MIN_W, rsz.ww + dx);
+        }
+        if (rsz.dir.includes("w")) {
+          nw = Math.max(MIN_W, rsz.ww - dx);
+          nx = Math.max(0, rsz.wx + (rsz.ww - nw));
+        }
+        if (rsz.dir.includes("s")) {
+          nh = Math.max(MIN_H, rsz.wh + dy);
+        }
+        if (rsz.dir.includes("n")) {
+          nh = Math.max(MIN_H, rsz.wh - dy);
+          ny = Math.max(TOPBAR_H, rsz.wy + (rsz.wh - nh));
+        }
+        if (nx !== rsz.wx || ny !== rsz.wy) onMove(win.id, nx, ny);
+        if (nw !== rsz.ww || nh !== rsz.wh) onResize(win.id, nw, nh);
       }
     };
     const up = () => {
@@ -128,11 +149,11 @@ export default function Window({
     setDrag({ x, y, wx: win.x, wy: win.y });
     onFocus(win.id);
   };
-  const startResize = (e) => {
+  const startResize = (dir) => (e) => {
     e.stopPropagation();
     const x = e.touches ? e.touches[0].clientX : e.clientX;
     const y = e.touches ? e.touches[0].clientY : e.clientY;
-    setRsz({ x, y, ww: win.w, wh: win.h });
+    setRsz({ x, y, ww: win.w, wh: win.h, wx: win.x, wy: win.y, dir });
     onFocus(win.id);
   };
 
@@ -202,7 +223,17 @@ export default function Window({
       </div>
       <div className="wb">{children}</div>
       {!win.maximized && (
-        <div className="rs" onMouseDown={startResize} onTouchStart={startResize} />
+        <>
+          <div className="rs-edge rs-n"  onMouseDown={startResize("n")}  onTouchStart={startResize("n")} />
+          <div className="rs-edge rs-s"  onMouseDown={startResize("s")}  onTouchStart={startResize("s")} />
+          <div className="rs-edge rs-e"  onMouseDown={startResize("e")}  onTouchStart={startResize("e")} />
+          <div className="rs-edge rs-w"  onMouseDown={startResize("w")}  onTouchStart={startResize("w")} />
+          <div className="rs-corner rs-nw" onMouseDown={startResize("nw")} onTouchStart={startResize("nw")} />
+          <div className="rs-corner rs-ne" onMouseDown={startResize("ne")} onTouchStart={startResize("ne")} />
+          <div className="rs-corner rs-sw" onMouseDown={startResize("sw")} onTouchStart={startResize("sw")} />
+          <div className="rs-corner rs-se" onMouseDown={startResize("se")} onTouchStart={startResize("se")} />
+          <div className="rs" aria-hidden="true" />
+        </>
       )}
     </div>
   );
