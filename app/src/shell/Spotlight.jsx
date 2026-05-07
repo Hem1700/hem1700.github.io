@@ -147,7 +147,7 @@ export default function Spotlight({ onClose, onLaunch, onOpenPost, onRunCveComma
           <span>esc close</span>
         </div>
       )}
-      <div className="rs">
+      <div className="spot-rs">
         {grouped.length === 0 && (
           <div className="re"><div className="ttl" style={{ color: "var(--mut)" }}>no results for "{q}"</div></div>
         )}

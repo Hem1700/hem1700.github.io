@@ -1321,10 +1321,11 @@ body.dark {
   font-family: var(--sans);
   border-bottom: 1px solid var(--line);
 }
-.spotlight .rs {
+.spotlight .spot-rs {
   max-height: 360px;
   overflow-y: auto;
   position: static;
+  width: 100%;
 }
 .spotlight .re {
   padding: 10px 18px;
