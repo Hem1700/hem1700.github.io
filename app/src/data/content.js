@@ -404,3 +404,103 @@ export const blogs = [
     category: "CVEs/Libraries",
   },
 ];
+
+// ============================================================
+// HEM-OS additions — new content for the OS metaphor.
+// All EXISTING exports above (socialLinks, hero, about, experience,
+// projects, certifications, blogIntro, blogs) are unchanged.
+// ============================================================
+
+export const identity = {
+  name: "Hem Parekh",
+  role: "Security and Privacy Engineer",
+  current: "Amazon",
+  location: "United States",
+  tz: "PT",
+  email: "hemparekhportfolio@gmail.com",
+};
+
+export const manifesto = [
+  { k: "BUILD:", v: "tools that ship, not slides." },
+  { k: "WRITE:", v: "defenders move faster when findings are public." },
+  { k: "HUNT:",  v: "every environment tells a story — read it before reacting." },
+  { k: "LEARN:", v: "curiosity-d runs continuously." },
+];
+
+export const stats = [
+  { n: String(projects.length),        l: "projects" },
+  { n: String(blogs.length),           l: "writeups" },
+  { n: String(certifications.length),  l: "certs" },
+  { n: "1",                            l: "patent" },
+];
+
+// `now` — currently-focused items. Pure flavor; user edits.
+export const now = [
+  "Building MCP-powered privacy review tooling at Amazon",
+  "Reverse-engineering CVE-2022-26318 (WatchGuard Firebox) for the next post",
+  "Iterating on FORGE — autonomous multi-agent pentesting",
+  "Reading: AMD-TSA microcode advisory + transient scheduler attacks",
+];
+
+// Short two-letter / four-letter project codes used by Files app.
+// Map by project title — falls back to first chars of title in Files component.
+export const projectMeta = {
+  "FORGE": { code: "FRG", status: "ACTIVE",   metric: "226 vulns surfaced",   stack: ["React", "Python", "FastAPI", "Docker", "WebSocket"] },
+  "Raven": { code: "RVN", status: "ACTIVE",   metric: "multi-agent platform", stack: ["Python", "LLM", "Binary RE"] },
+  "Phish Analyzer Tool": { code: "SITA", status: "PATENTED", metric: "patented design", stack: ["Desktop", "Sandbox"] },
+  "Secure Communication Using Image Exif Data": { code: "EXIF", status: "RESEARCH", metric: "covert channel paper", stack: ["Image", "Crypto", "Steganography"] },
+  "Architecture and Advancement in Virtualization of TPM": { code: "vTPM", status: "RESEARCH", metric: "research paper", stack: ["Virtualization", "TPM", "Cloud"] },
+  "Quantum Key Distribution": { code: "QKD", status: "RESEARCH", metric: "QKD distance study", stack: ["Quantum", "Crypto"] },
+  "SecTool: The Comprehensive Cybersecurity Toolkit": { code: "SEC", status: "SHIPPED", metric: "all-in-one toolkit", stack: ["Python", "Toolkit"] },
+  "Website Crawler": { code: "WCR", status: "SHIPPED", metric: "scraping utility", stack: ["Python", "Web"] },
+  "ShellScribe": { code: "SHL", status: "ACTIVE", metric: "policy-gated runner", stack: ["Python", "Plugin", "CLI"] },
+};
+
+// Year + issuer extracted from existing `details` strings on certifications.
+// Used by Timeline app's cert grid. Order mirrors the certifications array.
+export const certMeta = certifications.map((c) => {
+  const issuerMatch = c.details.match(/by\s+([A-Za-z0-9\s\-&/]+?)(?:\s*-|\s*$)/);
+  const yearMatch = c.details.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}/);
+  return {
+    title: c.title,
+    iss: c.issuer || (issuerMatch ? issuerMatch[1].trim() : "—"),
+    y: yearMatch ? yearMatch[0] : "—",
+    href: c.href,
+  };
+});
+
+// CVE entries derived from blog posts whose titles look like CVEs.
+// Used by Terminal `cves` and `cat cve <id>` commands.
+function deriveCveEntries() {
+  const isCveLike = (t) => t.toUpperCase().includes("CVE");
+  return blogs
+    .filter((b) => isCveLike(b.title))
+    .map((b) => {
+      const idMatch = b.title.match(/CVE[-–](\d{4})[-–]?(\d+)/i);
+      const id = idMatch ? `CVE-${idMatch[1]}-${idMatch[2]}` : b.slug.toUpperCase();
+      const yearMatch = idMatch ? idMatch[1] : (b.date.match(/\d{4}/) || ["—"])[0];
+      // Heuristic target/class derivation — first noun in excerpt + a static class.
+      const target = (b.excerpt.split(/[.,]/)[0] || "Unknown").slice(0, 40);
+      return {
+        id,
+        target,
+        class: b.category || "Unknown",
+        year: yearMatch,
+        role: "study",
+        slug: b.slug,
+      };
+    });
+}
+
+export const cves = deriveCveEntries();
+
+// Social handles — pulled from socialLinks; supplemented for Mail app.
+export const socialHandles = socialLinks.map((s) => ({
+  label: s.label,
+  href: s.href,
+  handle: s.label === "GitHub" ? "@Hem1700" :
+          s.label === "LinkedIn" ? "/in/hem-parekh" :
+          s.label === "Medium" ? "@hemparekh1596" :
+          s.label === "TryHackMe" ? "/p/beatmonk" :
+          s.label === "HackTheBox" ? "/profile" : "—",
+}));

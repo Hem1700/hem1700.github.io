@@ -1,14 +1,14 @@
 import { useEffect, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
 import { blogs } from "../data/content";
 import { posts } from "../data/posts";
 
+// Strip nav/header/footer/style chrome from imported blog HTML and unwrap
+// container divs so the post integrates with our centered layout.
 function sanitizePostContent(htmlString) {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, "text/html");
 
-    // Strip external chrome or inline styling that fights the SPA theme
     const removeSelectors = [
       "style",
       "script",
@@ -26,11 +26,9 @@ function sanitizePostContent(htmlString) {
     doc.querySelectorAll(removeSelectors.join(",")).forEach((node) => node.remove());
     doc.querySelectorAll("[style]").forEach((el) => el.removeAttribute("style"));
 
-    // Remove duplicated titles from imported HTML; page already renders the H1
     const firstH1 = doc.querySelector("h1");
     if (firstH1) firstH1.remove();
 
-    // Prefer the inner text wrapper; fall back to section/article/body
     const mainCandidates = [".blog-text", "article", ".blog-post-content", "main"];
     let container = doc.body;
     for (const selector of mainCandidates) {
@@ -41,7 +39,6 @@ function sanitizePostContent(htmlString) {
       }
     }
 
-    // Unwrap generic container divs to avoid nested widths interfering with our card
     container.querySelectorAll(".container").forEach((node) => {
       while (node.firstChild) {
         node.parentNode.insertBefore(node.firstChild, node);
@@ -49,19 +46,17 @@ function sanitizePostContent(htmlString) {
       node.remove();
     });
 
-    // Add predictable IDs for headings (helps future TOC or anchor links)
     Array.from(container.querySelectorAll("h2, h3")).forEach((heading, idx) => {
       if (!heading.id) heading.id = `section-${idx + 1}`;
     });
 
     return container.innerHTML || htmlString;
-  } catch (e) {
+  } catch (_) {
     return htmlString;
   }
 }
 
-export default function PostPage() {
-  const { slug } = useParams();
+export default function PostViewer({ slug, onClose }) {
   const postEntry = posts[slug];
   const meta = blogs.find((b) => b.slug === slug);
 
@@ -70,11 +65,11 @@ export default function PostPage() {
     return sanitizePostContent(postEntry.content);
   }, [postEntry]);
 
-  const getTheme = () => (document.body.classList.contains("dark") ? "dark" : "light");
-
+  // Mount giscus once per slug. Theme is fixed dark (no toggle).
   useEffect(() => {
-    const container = document.querySelector(".giscus-container");
-    if (!container) return;
+    if (!postEntry) return undefined;
+    const container = document.querySelector(".pv-comments");
+    if (!container) return undefined;
     container.innerHTML = "";
 
     const script = document.createElement("script");
@@ -92,65 +87,39 @@ export default function PostPage() {
     script.setAttribute("data-emit-metadata", "0");
     script.setAttribute("data-input-position", "top");
     script.setAttribute("data-lang", "en");
-    script.setAttribute("data-theme", getTheme());
-
+    script.setAttribute("data-theme", "dark");
     container.appendChild(script);
 
-    return () => {
-      container.innerHTML = "";
-    };
-  }, [slug]);
-
-  useEffect(() => {
-    const applyTheme = () => {
-      const iframe = document.querySelector("iframe.giscus-frame");
-      if (!iframe) return;
-      iframe.contentWindow?.postMessage(
-        {
-          giscus: {
-            setConfig: {
-              theme: getTheme(),
-            },
-          },
-        },
-        "https://giscus.app"
-      );
-    };
-
-    const observer = new MutationObserver(applyTheme);
-    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
-    applyTheme();
-    return () => observer.disconnect();
-  }, []);
+    return () => { container.innerHTML = ""; };
+  }, [slug, postEntry]);
 
   if (!postEntry) {
     return (
-      <main className="section blog-post-content container">
-        <h2>Post not found</h2>
-        <p>Signal lost. Let’s go back.</p>
-        <Link to="/blogs" className="view-credentials">
-          Back to Blog
-        </Link>
-      </main>
+      <div className="pv">
+        <div className="pv-bar">
+          <div className="pv-close" onClick={onClose}>✕</div>
+          <div className="pv-ti">Post not found</div>
+        </div>
+        <div className="pv-body">
+          <h1 className="pv-title">Post not found</h1>
+          <p>Signal lost. Close this and try another post from the Notes app.</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
-      <header className="blog-post-header">
-        <div className="container text-center">
-          <h1 className="blog-post-title">{postEntry.title}</h1>
-          {meta && <p className="blog-post-date">{meta.date} · {meta.readTime}</p>}
-        </div>
-      </header>
-      <main className="section blog-post-content container">
-        <article dangerouslySetInnerHTML={{ __html: content }} />
-        <section className="comments">
-          <div className="container">
-            <div className="giscus-container" />
-          </div>
-        </section>
-      </main>
-    </>
+    <div className="pv">
+      <div className="pv-bar">
+        <div className="pv-close" onClick={onClose}>✕</div>
+        <div className="pv-ti">{postEntry.title}</div>
+      </div>
+      <div className="pv-body">
+        <h1 className="pv-title">{postEntry.title}</h1>
+        {meta && <div className="pv-meta">{meta.date} · {meta.readTime} · {meta.category}</div>}
+        <div className="pv-content" dangerouslySetInnerHTML={{ __html: content }} />
+      </div>
+      <div className="pv-comments" />
+    </div>
   );
 }
