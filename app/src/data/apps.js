@@ -9,6 +9,7 @@ export const APPS = {
   mail:     { title: "Mail — Contact",      g: "g-mail",   w: 760, h: 540 },
   system:   { title: "System Monitor",      g: "g-system", w: 680, h: 540 },
   games:    { title: "Games — CVE Range",   g: "g-games",  w: 900, h: 600 },
+  exploitlab: { title: "Exploit Lab",       g: "g-exploit", w: 860, h: 600 },
 };
 
 // Order in the dock + mobile tab bar. Readme is intentionally not in the dock —
@@ -25,4 +26,4 @@ export const DOCK_ORDER = [
 ];
 
 // All apps, including readme — used by spotlight and mobile tab bar.
-export const ALL_APPS = ["readme", ...DOCK_ORDER];
+export const ALL_APPS = ["readme", ...DOCK_ORDER, "exploitlab"];

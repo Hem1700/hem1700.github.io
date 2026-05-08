@@ -4256,3 +4256,496 @@ body.dark .cve-modal__card {
 .win > .rs {
   pointer-events: none;
 }
+
+/* ==================== EXPLOIT LAB ==================== */
+
+.g-exploit {
+  background: linear-gradient(135deg, #ff5970, #b58cff);
+}
+
+/* ── Container ── */
+.exploit-lab {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-1);
+  font-family: var(--mono);
+  color: var(--ink);
+}
+
+/* ── Shared inputs / buttons ── */
+.el-input {
+  width: 100%;
+  background: var(--bg-0);
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.el-input:focus { border-color: var(--acc2); }
+
+.el-label {
+  font-size: 0.72rem;
+  color: var(--mut);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+.el-label-hint { text-transform: none; font-size: 0.68rem; color: var(--mut); }
+
+.el-btn-primary {
+  background: var(--acc);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  padding: 0.65rem 1.5rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  letter-spacing: 0.03em;
+}
+.el-btn-primary:hover:not(:disabled) { opacity: 0.85; }
+.el-btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.el-btn-ghost {
+  background: transparent;
+  color: var(--ink-d);
+  border: 1px solid var(--line2);
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.el-btn-ghost:hover:not(:disabled) { color: var(--ink); border-color: var(--line2); }
+.el-btn-ghost:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.el-badge {
+  font-size: 0.68rem;
+  font-family: var(--mono);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+.el-cvss {
+  font-size: 0.72rem;
+  color: var(--mut);
+  letter-spacing: 0.03em;
+}
+
+/* ── Setup screen ── */
+.el-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 2rem;
+  gap: 0.6rem;
+  max-width: 460px;
+  margin: 0 auto;
+  width: 100%;
+}
+.el-setup-icon { font-size: 2rem; margin-bottom: 0.25rem; }
+.el-setup-title {
+  font-size: 1.2rem;
+  color: var(--ink);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.1rem;
+}
+.el-setup-desc {
+  font-size: 0.8rem;
+  color: var(--mut);
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+.el-setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+.el-key-wrap { position: relative; }
+.el-key-wrap .el-input { padding-right: 4rem; }
+.el-key-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--mut);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+}
+.el-key-toggle:hover { color: var(--ink-d); }
+.el-setup-form .el-btn-primary { margin-top: 0.5rem; width: 100%; }
+.el-setup-footer {
+  font-size: 0.68rem;
+  color: var(--mut);
+  text-align: center;
+  margin-top: 0.25rem;
+  opacity: 0.7;
+}
+
+/* ── Loading screen ── */
+.el-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 2rem;
+  gap: 1rem;
+}
+.el-loading-cve {
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: var(--acc2);
+}
+.el-loading-bar {
+  width: 280px;
+  height: 3px;
+  background: var(--bg-2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.el-loading-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--acc2), var(--acc3));
+  border-radius: 2px;
+  animation: el-scan 1.6s ease-in-out infinite;
+}
+@keyframes el-scan {
+  0%   { width: 0%;   margin-left: 0; }
+  50%  { width: 60%;  margin-left: 20%; }
+  100% { width: 0%;   margin-left: 100%; }
+}
+.el-loading-log {
+  font-size: 0.78rem;
+  color: var(--mut);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 6rem;
+}
+.el-loading-line { color: var(--ink-d); }
+.el-loading-line:last-child { color: var(--acc2); }
+
+/* ── Result screen ── */
+.el-result {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.el-result-header {
+  padding: 1rem 1.2rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.el-result-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.el-result-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+.el-result-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.el-result-affected { font-size: 0.72rem; color: var(--mut); }
+.el-result-summary {
+  font-size: 0.78rem;
+  color: var(--ink-d);
+  line-height: 1.55;
+  font-family: var(--sans);
+}
+
+.el-result-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Step list sidebar */
+.el-step-list {
+  width: 190px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+  padding: 0.75rem 0;
+}
+.el-step-list-title {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mut);
+  padding: 0 1rem 0.5rem;
+}
+.el-step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--ink-d);
+  transition: background 0.1s, color 0.1s;
+  border-left: 2px solid transparent;
+}
+.el-step-item:hover { background: var(--bg-2); color: var(--ink); }
+.el-step-item.el-step-active {
+  background: rgba(110,231,255,0.06);
+  color: var(--acc2);
+  border-left-color: var(--acc2);
+}
+.el-step-num {
+  font-size: 0.68rem;
+  color: var(--mut);
+  width: 1rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+.el-step-item.el-step-active .el-step-num { color: var(--acc2); }
+.el-step-name { line-height: 1.3; }
+
+/* Step detail panel */
+.el-step-detail {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.el-step-detail-title {
+  font-size: 0.9rem;
+  color: var(--ink);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.el-step-detail-num {
+  font-size: 0.68rem;
+  color: var(--mut);
+  font-weight: 400;
+}
+.el-step-desc {
+  font-size: 0.8rem;
+  color: var(--ink-d);
+  line-height: 1.6;
+  font-family: var(--sans);
+}
+.el-code {
+  background: var(--bg-0);
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  color: var(--grn);
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.5;
+}
+.el-step-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+.el-step-dots { display: flex; gap: 0.4rem; }
+.el-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--line2);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.el-dot.el-dot-on { background: var(--acc2); }
+
+/* Result footer */
+.el-result-footer {
+  display: flex;
+  gap: 1px;
+  border-top: 1px solid var(--line);
+  background: var(--line);
+}
+.el-footer-col {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  background: var(--bg-1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.el-footer-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mut);
+}
+.el-footer-val {
+  font-size: 0.75rem;
+  color: var(--ink-d);
+  line-height: 1.4;
+  font-family: var(--sans);
+}
+
+/* ── Error screen ── */
+.el-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 2rem;
+  gap: 1rem;
+}
+.el-error-icon { font-size: 2rem; color: var(--red); }
+.el-error-msg { font-size: 0.82rem; color: var(--ink-d); text-align: center; max-width: 360px; line-height: 1.5; }
+
+/* ── Visual animations ── */
+.el-viz {
+  background: var(--bg-0);
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  padding: 1rem;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.el-viz-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mut);
+}
+
+/* Memory viz */
+.el-seg {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.el-seg-kernel { background: rgba(181,140,255,0.1); }
+.el-seg-stack  { background: rgba(110,231,255,0.08); }
+.el-seg-mmap   { background: rgba(255,93,56,0.08); }
+.el-seg-heap   { background: rgba(93,211,158,0.08); }
+.el-seg-text   { background: rgba(255,209,102,0.08); }
+.el-seg-active { border-color: var(--red); background: rgba(255,89,112,0.2) !important; animation: el-pulse 0.3s ease; }
+@keyframes el-pulse { 0% { transform: scaleX(1); } 50% { transform: scaleX(1.02); } 100% { transform: scaleX(1); } }
+.el-seg-addr { font-size: 0.65rem; color: var(--mut); font-family: var(--mono); }
+.el-seg-name { color: var(--ink-d); }
+
+/* Race viz */
+.el-viz-race { gap: 0.5rem; }
+.el-race-row { display: flex; align-items: center; gap: 0.5rem; }
+.el-race-name { font-size: 0.68rem; color: var(--mut); width: 80px; flex-shrink: 0; }
+.el-race-track { flex: 1; height: 10px; background: var(--bg-2); border-radius: 5px; overflow: hidden; }
+.el-race-bar { height: 100%; border-radius: 5px; transition: width 0.08s linear; }
+.el-race-safe { background: var(--grn); }
+.el-race-evil { background: var(--red); }
+.el-race-pct { font-size: 0.68rem; color: var(--mut); width: 2.5rem; text-align: right; }
+.el-race-win { font-size: 0.68rem; color: var(--ylw); margin-top: 0.25rem; animation: el-blink 1s step-end infinite; }
+@keyframes el-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* Network viz */
+.el-viz-net { justify-content: center; }
+.el-net-path { display: flex; align-items: center; flex-wrap: wrap; gap: 0.25rem; }
+.el-net-hop-wrap { display: flex; align-items: center; gap: 0.25rem; }
+.el-net-node {
+  font-size: 0.68rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  color: var(--ink-d);
+  transition: border-color 0.2s, color 0.2s;
+}
+.el-net-node.el-net-active { border-color: var(--acc); color: var(--acc); }
+.el-net-arrow { position: relative; font-size: 0.8rem; color: var(--mut); display: flex; align-items: center; }
+.el-net-packet {
+  position: absolute;
+  left: 0; top: 50%;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--acc);
+  transform: translateY(-50%);
+  opacity: 0;
+}
+.el-net-packet.el-net-flying { animation: el-fly 0.9s ease-in-out; }
+@keyframes el-fly { 0% { opacity:1; left:0; } 100% { opacity:0; left:100%; } }
+
+/* File viz */
+.el-file-tree { font-size: 0.75rem; line-height: 1.8; }
+.el-file-dir { color: var(--acc2); }
+.el-file-indent { padding-left: 1.2rem; }
+.el-file-node { color: var(--ink-d); }
+.el-file-dim { color: var(--mut); }
+.el-file-hit { color: var(--red); animation: el-blink 0.8s step-end infinite; font-weight: 600; }
+
+/* Process viz */
+.el-viz-proc { justify-content: center; }
+.el-proc-tree { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+.el-proc-box {
+  font-size: 0.72rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  text-align: center;
+  transition: background 0.3s, border-color 0.3s;
+}
+.el-proc-kernel { background: rgba(181,140,255,0.12); border-color: var(--acc3); color: var(--acc3); }
+.el-proc-init   { background: rgba(110,231,255,0.08); color: var(--acc2); }
+.el-proc-user   { color: var(--ink-d); }
+.el-proc-root   { background: rgba(255,89,112,0.15); border-color: var(--red); color: var(--red); }
+.el-proc-line   { width: 1px; height: 16px; background: var(--line2); }
+.el-proc-line-h { width: 20px; height: 1px; }
+.el-proc-row    { display: flex; align-items: center; gap: 0; }
+.el-proc-badge  {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  color: var(--red);
+  margin-top: 0.25rem;
+  animation: el-blink 1.2s step-end infinite;
+}
+
+/* Terminal viz */
+.el-viz-term { font-family: var(--mono); }
+.el-term-output { font-size: 0.72rem; line-height: 1.7; color: var(--ink-d); }
+.el-term-success { color: var(--grn); }
+.el-term-warn    { color: var(--ylw); }
+.el-term-cursor  { animation: el-blink 1s step-end infinite; color: var(--acc2); }

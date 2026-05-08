@@ -14,6 +14,7 @@ import Timeline from "../apps/Timeline";
 import Mail from "../apps/Mail";
 import System from "../apps/System";
 import Games from "../apps/Games";
+import ExploitLab from "../apps/ExploitLab";
 
 function AppHost({ app, win, desktop }) {
   const appState = win.appState || {};
@@ -47,6 +48,8 @@ function AppHost({ app, win, desktop }) {
       return <System />;
     case "games":
       return <Games initialGame={appState.initialGame} />;
+    case "exploitlab":
+      return <ExploitLab />;
     default:
       return null;
   }

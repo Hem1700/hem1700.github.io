@@ -9,6 +9,7 @@ import Timeline from "../apps/Timeline";
 import Mail from "../apps/Mail";
 import System from "../apps/System";
 import Games from "../apps/Games";
+import ExploitLab from "../apps/ExploitLab";
 import PostViewer from "./PostViewer";
 import Spotlight from "./Spotlight";
 
@@ -23,8 +24,9 @@ function renderApp(app, args) {
     case "timeline": return <Timeline />;
     case "mail":     return <Mail />;
     case "system":   return <System />;
-    case "games":    return <Games initialGame={a.initialGame} />;
-    default:         return null;
+    case "games":      return <Games initialGame={a.initialGame} />;
+    case "exploitlab": return <ExploitLab />;
+    default:           return null;
   }
 }
 
