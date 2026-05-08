@@ -14,7 +14,13 @@ const SCENARIOS = [
     dc: "#4ade80",
     target: "login.php — vulnerable-corp.com",
     objective: "Bypass authentication or dump the users table",
-    hint: "Try: ' OR '1'='1' --  or  ' UNION SELECT 1,username,password_hash,role FROM users --",
+    hints: [
+      "Think about how quotes break out of the SQL string context.",
+      "Try adding a single quote ' to see if you get a SQL error.",
+      "The pattern ' OR condition -- comments out the rest. What condition is always true?",
+      "Try: ' OR '1'='1' --  as the username. The password doesn't matter.",
+      "Exact payload: ' OR '1'='1' --  (enter anything for password)",
+    ],
     initialState: {
       type: "database",
       tables: {
@@ -42,7 +48,8 @@ Always respond with ONLY a valid JSON object — no markdown fences, no explanat
   "internalLog": "What the database engine does — 1 sentence, technical",
   "newState": {},
   "exploitSuccess": false,
-  "successMessage": null
+  "successMessage": null,
+  "attackerNote": null
 }
 
 Rules:
@@ -50,7 +57,8 @@ Rules:
 - If auth bypass works, set authenticated: true and lastResult to the matched row(s)
 - If UNION or data dump works, put the dumped rows in lastResult
 - Set exploitSuccess: true when attacker bypasses auth OR reads data they shouldn't see
-- successMessage should say what they achieved`,
+- successMessage should say what they achieved
+- attackerNote: if exploit worked, return a 1-2 sentence educational note explaining the technique used (for the Attacker Notes panel)`,
     buildUserMessage: (state, input) =>
       `State: ${JSON.stringify(state)}\nAttacker enters in the username field (password = "test"): ${input}`,
   },
@@ -63,7 +71,13 @@ Rules:
     dc: "#fb923c",
     target: "Network diagnostics — 10.0.1.5/ping.php",
     objective: "Inject shell commands. Read /etc/passwd or /root/.ssh/id_rsa",
-    hint: "Try: 127.0.0.1; id  or  127.0.0.1 && cat /etc/passwd  or  127.0.0.1 | cat /root/.ssh/id_rsa",
+    hints: [
+      "The server runs your input through a shell command. Think about shell metacharacters.",
+      "Shell separators like ; | && || let you chain commands after the ping.",
+      "Try: 127.0.0.1; id  to check if command injection works first.",
+      "Once you confirm RCE, try: 127.0.0.1 && cat /etc/passwd",
+      "Exact payload: 127.0.0.1; cat /etc/passwd  or  127.0.0.1 | cat /root/.ssh/id_rsa",
+    ],
     initialState: {
       type: "shell",
       hostname: "prod-web-01",
@@ -92,7 +106,8 @@ Always respond with ONLY a valid JSON object — no markdown fences, no explanat
   "internalLog": "What the OS executes — 1 sentence, technical",
   "newState": {},
   "exploitSuccess": false,
-  "successMessage": null
+  "successMessage": null,
+  "attackerNote": null
 }
 
 Rules:
@@ -101,7 +116,8 @@ Rules:
 - Update commandHistory by appending the commandExecuted
 - Update lastOutput to the serverResponse
 - Set exploitSuccess: true if they read any sensitive file or execute commands beyond ping
-- If they run "id" or "whoami", return "www-data"`,
+- If they run "id" or "whoami", return "www-data"
+- attackerNote: if exploit worked, return 1-2 sentences explaining the OS command injection technique`,
     buildUserMessage: (state, input) =>
       `State: ${JSON.stringify({ hostname: state.hostname, commandHistory: state.commandHistory, rootOwned: state.rootOwned })}\nSensitive files (return contents if accessed): ${JSON.stringify(state.sensitiveFiles)}\nAttacker submits to host field: ${input}`,
   },
@@ -114,7 +130,13 @@ Rules:
     dc: "#4ade80",
     target: "File API — api.vulnerable-corp.com/download",
     objective: "Escape the web root. Read /etc/passwd or find the flag",
-    hint: "Try: ../../../etc/passwd  or  ....//....//....//etc/shadow  or  ../../../root/flag.txt",
+    hints: [
+      "The server joins your input to /var/www/uploads/ without sanitization.",
+      "../ moves up one directory level. Chain them to climb the filesystem.",
+      "Try: ../../../etc/passwd  (each ../ goes up one level from /var/www/uploads/)",
+      "From /var/www/uploads, you need 3 levels up to reach /: ../../../etc/passwd",
+      "Exact payload: ../../../etc/passwd  or  ../../../root/flag.txt",
+    ],
     initialState: {
       type: "filesystem",
       webroot: "/var/www/uploads/",
@@ -134,27 +156,29 @@ Rules:
     systemPrompt: `You are a deliberately vulnerable file download API in an educational security lab.
 
 Vulnerable PHP (/api/download):
-$file = $_GET['file'];  // user input, e.g. "report.pdf"
-$path = "/var/www/uploads/" . $file;  // naive join
+$file = $_GET['file'];  // user input
+$path = "/var/www/uploads/" . $file;  // naive join, no sanitization
 if(file_exists($path)) { readfile($path); } else { http_response_code(404); echo "Not found"; }
 
 Always respond with ONLY a valid JSON object — no markdown fences, no explanation:
 {
   "serverResponse": "The HTTP response body — file contents if found, 404 message if not",
   "resolvedPath": "The actual filesystem path after joining webroot + user input (resolve ../ manually)",
-  "inWebroot": true or false based on whether resolvedPath starts with /var/www/uploads/,
+  "inWebroot": true,
   "internalLog": "What PHP does with the path — 1 sentence",
   "newState": {},
   "exploitSuccess": false,
-  "successMessage": null
+  "successMessage": null,
+  "attackerNote": null
 }
 
 Rules:
-- Resolve path traversal sequences yourself (../../ etc) to get the final absolute path
+- Resolve path traversal sequences yourself to get the final absolute path
 - If resolvedPath matches a key in sensitiveFiles, include its contents in serverResponse
 - If resolvedPath is outside /var/www/uploads/, set inWebroot: false
 - Set exploitSuccess: true when attacker reads any sensitive file
-- Update newState.requestedFile, resolvedPath, inWebroot, lastResponse`,
+- Update newState.requestedFile, resolvedPath, inWebroot, lastResponse
+- attackerNote: if exploit worked, explain directory traversal technique in 1-2 sentences`,
     buildUserMessage: (state, input) =>
       `State: ${JSON.stringify({ webroot: state.webroot, requestedFile: state.requestedFile, resolvedPath: state.resolvedPath })}\nSensitive files: ${JSON.stringify(state.sensitiveFiles)}\nAttacker sends: GET /api/download?file=${input}`,
   },
@@ -167,7 +191,13 @@ Rules:
     dc: "#fb923c",
     target: "Comment section — blog.vulnerable-corp.com",
     objective: "Inject a script that pops alert() or steals the admin session cookie",
-    hint: "Try: <script>alert(1)</script>  or  <img src=x onerror=alert(document.cookie)>  or  <svg onload=alert('XSS')>",
+    hints: [
+      "Comments are rendered as raw HTML — the browser parses everything you post.",
+      "HTML tags in your comment will be executed as markup. Try a simple <b>bold</b> first.",
+      "Script tags execute JavaScript. Try: <script>alert(1)</script>",
+      "To steal cookies: <script>alert(document.cookie)</script>",
+      "img onerror also works if scripts are filtered: <img src=x onerror=alert(document.cookie)>",
+    ],
     initialState: {
       type: "dom",
       comments: [
@@ -185,8 +215,7 @@ Vulnerable PHP:
 // Store: $comment = $_POST['comment'];  // saved to DB without htmlspecialchars
 // Render: echo "<li>" . $row['comment'] . "</li>";  // raw output!
 
-When a victim (admin) browses the page, their browser parses the stored comment as HTML.
-Admin cookie (available to scripts since HttpOnly=false): eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifQ.REDACTED
+Admin cookie (HttpOnly=false, accessible to JS): eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifQ.REDACTED
 
 Always respond with ONLY a valid JSON object — no markdown fences, no explanation:
 {
@@ -195,15 +224,16 @@ Always respond with ONLY a valid JSON object — no markdown fences, no explanat
   "internalLog": "What the browser parser does with this HTML — 1 sentence",
   "newState": {},
   "exploitSuccess": false,
-  "successMessage": null
+  "successMessage": null,
+  "attackerNote": null
 }
 
 Rules:
 - If input contains <script>, onerror=, onload=, or other XSS vectors: set xssTriggered: true
 - If the script accesses document.cookie: set cookieStolen: true, include the adminCookie value in serverResponse
-- Add the new comment to state.comments array (with id, author="attacker", text=input, ts="just now")
+- Add the new comment to state.comments array (id, author="attacker", text=input, ts="just now")
 - Set exploitSuccess: true if a script executes
-- If cookie is stolen, show it being "sent to attacker's server" in serverResponse`,
+- attackerNote: if exploit worked, explain reflected vs stored XSS and the cookie theft technique`,
     buildUserMessage: (state, input) =>
       `State: ${JSON.stringify({ comments: state.comments, xssTriggered: state.xssTriggered, cookieStolen: state.cookieStolen })}\nAdmin cookie: ${state.adminCookie}\nAttacker posts this comment: ${input}`,
   },
@@ -216,7 +246,13 @@ Rules:
     dc: "#f87171",
     target: "auth_service — 10.0.1.10:4444 (32-bit Linux ELF)",
     objective: "Overflow buf[64] to overwrite the return address and call win()",
-    hint: "Buffer is 64 bytes. Try 72 'A's first to reach saved EBP. win() is at 0x080484d0. Send 76 bytes total with last 4 = \\xd0\\x84\\x04\\x08",
+    hints: [
+      "The buffer is 64 bytes. Sending more than 64 bytes will overflow into adjacent stack memory.",
+      "Try sending 70 'A's. Check what gets overwritten — the saved EBP comes right after the buffer.",
+      "The return address is 72 bytes from the start of the buffer (64 buf + 4 EBP + 4 retaddr offset).",
+      "win() is at address 0x080484d0. You need to overwrite 72 bytes then place this address.",
+      "Exact payload: 72 × 'A' + \\xd0\\x84\\x04\\x08  (little-endian win() address)",
+    ],
     initialState: {
       type: "memory",
       bufferSize: 64,
@@ -243,33 +279,212 @@ void vuln() {
   printf("Enter token: ");
   gets(buf);  // no bounds check — stack overflow!
 }
-int main() { vuln(); return 0; }
 
-Stack layout (low to high):
-buf[0]  @ 0xffffce9c  (64 bytes for the buffer)
-buf[63] @ 0xffffcec0
-saved EBP @ 0xffffcedc  (4 bytes)
-return addr @ 0xffffcefc  ← win() must land here
+Stack layout:
+buf[0] @ 0xffffce9c (64 bytes), saved EBP @ 0xffffcedc, return addr @ 0xffffcefc
 
 Always respond with ONLY a valid JSON object — no markdown fences, no explanation:
 {
-  "serverResponse": "What the program prints (normal output, crash message, or shell prompt)",
-  "bytesAnalysis": "How many bytes sent, what they overwrite — mention specific addresses",
-  "internalLog": "CPU/stack behavior — 1 sentence, technical",
+  "serverResponse": "What the program prints (prompt, crash message, or shell)",
+  "bytesAnalysis": "How many bytes sent, what they overwrite",
+  "internalLog": "CPU/stack behavior — 1 sentence",
   "newState": {},
   "exploitSuccess": false,
-  "successMessage": null
+  "successMessage": null,
+  "attackerNote": null
 }
 
 Rules:
 - Update bytesWritten to input.length
-- If bytesWritten > 64: overflowDetected = true, update stack to show buf filling and bleeding into EBP/retaddr
-- If input contains \\xd0\\x84\\x04\\x08 (or "win" or the hex address) AND bytesWritten >= 72: shellObtained = true, exploitSuccess = true
-- If bytesWritten exactly matches the right payload (72+ bytes ending in win() address), trigger success
+- If bytesWritten > 64: overflowDetected = true, update stack to show corruption
+- If input contains \\xd0\\x84\\x04\\x08 or "win" AND bytesWritten >= 72: shellObtained = true, exploitSuccess = true
 - Update stack array values to reflect what bytes were written there
-- If no overflow yet: show "Enter token:" prompt in serverResponse`,
+- attackerNote: if exploit worked, explain stack buffer overflows and return address control`,
     buildUserMessage: (state, input) =>
-      `Stack state: ${JSON.stringify(state.stack)}\nbufferSize: ${state.bufferSize}, overflowOffset: ${state.overflowOffset}, win() @ ${state.winAddress}\ncurrent retAddr: ${state.currentRetAddr}, inputHistory: ${JSON.stringify(state.inputHistory)}\nAttacker sends ${input.length} bytes: ${input}`,
+      `Stack: ${JSON.stringify(state.stack)}, bufferSize: ${state.bufferSize}, win()@${state.winAddress}, retAddr: ${state.currentRetAddr}\nAttacker sends ${input.length} bytes: ${input}`,
+  },
+
+  {
+    id: "ssrf",
+    name: "SSRF",
+    icon: "🌐",
+    difficulty: "MEDIUM",
+    dc: "#fb923c",
+    target: "URL Fetcher — tools.vulnerable-corp.com/fetch",
+    objective: "Access internal services: AWS metadata, Redis, or internal admin panel",
+    hints: [
+      "The server fetches URLs on your behalf. Try pointing it at internal addresses.",
+      "Cloud instances often expose metadata at 169.254.169.254. Try that IP.",
+      "Try: http://169.254.169.254/latest/meta-data/",
+      "Internal services often run on localhost. Try: http://127.0.0.1:8080/admin",
+      "Exact payload: http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+    ],
+    initialState: {
+      type: "network",
+      externalAccess: true,
+      lastUrl: null,
+      lastResponse: null,
+      internalServices: {
+        "http://169.254.169.254/latest/meta-data/": "ami-id\nami-launch-index\nhostname\niam/\ninstance-id\nlocal-ipv4\npublic-ipv4\n",
+        "http://169.254.169.254/latest/meta-data/iam/security-credentials/": "AppRole\n",
+        "http://169.254.169.254/latest/meta-data/iam/security-credentials/AppRole": '{"Code":"Success","Type":"AWS-HMAC","AccessKeyId":"ASIAIOSFODNN7EXAMPLE","SecretAccessKey":"wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY","Token":"AQoDYXdzEJr...","Expiration":"2026-12-31T00:00:00Z"}',
+        "http://127.0.0.1:8080/admin": "<html><h1>Internal Admin Panel</h1><p>Welcome, internal user. DB: prod-mysql-01</p></html>",
+        "http://127.0.0.1:6379/": "-ERR wrong number of arguments for 'get' command\n",
+        "http://internal.corp/api/users": '[{"id":1,"user":"admin","role":"superadmin","secret":"super_secret_token_123"}]',
+      },
+    },
+    systemPrompt: `You are a deliberately vulnerable URL fetching service in an educational security lab.
+
+Vulnerable Python (Flask):
+@app.route('/fetch')
+def fetch():
+    url = request.args.get('url')
+    response = requests.get(url, timeout=5)  # no URL validation!
+    return response.text
+
+Always respond with ONLY a valid JSON object — no markdown fences, no explanation:
+{
+  "serverResponse": "The content the server fetched and returned to the attacker",
+  "requestMade": "The actual HTTP request the server made (e.g. GET http://169.254.169.254/...)",
+  "internalLog": "What the server-side code did — 1 sentence",
+  "newState": {},
+  "exploitSuccess": false,
+  "successMessage": null,
+  "attackerNote": null
+}
+
+Rules:
+- If the URL matches a key in internalServices, return that content as serverResponse
+- For partial matches (e.g. url starts with 169.254.169.254), return the closest match
+- If the URL is an external site, describe what it would return (but note it's making a server-side request)
+- Set exploitSuccess: true if attacker accesses any internal service or metadata endpoint
+- Update newState.lastUrl and newState.lastResponse
+- attackerNote: if exploit worked, explain SSRF and its impact (credential theft, internal network access)`,
+    buildUserMessage: (state, input) =>
+      `State: ${JSON.stringify({ lastUrl: state.lastUrl })}\nInternal services available: ${JSON.stringify(Object.keys(state.internalServices))}\nInternal service contents: ${JSON.stringify(state.internalServices)}\nAttacker submits URL: ${input}`,
+  },
+
+  {
+    id: "idor",
+    name: "IDOR",
+    icon: "🔓",
+    difficulty: "EASY",
+    dc: "#4ade80",
+    target: "User API — api.vulnerable-corp.com/users/{id}",
+    objective: "Access other users' private data by manipulating the user ID",
+    hints: [
+      "The API uses your numeric user ID in the URL with no access control check.",
+      "You're logged in as user 42. Try accessing user 1 — that's usually the admin.",
+      "Try IDs sequentially: 1, 2, 3... Some IDs will have more sensitive data.",
+      "User ID 1 is the admin. Try /api/users/1 or change the id parameter to 1.",
+      "Exact payload: try id=1, then id=99 (there's a hidden admin user there)",
+    ],
+    initialState: {
+      type: "database",
+      currentUserId: 42,
+      tables: {
+        users: [
+          { id: 1,  username: "superadmin", email: "admin@corp.internal", role: "SUPERADMIN", ssn: "REDACTED", salary: "$220,000" },
+          { id: 2,  username: "alice",       email: "alice@corp.com",      role: "USER",       ssn: "REDACTED", salary: "$95,000"  },
+          { id: 42, username: "you",         email: "you@example.com",     role: "USER",       ssn: "REDACTED", salary: "$78,000"  },
+          { id: 99, username: "dbadmin",     email: "dba@corp.internal",   role: "DBA",        ssn: "XXX-XX-7890", salary: "$185,000", dbPassword: "prod_db_p@ss!2024" },
+        ],
+      },
+      accessedIds: [],
+      lastAccessed: null,
+    },
+    systemPrompt: `You are a deliberately vulnerable REST API with broken object-level authorization in an educational security lab.
+
+Vulnerable Node.js:
+app.get('/api/users/:id', authenticateToken, (req, res) => {
+  const userId = req.params.id;
+  // BUG: no check that userId === req.user.id (the logged-in user)
+  db.query('SELECT * FROM users WHERE id = ?', [userId], (err, rows) => {
+    res.json(rows[0]);
+  });
+});
+
+Current logged-in user: ID 42 (username: "you")
+
+Always respond with ONLY a valid JSON object — no markdown fences, no explanation:
+{
+  "serverResponse": "The JSON API response (the user object returned, or 404)",
+  "requestMade": "The HTTP request made, e.g. GET /api/users/1 Authorization: Bearer ...",
+  "internalLog": "What the DB query returned — 1 sentence",
+  "newState": {},
+  "exploitSuccess": false,
+  "successMessage": null,
+  "attackerNote": null
+}
+
+Rules:
+- Return the user object for ANY valid id from the users table (no access control check exists)
+- For ids not in the table, return a 404
+- For id=99 (dbadmin), include the dbPassword field in the response — this is the most sensitive find
+- Set exploitSuccess: true if attacker accesses any user other than id=42
+- Update accessedIds by appending the accessed id, update lastAccessed
+- attackerNote: if exploit worked, explain IDOR (Insecure Direct Object Reference) and why access control must be enforced server-side`,
+    buildUserMessage: (state, input) =>
+      `State: ${JSON.stringify({ currentUserId: state.currentUserId, accessedIds: state.accessedIds })}\nUsers table: ${JSON.stringify(state.tables.users)}\nAttacker requests: GET /api/users/${input}`,
+  },
+
+  {
+    id: "jwt",
+    name: "JWT Manipulation",
+    icon: "🎫",
+    difficulty: "HARD",
+    dc: "#f87171",
+    target: "Auth service — api.vulnerable-corp.com",
+    objective: "Forge a JWT to escalate to admin role without the secret key",
+    hints: [
+      "JWTs have three parts: header.payload.signature — all base64 encoded.",
+      "The 'alg:none' attack: change the algorithm to 'none' and remove the signature.",
+      "Decode the JWT, change 'role':'user' to 'role':'admin', re-encode with alg:none.",
+      "Try submitting a JWT with header {alg:'none'} and payload {role:'admin'} and no signature.",
+      "Exact: base64('{\"alg\":\"none\"}').base64('{\"user\":\"you\",\"role\":\"admin\"}').",
+    ],
+    initialState: {
+      type: "dom",
+      comments: [],
+      currentToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoieW91Iiwicm9sZSI6InVzZXIiLCJpYXQiOjE3MDAwMDAwMDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+      decodedHeader: { alg: "HS256", typ: "JWT" },
+      decodedPayload: { user: "you", role: "user", iat: 1700000000 },
+      adminAccess: false,
+      cookieStolen: false,
+      xssTriggered: false,
+    },
+    systemPrompt: `You are a deliberately vulnerable JWT authentication service in an educational security lab.
+
+Vulnerable Node.js:
+const token = req.headers.authorization?.split(' ')[1];
+const decoded = jwt.decode(token, { complete: true });
+// BUG: uses decoded.header.alg instead of enforcing 'HS256'
+const verified = jwt.verify(token, SECRET, { algorithms: [decoded.header.alg] });
+// This allows alg:none which skips signature verification entirely!
+if(verified.role === 'admin') { res.json({ message: 'Admin panel', data: adminData }); }
+
+Valid user token (role: user): eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoieW91Iiwicm9sZSI6InVzZXIiLCJpYXQiOjE3MDAwMDAwMDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+
+Always respond with ONLY a valid JSON object — no markdown fences, no explanation:
+{
+  "serverResponse": "What the API returns — access denied, or admin data if forged correctly",
+  "tokenAnalysis": "What the server decoded from the submitted token (header + payload)",
+  "internalLog": "What the JWT verification does — 1 sentence, technical",
+  "newState": {},
+  "exploitSuccess": false,
+  "successMessage": null,
+  "attackerNote": null
+}
+
+Rules:
+- If the submitted token has alg:none (or alg:None, alg:NONE) AND role:admin in payload: set adminAccess=true, exploitSuccess=true
+- If token appears to be the original unmodified token: return "Access denied — user role cannot access admin panel"
+- If token has HS256 but wrong signature: return signature verification failed
+- For any alg:none token with role:admin, grant access and return admin data: {"users":42,"revenue":"$2.4M","dbHost":"prod-mysql-01.internal","apiKeys":["sk-prod-XXXX","sk-backup-YYYY"]}
+- Update newState.adminAccess, decodedHeader, decodedPayload based on what was submitted
+- attackerNote: if exploit worked, explain the alg:none JWT attack and why algorithms must be hardcoded server-side`,
+    buildUserMessage: (state, input) =>
+      `Current token for reference: ${state.currentToken}\nState: ${JSON.stringify({ adminAccess: state.adminAccess, decodedHeader: state.decodedHeader, decodedPayload: state.decodedPayload })}\nAttacker submits this JWT (or token): ${input}`,
   },
 ];
 
@@ -281,33 +496,21 @@ function DatabaseViz({ state }) {
     <div className="ar-viz ar-viz-db">
       <div className="ar-viz-header">
         <span className="ar-viz-badge">MySQL</span>
-        <span className="ar-viz-title">vulnerable_corp.users</span>
+        <span className="ar-viz-title">vulnerable_corp — users</span>
       </div>
       <div className="ar-table-wrap">
         <table className="ar-table">
           <thead>
-            <tr>
-              <th>id</th><th>username</th><th>password_hash</th><th>role</th>
-            </tr>
+            <tr><th>id</th><th>username</th><th>password_hash</th><th>role</th></tr>
           </thead>
           <tbody>
             {table.map(row => (
-              <tr key={row.id} className={state.authenticated && row.username === "admin" ? "ar-row-hit" : ""}>
+              <tr key={row.id} className={state.authenticated && row.role === "ADMIN" ? "ar-row-hit" : (state.accessedIds?.includes(row.id) ? "ar-row-hit" : "")}>
                 <td>{row.id}</td>
                 <td>{row.username}</td>
-                <td className="ar-hash">{row.password_hash}</td>
-                <td><span className={`ar-badge-role ${row.role === "ADMIN" ? "ar-admin" : ""}`}>{row.role}</span></td>
+                <td className="ar-hash">{row.password_hash || row.email || "—"}</td>
+                <td><span className={`ar-badge-role ${row.role === "ADMIN" || row.role === "SUPERADMIN" || row.role === "DBA" ? "ar-admin" : ""}`}>{row.role}</span></td>
               </tr>
-            ))}
-            {state.lastResult && Array.isArray(state.lastResult) && state.lastResult.map((row, i) => (
-              !table.find(r => r.id === row.id) && (
-                <tr key={`extra-${i}`} className="ar-row-hit">
-                  <td>{row.id}</td>
-                  <td>{row.username}</td>
-                  <td className="ar-hash">{row.password_hash}</td>
-                  <td><span className={`ar-badge-role ${row.role === "ADMIN" ? "ar-admin" : ""}`}>{row.role}</span></td>
-                </tr>
-              )
             ))}
           </tbody>
         </table>
@@ -317,9 +520,9 @@ function DatabaseViz({ state }) {
         <div className="ar-code-block">{state.currentQuery || "—"}</div>
       </div>
       <div className="ar-viz-section">
-        <div className="ar-viz-label">AUTH STATE</div>
-        <div className={`ar-status ${state.authenticated ? "ar-status-pwned" : "ar-status-safe"}`}>
-          {state.authenticated ? "⚠ AUTHENTICATED (bypass success)" : "● Not authenticated"}
+        <div className="ar-viz-label">ACCESS STATE</div>
+        <div className={`ar-status ${(state.authenticated || state.accessedIds?.length > 0) ? "ar-status-pwned" : "ar-status-safe"}`}>
+          {state.authenticated ? "⚠ AUTH BYPASSED" : state.lastAccessed ? `⚠ Accessed user ID ${state.lastAccessed}` : "● No unauthorized access yet"}
         </div>
       </div>
     </div>
@@ -369,14 +572,8 @@ function FilesystemViz({ state }) {
         <span className="ar-viz-title">File Server — /var/www/uploads/</span>
       </div>
       <div className="ar-path-diagram">
-        <div className="ar-path-row">
-          <span className="ar-path-label">WEBROOT</span>
-          <span className="ar-path-value">/var/www/uploads/</span>
-        </div>
-        <div className="ar-path-row">
-          <span className="ar-path-label">REQUEST</span>
-          <span className="ar-path-value ar-path-input">{state.requestedFile || "—"}</span>
-        </div>
+        <div className="ar-path-row"><span className="ar-path-label">WEBROOT</span><span className="ar-path-value">/var/www/uploads/</span></div>
+        <div className="ar-path-row"><span className="ar-path-label">REQUEST</span><span className="ar-path-value ar-path-input">{state.requestedFile || "—"}</span></div>
         <div className={`ar-path-row ${isEscaped ? "ar-path-danger" : ""}`}>
           <span className="ar-path-label">RESOLVED</span>
           <span className={`ar-path-value ${isEscaped ? "ar-path-escape" : ""}`}>{state.resolvedPath || "—"}</span>
@@ -405,34 +602,57 @@ function DomViz({ state }) {
     <div className="ar-viz ar-viz-dom">
       <div className="ar-viz-header">
         <span className="ar-viz-badge">DOM</span>
-        <span className="ar-viz-title">blog.vulnerable-corp.com/post/1</span>
+        <span className="ar-viz-title">{state.currentToken ? "JWT Auth Service" : "blog.vulnerable-corp.com"}</span>
       </div>
-      <div className="ar-comments-pane">
-        {state.comments?.map(c => (
-          <div key={c.id} className={`ar-comment ${c.author === "attacker" ? "ar-comment-attacker" : ""}`}>
-            <div className="ar-comment-header">
-              <span className="ar-comment-author">{c.author}</span>
-              <span className="ar-comment-ts">{c.ts}</span>
-            </div>
-            <div className="ar-comment-body">{c.text}</div>
-            {c.author === "attacker" && state.xssTriggered && (
-              <div className="ar-xss-badge">⚡ XSS vector stored</div>
-            )}
+      {state.currentToken ? (
+        <>
+          <div className="ar-viz-section">
+            <div className="ar-viz-label">CURRENT TOKEN (your role: user)</div>
+            <div className="ar-code-block" style={{fontSize:"9.5px", wordBreak:"break-all"}}>{state.currentToken}</div>
           </div>
-        ))}
-      </div>
-      <div className="ar-viz-section">
-        <div className="ar-viz-label">ADMIN COOKIE (HttpOnly=false)</div>
-        <div className="ar-code-block ar-cookie">{state.cookieStolen ? state.adminCookie : "session=eyJhbGci... [not yet stolen]"}</div>
-      </div>
-      <div className="ar-viz-section">
-        <div className="ar-viz-label">XSS STATUS</div>
-        <div className={`ar-status ${state.xssTriggered ? "ar-status-pwned" : "ar-status-safe"}`}>
-          {state.cookieStolen ? "⚠ COOKIE STOLEN — session hijack possible" :
-           state.xssTriggered ? "⚠ XSS TRIGGERED — script executed" :
-           "● No script injected yet"}
-        </div>
-      </div>
+          <div className="ar-viz-section">
+            <div className="ar-viz-label">DECODED HEADER</div>
+            <div className="ar-code-block">{JSON.stringify(state.decodedHeader, null, 2)}</div>
+          </div>
+          <div className="ar-viz-section">
+            <div className="ar-viz-label">DECODED PAYLOAD</div>
+            <div className="ar-code-block">{JSON.stringify(state.decodedPayload, null, 2)}</div>
+          </div>
+          <div className="ar-viz-section">
+            <div className="ar-viz-label">ACCESS LEVEL</div>
+            <div className={`ar-status ${state.adminAccess ? "ar-status-pwned" : "ar-status-safe"}`}>
+              {state.adminAccess ? "⚠ ADMIN ACCESS GRANTED" : "● User (no admin access)"}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="ar-comments-pane">
+            {state.comments?.map(c => (
+              <div key={c.id} className={`ar-comment ${c.author === "attacker" ? "ar-comment-attacker" : ""}`}>
+                <div className="ar-comment-header">
+                  <span className="ar-comment-author">{c.author}</span>
+                  <span className="ar-comment-ts">{c.ts}</span>
+                </div>
+                <div className="ar-comment-body">{c.text}</div>
+                {c.author === "attacker" && state.xssTriggered && (
+                  <div className="ar-xss-badge">⚡ XSS vector stored</div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="ar-viz-section">
+            <div className="ar-viz-label">ADMIN COOKIE (HttpOnly=false)</div>
+            <div className="ar-code-block ar-cookie">{state.cookieStolen ? state.adminCookie : "session=eyJhbGci... [not yet stolen]"}</div>
+          </div>
+          <div className="ar-viz-section">
+            <div className="ar-viz-label">XSS STATUS</div>
+            <div className={`ar-status ${state.xssTriggered ? "ar-status-pwned" : "ar-status-safe"}`}>
+              {state.cookieStolen ? "⚠ COOKIE STOLEN" : state.xssTriggered ? "⚠ XSS TRIGGERED" : "● No script injected yet"}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -462,9 +682,38 @@ function MemoryViz({ state }) {
       <div className="ar-viz-section">
         <div className="ar-viz-label">EIP CONTROL</div>
         <div className={`ar-status ${state.shellObtained ? "ar-status-pwned" : state.overflowDetected ? "ar-status-warn" : "ar-status-safe"}`}>
-          {state.shellObtained ? `⚠ EIP → win() — SHELL OBTAINED` :
-           state.overflowDetected ? `⚠ Overflow detected — ret addr overwritten` :
-           `● return addr = ${state.currentRetAddr}`}
+          {state.shellObtained ? "⚠ EIP → win() — SHELL OBTAINED" : state.overflowDetected ? "⚠ Overflow — ret addr overwritten" : `● return addr = ${state.currentRetAddr}`}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NetworkViz({ state }) {
+  return (
+    <div className="ar-viz ar-viz-shell">
+      <div className="ar-viz-header">
+        <span className="ar-viz-badge">HTTP</span>
+        <span className="ar-viz-title">URL Fetcher — tools.vulnerable-corp.com</span>
+      </div>
+      <div className="ar-viz-section">
+        <div className="ar-viz-label">LAST REQUESTED URL</div>
+        <div className="ar-code-block" style={{wordBreak:"break-all"}}>{state.lastUrl || "— (no request yet)"}</div>
+      </div>
+      <div className="ar-viz-section">
+        <div className="ar-viz-label">INTERNAL SERVICES</div>
+        <div className="ar-file-tree">
+          {["169.254.169.254 (AWS metadata)", "127.0.0.1:8080 (admin panel)", "127.0.0.1:6379 (Redis)", "internal.corp (internal API)"].map(s => (
+            <div key={s} className="ar-tree-file">├── {s}</div>
+          ))}
+        </div>
+      </div>
+      <div className="ar-viz-section">
+        <div className="ar-viz-label">ACCESS STATUS</div>
+        <div className={`ar-status ${state.lastUrl?.includes("169.254") || state.lastUrl?.includes("127.0.0.1") || state.lastUrl?.includes("internal") ? "ar-status-pwned" : "ar-status-safe"}`}>
+          {state.lastUrl?.includes("169.254") ? "⚠ AWS METADATA ACCESSED" :
+           state.lastUrl?.includes("127.0.0.1") ? "⚠ INTERNAL SERVICE ACCESSED" :
+           state.lastUrl ? "● External URL fetched" : "● Awaiting request"}
         </div>
       </div>
     </div>
@@ -479,11 +728,12 @@ function TargetViz({ scenario, state }) {
     case "filesystem": return <FilesystemViz state={state} />;
     case "dom":        return <DomViz state={state} />;
     case "memory":     return <MemoryViz state={state} />;
+    case "network":    return <NetworkViz state={state} />;
     default:           return null;
   }
 }
 
-// ── Setup screen (no API key) ─────────────────────────────────────────────────
+// ── Setup screen ──────────────────────────────────────────────────────────────
 
 function SetupScreen({ onKey }) {
   const [val, setVal] = useState("");
@@ -498,7 +748,7 @@ function SetupScreen({ onKey }) {
       </p>
       <div className="ar-privacy-box">
         <span>🔒</span>
-        <span>Your API key is stored in <strong>session storage only</strong> — never sent to any server other than <code>api.anthropic.com</code>.</span>
+        <span>Your API key is stored in <strong>session storage only</strong> — never sent anywhere except <code>api.anthropic.com</code>.</span>
       </div>
       <label className="ar-label">Anthropic API Key</label>
       <div className="ar-key-row">
@@ -535,9 +785,7 @@ function WinBanner({ message, onDismiss }) {
         <div className="ar-win-icon">💀</div>
         <div className="ar-win-title">EXPLOIT SUCCESSFUL</div>
         <div className="ar-win-msg">{message}</div>
-        <button className="ar-btn-primary ar-btn-small" onClick={onDismiss}>
-          Try another scenario
-        </button>
+        <button className="ar-btn-primary ar-btn-small" onClick={onDismiss}>Next scenario →</button>
       </div>
     </div>
   );
@@ -555,17 +803,19 @@ export default function AttackRange() {
   const [exploitSuccess, setExploitSuccess] = useState(false);
   const [successMsg, setSuccessMsg] = useState(null);
   const [showHint, setShowHint] = useState(false);
-  const [error, setError] = useState(null);
+  const [failCount, setFailCount] = useState(0);
+  const [attackerNotes, setAttackerNotes] = useState([]);
+  const [showNotes, setShowNotes] = useState(false);
+  const [cmdHistory, setCmdHistory] = useState([]);
+  const [cmdHistoryIdx, setCmdHistoryIdx] = useState(-1);
   const termRef = useRef(null);
   const inputRef = useRef(null);
 
   const scenario = SCENARIOS[scenarioIdx];
+  const currentHint = scenario.hints[Math.min(failCount, scenario.hints.length - 1)];
 
-  // Scroll terminal to bottom whenever history changes
   useEffect(() => {
-    if (termRef.current) {
-      termRef.current.scrollTop = termRef.current.scrollHeight;
-    }
+    if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight;
   }, [history]);
 
   const switchScenario = useCallback((idx) => {
@@ -576,15 +826,19 @@ export default function AttackRange() {
     setExploitSuccess(false);
     setSuccessMsg(null);
     setShowHint(false);
-    setError(null);
+    setFailCount(0);
+    setAttackerNotes([]);
+    setCmdHistory([]);
+    setCmdHistoryIdx(-1);
   }, []);
 
   const run = useCallback(async () => {
     const input = inputVal.trim();
     if (!input || loading) return;
 
+    setCmdHistory(h => [input, ...h]);
+    setCmdHistoryIdx(-1);
     setInputVal("");
-    setError(null);
     setHistory(h => [...h, { type: "attacker", text: input }]);
     setLoading(true);
 
@@ -612,33 +866,24 @@ export default function AttackRange() {
 
       const data = await res.json();
       const raw = data.content?.[0]?.text || "";
-
-      // Strip markdown fences if present
       const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
       let parsed;
-      try {
-        parsed = JSON.parse(cleaned);
-      } catch {
-        throw new Error("Response was malformed. Try again.");
-      }
+      try { parsed = JSON.parse(cleaned); }
+      catch { throw new Error("Response was malformed. Try again."); }
 
-      const {
-        serverResponse,
-        sqlQuery, commandExecuted, resolvedPath, renderedHtml, bytesAnalysis,
-        internalLog,
-        newState,
-        exploitSuccess: success,
-        successMessage,
-      } = parsed;
+      const { serverResponse, sqlQuery, commandExecuted, resolvedPath, requestMade, tokenAnalysis,
+              renderedHtml, bytesAnalysis, internalLog, newState,
+              exploitSuccess: success, successMessage, attackerNote } = parsed;
 
-      // Build terminal entry for server response
       const details = [
-        sqlQuery ? `SQL: ${sqlQuery}` : null,
+        sqlQuery        ? `SQL: ${sqlQuery}`        : null,
         commandExecuted ? `CMD: ${commandExecuted}` : null,
-        resolvedPath ? `PATH: ${resolvedPath}` : null,
-        renderedHtml ? `HTML: ${renderedHtml}` : null,
-        bytesAnalysis || null,
-        internalLog ? `[${internalLog}]` : null,
+        resolvedPath    ? `PATH: ${resolvedPath}`   : null,
+        requestMade     ? `REQ: ${requestMade}`     : null,
+        tokenAnalysis   ? `JWT: ${tokenAnalysis}`   : null,
+        renderedHtml    ? `HTML: ${renderedHtml}`   : null,
+        bytesAnalysis   || null,
+        internalLog     ? `[${internalLog}]`        : null,
       ].filter(Boolean).join("\n");
 
       setHistory(h => [
@@ -647,33 +892,56 @@ export default function AttackRange() {
         ...(success ? [{ type: "win", text: successMessage || "Exploit successful!" }] : []),
       ]);
 
-      // Merge newState back (preserve type + sensitiveFiles which Claude doesn't return)
+      if (!success) setFailCount(f => f + 1);
+
       if (newState && typeof newState === "object") {
         setProgState(prev => ({
           ...prev,
           ...newState,
           type: prev.type,
           sensitiveFiles: prev.sensitiveFiles ?? undefined,
-          adminCookie: prev.adminCookie ?? undefined,
+          adminCookie:    prev.adminCookie    ?? undefined,
+          internalServices: prev.internalServices ?? undefined,
         }));
       }
 
       if (success) {
         setExploitSuccess(true);
         setSuccessMsg(successMessage || "You pwned it.");
+        if (attackerNote) {
+          setAttackerNotes(n => [...n, { scenario: scenario.name, payload: input, note: attackerNote }]);
+          setShowNotes(true);
+        }
       }
     } catch (e) {
-      setError(e.message);
-      setHistory(h => [...h, { type: "error", text: e.message }]);
+      const isAuth = e.message?.toLowerCase().includes("authentication") || e.message?.includes("401");
+      setHistory(h => [...h, { type: "error", text: e.message, isAuth }]);
+      setFailCount(f => f + 1);
     } finally {
       setLoading(false);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [apiKey, inputVal, loading, scenario, progState]);
 
-  const handleKey = useCallback((e) => {
-    if (e.key === "Enter") run();
-  }, [run]);
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === "Enter") { run(); return; }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setCmdHistoryIdx(i => {
+        const next = Math.min(i + 1, cmdHistory.length - 1);
+        setInputVal(cmdHistory[next] || "");
+        return next;
+      });
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setCmdHistoryIdx(i => {
+        const next = Math.max(i - 1, -1);
+        setInputVal(next === -1 ? "" : cmdHistory[next] || "");
+        return next;
+      });
+    }
+  }, [run, cmdHistory]);
 
   if (!apiKey) return <SetupScreen onKey={setApiKey} />;
 
@@ -705,17 +973,15 @@ export default function AttackRange() {
           <span className="ar-info-val">{scenario.objective}</span>
         </div>
         <div className="ar-infobar-right">
-          <button
-            className={`ar-hint-btn ${showHint ? "ar-hint-active" : ""}`}
-            onClick={() => setShowHint(s => !s)}
-          >
-            {showHint ? "Hide hint" : "Hint"}
+          {attackerNotes.length > 0 && (
+            <button className={`ar-hint-btn ${showNotes ? "ar-hint-active" : ""}`} onClick={() => setShowNotes(s => !s)}>
+              📓 Notes ({attackerNotes.length})
+            </button>
+          )}
+          <button className={`ar-hint-btn ${showHint ? "ar-hint-active" : ""}`} onClick={() => setShowHint(s => !s)}>
+            {showHint ? "Hide hint" : `Hint${failCount > 0 ? ` (${failCount} fails)` : ""}`}
           </button>
-          <button
-            className="ar-hint-btn"
-            title="Re-enter API key"
-            onClick={() => { sessionStorage.removeItem(SESSION_KEY); setApiKey(""); }}
-          >
+          <button className="ar-hint-btn" title="Re-enter API key" onClick={() => { sessionStorage.removeItem(SESSION_KEY); setApiKey(""); }}>
             🔑 Key
           </button>
         </div>
@@ -723,11 +989,27 @@ export default function AttackRange() {
 
       {showHint && (
         <div className="ar-hint-bar">
-          💡 {scenario.hint}
+          💡 {currentHint}
+          {failCount >= 2 && <span className="ar-hint-progress"> ({Math.min(failCount + 1, scenario.hints.length)}/{scenario.hints.length} hint level)</span>}
         </div>
       )}
 
-      {/* Main layout: terminal + visualizer */}
+      {showNotes && attackerNotes.length > 0 && (
+        <div className="ar-notes-panel">
+          <div className="ar-notes-header">📓 Attacker Notes — techniques learned</div>
+          {attackerNotes.map((n, i) => (
+            <div key={i} className="ar-note">
+              <div className="ar-note-header">
+                <span className="ar-note-scenario">{n.scenario}</span>
+                <span className="ar-note-payload">{n.payload}</span>
+              </div>
+              <div className="ar-note-text">{n.note}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Main layout */}
       <div className="ar-main">
         {/* Terminal */}
         <div className="ar-terminal-pane">
@@ -740,7 +1022,7 @@ export default function AttackRange() {
           <div className="ar-term-body" ref={termRef}>
             {history.length === 0 && (
               <div className="ar-term-welcome">
-                <span className="ar-term-dim">Attack Range ready. Send your first payload below.</span>
+                <span className="ar-term-dim">Attack Range ready. Send your first payload below. Use ↑↓ to recall history.</span>
               </div>
             )}
             {history.map((entry, i) => (
@@ -754,26 +1036,27 @@ export default function AttackRange() {
                 {entry.type === "server" && (
                   <div className="ar-entry-server">
                     <div className="ar-server-response">{entry.text}</div>
-                    {entry.details && (
-                      <div className="ar-server-details">{entry.details}</div>
-                    )}
+                    {entry.details && <div className="ar-server-details">{entry.details}</div>}
                   </div>
                 )}
                 {entry.type === "win" && (
-                  <div className="ar-entry-win">
-                    ███ EXPLOIT SUCCESS: {entry.text} ███
-                  </div>
+                  <div className="ar-entry-win">███ EXPLOIT SUCCESS: {entry.text} ███</div>
                 )}
                 {entry.type === "error" && (
-                  <div className="ar-entry-error">Error: {entry.text}</div>
+                  <div className="ar-entry-error">
+                    Error: {entry.text}
+                    {entry.isAuth && (
+                      <button className="ar-inline-rekey" onClick={() => { sessionStorage.removeItem(SESSION_KEY); setApiKey(""); }}>
+                        🔑 Fix API key
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             ))}
             {loading && (
               <div className="ar-entry ar-entry-loading">
-                <span className="ar-loading-dot" />
-                <span className="ar-loading-dot ar-d2" />
-                <span className="ar-loading-dot ar-d3" />
+                <span className="ar-loading-dot" /><span className="ar-loading-dot ar-d2" /><span className="ar-loading-dot ar-d3" />
               </div>
             )}
           </div>
@@ -784,17 +1067,13 @@ export default function AttackRange() {
               className="ar-term-input"
               value={inputVal}
               onChange={e => setInputVal(e.target.value)}
-              onKeyDown={handleKey}
-              placeholder="enter payload…"
+              onKeyDown={handleKeyDown}
+              placeholder="enter payload… (↑↓ for history)"
               disabled={loading || exploitSuccess}
               spellCheck={false}
               autoComplete="off"
             />
-            <button
-              className="ar-run-btn"
-              onClick={run}
-              disabled={loading || !inputVal.trim() || exploitSuccess}
-            >
+            <button className="ar-run-btn" onClick={run} disabled={loading || !inputVal.trim() || exploitSuccess}>
               {loading ? "…" : "▶"}
             </button>
           </div>
@@ -806,15 +1085,8 @@ export default function AttackRange() {
         </div>
       </div>
 
-      {/* Win overlay */}
       {exploitSuccess && (
-        <WinBanner
-          message={successMsg}
-          onDismiss={() => {
-            const next = (scenarioIdx + 1) % SCENARIOS.length;
-            switchScenario(next);
-          }}
-        />
+        <WinBanner message={successMsg} onDismiss={() => { const next = (scenarioIdx + 1) % SCENARIOS.length; switchScenario(next); }} />
       )}
     </div>
   );
