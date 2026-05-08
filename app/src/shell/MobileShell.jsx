@@ -10,6 +10,7 @@ import Mail from "../apps/Mail";
 import System from "../apps/System";
 import Games from "../apps/Games";
 import ExploitLab from "../apps/ExploitLab";
+import AttackRange from "../apps/AttackRange";
 import PostViewer from "./PostViewer";
 import Spotlight from "./Spotlight";
 
@@ -25,8 +26,9 @@ function renderApp(app, args) {
     case "mail":     return <Mail />;
     case "system":   return <System />;
     case "games":      return <Games initialGame={a.initialGame} />;
-    case "exploitlab": return <ExploitLab />;
-    default:           return null;
+    case "exploitlab":   return <ExploitLab />;
+    case "attackrange":  return <AttackRange />;
+    default:             return null;
   }
 }
 

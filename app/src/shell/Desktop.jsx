@@ -15,6 +15,7 @@ import Mail from "../apps/Mail";
 import System from "../apps/System";
 import Games from "../apps/Games";
 import ExploitLab from "../apps/ExploitLab";
+import AttackRange from "../apps/AttackRange";
 
 function AppHost({ app, win, desktop }) {
   const appState = win.appState || {};
@@ -50,6 +51,8 @@ function AppHost({ app, win, desktop }) {
       return <Games initialGame={appState.initialGame} />;
     case "exploitlab":
       return <ExploitLab />;
+    case "attackrange":
+      return <AttackRange />;
     default:
       return null;
   }
