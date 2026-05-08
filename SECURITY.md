@@ -18,7 +18,7 @@ This repository is a **static portfolio site** with no backend infrastructure, d
 
 ## Reporting a vulnerability
 
-If you find a real security issue in this repo, please email **learning1599@gmail.com** with:
+If you find a real security issue in this repo, please email **hemparekhportfolio@gmail.com** with:
 
 1. A description of the issue and its potential impact
 2. Steps to reproduce
