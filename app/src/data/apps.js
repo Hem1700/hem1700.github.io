@@ -23,6 +23,7 @@ export const DOCK_ORDER = [
   "mail",
   "system",
   "games",
+  "exploitlab",
 ];
 
 // All apps, including readme — used by spotlight and mobile tab bar.
