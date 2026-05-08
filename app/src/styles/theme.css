@@ -4263,6 +4263,7 @@ body.dark .cve-modal__card {
   background: linear-gradient(135deg, #ff5970, #b58cff);
 }
 
+
 /* ── Container ── */
 .exploit-lab {
   height: 100%;
@@ -4749,3 +4750,103 @@ body.dark .cve-modal__card {
 .el-term-success { color: var(--grn); }
 .el-term-warn    { color: var(--ylw); }
 .el-term-cursor  { animation: el-blink 1s step-end infinite; color: var(--acc2); }
+
+/* ==================== EXPLOIT LAB — UI POLISH ==================== */
+
+/* Header: bigger title, better hierarchy */
+.el-result-header { padding: 1.1rem 1.4rem 0.9rem; gap: 0.45rem; }
+.el-result-title  { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.01em; }
+.el-result-title-row { gap: 0.75rem; }
+.el-badge         { font-size: 0.7rem; padding: 0.22rem 0.65rem; font-weight: 700; }
+.el-cvss          { font-size: 0.78rem; color: var(--acc2); font-weight: 600; }
+.el-result-summary { font-size: 0.82rem; line-height: 1.65; color: var(--ink-d); }
+.el-result-affected { font-size: 0.75rem; }
+
+/* Step list: wider, better spacing, more prominent active */
+.el-step-list       { width: 220px; padding: 0.9rem 0; border-right: 1px solid var(--line2); }
+.el-step-list-title { font-size: 0.66rem; padding: 0 1.1rem 0.6rem; letter-spacing: 0.1em; }
+.el-step-item       { padding: 0.6rem 1.1rem; font-size: 0.82rem; gap: 0.7rem; border-left: 3px solid transparent; }
+.el-step-num        { font-size: 0.72rem; width: 1.2rem; }
+.el-step-item.el-step-active {
+  background: rgba(110,231,255,0.08);
+  border-left-color: var(--acc2);
+  color: var(--acc2);
+  font-weight: 600;
+}
+
+/* Step detail: bigger text, more breathing room */
+.el-step-detail       { padding: 1.2rem 1.4rem; gap: 1rem; }
+.el-step-detail-title { font-size: 1rem; font-weight: 700; letter-spacing: 0.01em; gap: 0.6rem; }
+.el-step-detail-num   { font-size: 0.7rem; color: var(--mut); background: var(--bg-0); border: 1px solid var(--line2); border-radius: 4px; padding: 0.1rem 0.4rem; }
+.el-step-desc         { font-size: 0.84rem; line-height: 1.7; }
+
+/* Visualization: taller, more prominent border */
+.el-viz {
+  min-height: 160px;
+  border: 1px solid var(--acc2);
+  border-opacity: 0.25;
+  border-color: rgba(110,231,255,0.2);
+  background: rgba(10,14,22,0.8);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+}
+.el-viz-label { font-size: 0.65rem; color: var(--acc2); opacity: 0.7; letter-spacing: 0.1em; }
+
+/* Code block: more distinctive */
+.el-code {
+  background: #070a10;
+  border: 1px solid rgba(110,231,255,0.15);
+  border-left: 3px solid var(--acc2);
+  border-radius: 0 6px 6px 0;
+  padding: 0.85rem 1.1rem;
+  font-size: 0.77rem;
+  color: var(--grn);
+  line-height: 1.6;
+}
+
+/* Step nav: bigger buttons */
+.el-step-nav    { padding-top: 0.75rem; }
+.el-btn-ghost   { font-size: 0.82rem; padding: 0.42rem 1rem; }
+.el-dot         { width: 7px; height: 7px; }
+
+/* Result footer: more readable */
+.el-result-footer   { flex-shrink: 0; }
+.el-footer-col      { padding: 0.75rem 1.2rem; }
+.el-footer-label    { font-size: 0.65rem; letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+.el-footer-val      { font-size: 0.8rem; line-height: 1.5; }
+
+/* Setup: more polished */
+.el-setup           { gap: 0.8rem; max-width: 420px; }
+.el-setup-icon      { font-size: 2.5rem; margin-bottom: 0.1rem; }
+.el-setup-title     { font-size: 1.3rem; letter-spacing: 0.08em; }
+.el-setup-desc      { font-size: 0.82rem; margin-bottom: 0.75rem; }
+.el-input           { font-size: 0.88rem; padding: 0.6rem 0.85rem; }
+.el-label           { font-size: 0.74rem; margin-bottom: 0.45rem; }
+.el-btn-primary     { font-size: 0.88rem; padding: 0.72rem 1.5rem; letter-spacing: 0.04em; }
+
+/* Loading: bigger */
+.el-loading-cve   { font-size: 1.2rem; letter-spacing: 0.1em; }
+.el-loading-bar   { width: 300px; height: 4px; }
+.el-loading-log   { font-size: 0.82rem; }
+
+/* Memory viz segments */
+.el-seg       { padding: 0.35rem 0.7rem; font-size: 0.75rem; }
+.el-seg-addr  { font-size: 0.68rem; }
+
+/* Race viz */
+.el-race-name { font-size: 0.72rem; width: 90px; }
+.el-race-pct  { font-size: 0.72rem; }
+.el-race-win  { font-size: 0.72rem; }
+
+/* Network viz nodes */
+.el-net-node { font-size: 0.72rem; padding: 0.35rem 0.7rem; }
+
+/* File viz */
+.el-file-tree { font-size: 0.8rem; line-height: 2; }
+
+/* Process viz */
+.el-proc-box   { font-size: 0.75rem; padding: 0.35rem 0.9rem; }
+.el-proc-badge { font-size: 0.68rem; letter-spacing: 0.08em; }
+
+/* Terminal viz */
+.el-term-output { font-size: 0.78rem; line-height: 1.8; }
