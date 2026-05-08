@@ -704,12 +704,21 @@ export default function AttackRange() {
           <span className="ar-info-label">OBJECTIVE</span>
           <span className="ar-info-val">{scenario.objective}</span>
         </div>
-        <button
-          className={`ar-hint-btn ${showHint ? "ar-hint-active" : ""}`}
-          onClick={() => setShowHint(s => !s)}
-        >
-          {showHint ? "Hide hint" : "Hint"}
-        </button>
+        <div className="ar-infobar-right">
+          <button
+            className={`ar-hint-btn ${showHint ? "ar-hint-active" : ""}`}
+            onClick={() => setShowHint(s => !s)}
+          >
+            {showHint ? "Hide hint" : "Hint"}
+          </button>
+          <button
+            className="ar-hint-btn"
+            title="Re-enter API key"
+            onClick={() => { sessionStorage.removeItem(SESSION_KEY); setApiKey(""); }}
+          >
+            🔑 Key
+          </button>
+        </div>
       </div>
 
       {showHint && (
