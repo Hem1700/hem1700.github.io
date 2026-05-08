@@ -327,7 +327,7 @@ Rules:
       internalServices: {
         "http://169.254.169.254/latest/meta-data/": "ami-id\nami-launch-index\nhostname\niam/\ninstance-id\nlocal-ipv4\npublic-ipv4\n",
         "http://169.254.169.254/latest/meta-data/iam/security-credentials/": "AppRole\n",
-        "http://169.254.169.254/latest/meta-data/iam/security-credentials/AppRole": '{"Code":"Success","Type":"AWS-HMAC","AccessKeyId":"ASIAIOSFODNN7EXAMPLE","SecretAccessKey":"wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY","Token":"AQoDYXdzEJr...","Expiration":"2026-12-31T00:00:00Z"}',
+        "http://169.254.169.254/latest/meta-data/iam/security-credentials/AppRole": '{"Code":"Success","Type":"AWS-HMAC","AccessKeyId":"ASIA[REDACTED-LAB-KEY]","SecretAccessKey":"[REDACTED-LAB-SECRET]","Token":"AQoDYXdzEJr...","Expiration":"2026-12-31T00:00:00Z"}',
         "http://127.0.0.1:8080/admin": "<html><h1>Internal Admin Panel</h1><p>Welcome, internal user. DB: prod-mysql-01</p></html>",
         "http://127.0.0.1:6379/": "-ERR wrong number of arguments for 'get' command\n",
         "http://internal.corp/api/users": '[{"id":1,"user":"admin","role":"superadmin","secret":"super_secret_token_123"}]',
