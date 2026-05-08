@@ -4850,3 +4850,39 @@ body.dark .cve-modal__card {
 
 /* Terminal viz */
 .el-term-output { font-size: 0.78rem; line-height: 1.8; }
+
+/* ── Exploit Lab — privacy notice ───────────────────────────────────────── */
+.el-privacy-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(80, 200, 120, 0.08);
+  border: 1px solid rgba(80, 200, 120, 0.28);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 12px 0 4px;
+  max-width: 420px;
+  text-align: left;
+}
+.el-privacy-icon {
+  font-size: 18px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+.el-privacy-text {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--c2, #aaa);
+}
+.el-privacy-text strong {
+  color: var(--fg, #e8e8e8);
+  font-weight: 600;
+}
+.el-privacy-text code {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 11.5px;
+  background: rgba(255,255,255,0.07);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: #7dd3a8;
+}

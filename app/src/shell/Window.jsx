@@ -162,7 +162,7 @@ export default function Window({
     top: win.maximized ? 30 : win.y,
     width: win.maximized ? "100vw" : win.w,
     height: win.maximized ? "calc(100vh - 30px - 80px)" : win.h,
-    zIndex: focused ? 30 : 10 + (win.z || 0),
+    zIndex: 10 + (win.z || 0) + (focused ? 200 : 0),
   };
   if (target && (phase === "minimizing" || phase === "restoring" || phase === "opening")) {
     style["--genie-tx"] = `${target.tx}px`;

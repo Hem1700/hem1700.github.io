@@ -29,15 +29,23 @@ export function useDesktop() {
       widRef.current += 1;
       zRef.current += 1;
       const id = widRef.current;
-      const off = ws.length * 28;
+      // Center window in the available area (between topbar and dock)
+      // then cascade by 32px per open window, wrapping every 8.
+      const TOPBAR = 30, DOCK = 80;
+      const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
+      const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+      const openCount = ws.filter((w) => !w.minimized).length % 8;
+      const cascade = openCount * 32;
+      const cx = Math.max(60, Math.round((vw - meta.w) / 2) - 80 + cascade);
+      const cy = Math.max(TOPBAR + 10, Math.round((vh - TOPBAR - DOCK - meta.h) / 2) + TOPBAR + cascade);
       setFocusId(id);
       return [
         ...ws,
         {
           id,
           app,
-          x: 100 + off,
-          y: 70 + off,
+          x: Math.min(cx, vw - meta.w - 20),
+          y: Math.min(cy, vh - DOCK - meta.h - 10),
           w: meta.w,
           h: meta.h,
           minimized: false,
