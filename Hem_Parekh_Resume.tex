@@ -1,0 +1,203 @@
+%-------------------------
+% Resume in Latex
+% Author : Jake Gutierrez
+% Based off of: https://github.com/sb2nov/resume
+% License : MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{fontawesome5}
+\usepackage{multicol}
+\setlength{\multicolsep}{-3.0pt}
+\setlength{\columnsep}{-1pt}
+\input{glyphtounicode}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.6in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1.19in}
+\addtolength{\topmargin}{-.7in}
+\addtolength{\textheight}{1.4in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large\bfseries
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that generated pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{{#1 \vspace{-2pt}}}
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{1.0\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textbf{\small #2} \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{1.001\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & \textbf{\small #2}\\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.0in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\renewcommand\labelitemi{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    {\Huge \scshape Hem Parekh} \\ \vspace{1pt}
+    \small
+    Seattle, WA ~
+    \raisebox{-0.1\height}\faPhone\ \underline{+1-602-554-8248} ~
+    \href{mailto:hemparekh1596@gmail.com}{\raisebox{-0.2\height}\faEnvelope\ \underline{hemparekh1596@gmail.com}} ~
+    \href{https://www.linkedin.com/in/hem-parekh/}{\raisebox{-0.2\height}\faLinkedin\ \underline{LinkedIn}} ~
+    \href{https://github.com/Hem1700}{\raisebox{-0.2\height}\faGithub\ \underline{Github}} ~
+    \href{https://hem1700.github.io/}{\raisebox{-0.2\height}\faGlobe\ \underline{Portfolio}}
+    \vspace{-8pt}
+\end{center}
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Rochester Institute of Technology}{Aug 2022 -- May 2024}
+      {Master of Science in Cybersecurity (GPA: 4.0/4.0)}{Rochester, NY}
+    \resumeSubheading
+      {Vishwakarma Institute of Information Technology}{Aug 2018 -- May 2022}
+      {Bachelor of Technology in Computer Engineering (GPA: 3.9/4.0)}{Pune, India}
+  \resumeSubHeadingListEnd
+
+%-----------SKILLS-----------
+\section{Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Technical}{: Penetration Testing, Vulnerability Management, Incident Response, Network Security, Endpoint Security, IoT Security} \\
+     \textbf{Languages}{: Python, Ruby, Go, Java, JavaScript, SQL, C/C++, Bash, PowerShell, Flutter/Dart} \\
+     \textbf{AI \& Frameworks}{: LangChain, Claude API (Anthropic), MCP, FastAPI, React, Redis, PostgreSQL, Docker, Qdrant, Neo4j} \\
+     \textbf{Cloud \& Platforms}{: AWS, Azure, Google Cloud} \\
+     \textbf{Security Tools}{: Nmap, Burp Suite, Metasploit, Wireshark, Splunk, LogRhythm, AlienVault, Seceon, Falcon CrowdStrike, SentinelOne, Cisco AMP, Mimecast, BlackDuck Synopsys, Checkmarx} \\
+     \textbf{Certifications}{: CompTIA PenTest+, Security+, CySA+; AWS CCP, AWS SAA; AZ-900, SC-900; CCNA; Google Certified SOAR Analyst; ISC2 CC} \\
+    }}
+ \end{itemize}
+ \vspace{-16pt}
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Amazon}{Mar 2024 -- Present}
+      {Security and Privacy Engineer}{Seattle, WA}
+      \resumeItemListStart
+        \resumeItem{Led privacy threat modeling and design reviews for Devices \& Services features, identifying data flow risks and driving technical mitigations before launch.}
+        \resumeItem{Conducted end-to-end privacy incident response --- scoping impact, coordinating containment, and producing executive-ready root cause documentation with risk decisions and corrective actions.}
+        \resumeItem{Built automated tooling using Python and MCP to streamline privacy review workflows, surface control gaps at build time, and enforce privacy-by-design guardrails across product teams.}
+        \resumeItem{Translated regulatory requirements (GDPR, CCPA) into actionable technical controls, advising product and engineering teams on data minimization, retention policies, and access scoping.}
+        \resumeItem{Partnered with legal, security, and engineering stakeholders to assess third-party integrations and AI features for privacy risk, delivering recommendations to senior leadership.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Toshiba Global Commerce Solutions}{May 2024 -- Dec 2024}
+      {Cybersecurity Engineer Intern}{Dallas, TX}
+      \resumeItemListStart
+        \resumeItem{Automated repeatable security processes using Python, Bash, and PowerShell to streamline issue intake, evidence collection, and operational reporting.}
+        \resumeItem{Integrated product security tooling into CI/CD pipelines (e.g., SAST/SCA and related scanners) to improve detection coverage and speed up remediation cycles.}
+        \resumeItem{Performed security architecture reviews across cloud environments (Azure, AWS, Google Cloud), documenting findings and recommending mitigations to reduce risk.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Langan Engineering and Environmental Services}{Sep 2023 -- May 2024}
+      {Cybersecurity Analyst Intern}{Parsippany, NJ}
+      \resumeItemListStart
+        \resumeItem{Conducted vulnerability assessments and penetration tests across internal systems and web applications, collaborating with network teams to validate and remediate findings.}
+        \resumeItem{Developed and maintained YARA rules with Git-based workflows to improve phishing detection quality and reduce false positives.}
+        \resumeItem{Contributed to ISO/IEC 27001-aligned documentation and supported secure SDLC processes while monitoring security events to mitigate active threats.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {RNS Technology}{Jun 2021 -- Jul 2022}
+      {Security Operations Center (SOC) Analyst}{Pune, India}
+      \resumeItemListStart
+        \resumeItem{Monitored enterprise security devices and IDS/IPS alerts, triaging incidents and coordinating response actions to safeguard production systems.}
+        \resumeItem{Performed root cause analysis on threat alerts and implemented remediation recommendations to protect data integrity and minimize business impact.}
+        \resumeItem{Partnered with cross-functional teams to analyze incident trends and propose proactive controls using tools such as LogRhythm, CrowdStrike, AlienVault, and SentinelOne.}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+\vspace{-16pt}
+
+%-----------PROJECTS-----------
+\section{Projects}
+    \vspace{-5pt}
+    \resumeSubHeadingListStart
+
+      \resumeProjectHeading
+          {\textbf{FORGE --- Multi-Agent Autonomous Pentesting Platform} $|$ \href{https://github.com/Hem1700/forge}{\underline{Github}} $|$ \emph{Python, FastAPI, React, LangChain, Claude API, Docker}}{2025}
+          \resumeItemListStart
+            \resumeItem{Built a full-stack pentesting platform with a Strategic Brain (semantic app modeling, campaign planning, LLM-powered attack surface analysis) and a Tactical Swarm of autonomous agents --- recon, probe, evasion, code analysis, dependency scanning, and fuzzing.}
+            \resumeItem{Supports web applications, local codebases, and binaries; discovered 226 vulnerabilities in a real-world CLI project during initial testing.}
+            \resumeItem{Engineered live WebSocket event streaming, human-in-the-loop gate system, Qdrant vector store + Neo4j graph store for cross-engagement memory, React dashboard, and a full CLI tool (\texttt{forge run / findings / report / gate / configure}).}
+            \resumeItem{Designed and implemented multi-organization support with role-based access control (Viewer, Analyst, Admin), API key authentication, 12 new auth and admin endpoints, and persistent CLI credential management (\texttt{forge configure}); each org operates in full isolation with dedicated admin controls, org settings, and a super-admin panel for cross-org management.}
+          \resumeItemListEnd
+          \vspace{-13pt}
+
+      \resumeProjectHeading
+          {\textbf{ShellScribe --- Offline Security Analysis CLI} $|$ \href{https://github.com/Hem1700/shellscribe}{\underline{Github}} $|$ \emph{Python, LLM Orchestration, SQLite}}{2025}
+          \resumeItemListStart
+            \resumeItem{Built an offline, cross-platform security analysis CLI that runs LLM-powered code review, fuzzing, and dependency scanning without sending data to external services --- designed for air-gapped and compliance-sensitive environments.}
+            \resumeItem{Designed versioned data contracts (Event, TaskSpec, Finding, Artifact, TargetProfile) with JSON Schema validation to enable reproducible runs and audit-grade provenance.}
+            \resumeItem{Implemented safety and compliance controls (policy allowlists, human-in-the-loop gates, capability tokens, threat modeling) to enforce scoped, authorized analysis workflows.}
+          \resumeItemListEnd
+          \vspace{-13pt}
+
+      \resumeProjectHeading
+          {\textbf{SITA: Comprehensive Email Threat Analysis System (CETAS)} $|$ \href{https://github.com/Hem1700/sita}{\underline{Github}} $|$ \emph{Python, Desktop App, AWS}}{2024}
+          \resumeItemListStart
+            \resumeItem{Patented under my name --- built a Python desktop application to analyze email threats with automated checks for URLs, attachments, and sender reputation signals.}
+            \resumeItem{Integrated external lookups and enrichment workflows to support analyst-friendly triage and consistent investigation output.}
+            \resumeItem{Configured a private, isolated AWS sandbox to perform controlled analysis of suspicious URLs and attachments for deeper inspection.}
+          \resumeItemListEnd
+
+    \resumeSubHeadingListEnd
+
+\end{document}

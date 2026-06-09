@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORGE — Events UI Options</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #050508; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif; padding: 32px 24px; }
+h1 { font-size: 13px; letter-spacing: 0.15em; color: #06B6D4; margin-bottom: 32px; text-transform: uppercase; }
+.grid { display: flex; flex-wrap: wrap; gap: 28px; }
+.option { display: flex; flex-direction: column; gap: 10px; width: 280px; }
+.lbl { font-size: 10px; font-weight: 600; color: #444a60; letter-spacing: 0.12em; text-transform: uppercase; }
+.phone { background: #070910; border-radius: 20px; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #1a1d28; }
+.sec { font-size: 10px; color: #444a60; letter-spacing: 0.1em; text-transform: uppercase; }
+.mono { font-family: 'SF Mono', 'Fira Code', monospace; }
+.choose { font-size: 11px; padding: 9px; border-radius: 8px; background: #0a0b0f; border: 0.5px solid #1D9E75; color: #1D9E75; cursor: pointer; font-family: inherit; margin-top: 4px; width: 100%; }
+.choose:hover { background: #0a2b1c; }
+
+/* Timeline */
+.tl { position: relative; padding-left: 20px; display: flex; flex-direction: column; gap: 0; }
+.tl-line { position: absolute; left: 5px; top: 6px; bottom: 6px; width: 1px; background: #0e3a42; }
+.tl-item { position: relative; padding-bottom: 12px; }
+.tl-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #070910; position: absolute; left: -15px; top: 2px; }
+.tl-title { font-size: 12px; font-weight: 500; }
+.tl-sub { font-size: 10px; color: #444a60; font-family: 'SF Mono', monospace; margin-top: 2px; }
+
+/* Cards */
+.ev-card { background: #0d0f16; border: 0.5px solid #1a1d28; border-radius: 0 10px 10px 0; padding: 8px 10px; margin-bottom: 6px; }
+.ev-type { font-size: 11px; font-weight: 500; }
+.ev-msg { font-size: 12px; color: #e8eaf0; margin-top: 2px; }
+.ev-meta { font-size: 10px; color: #444a60; font-family: monospace; margin-top: 3px; }
+
+/* Terminal */
+.term { background: #050508; border: 1px solid #0e3a42; border-radius: 10px; padding: 10px 12px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; display: flex; flex-direction: column; gap: 6px; }
+.term-row { display: flex; gap: 8px; }
+
+/* Grouped */
+.group { background: #0d0f16; border: 0.5px solid #1a1d28; border-radius: 10px; overflow: hidden; margin-bottom: 7px; }
+.group-hd { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 0.5px solid #1a1d28; background: #0a0b0f; }
+.group-dot { width: 6px; height: 6px; border-radius: 50%; }
+.group-name { font-size: 11px; font-weight: 500; color: #e8eaf0; }
+.group-status { font-size: 10px; margin-left: auto; }
+.group-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+.group-ev { font-size: 11px; }
+</style>
+</head>
+<body>
+
+<h1>FORGE · Events Feed — 4 UI Options</h1>
+
+<div class="grid">
+
+  <!-- Option A: Timeline -->
+  <div class="option">
+    <div class="lbl">Option A — Timeline</div>
+    <div class="phone">
+      <div class="sec">Live events</div>
+      <div class="tl">
+        <div class="tl-line"></div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:#f87171;"></div>
+          <div class="tl-title" style="color:#f87171;">Critical — SQLi on /api/users</div>
+          <div class="tl-sub">09:43:12 · ExploitEngine</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:#06B6D4;"></div>
+          <div class="tl-title" style="color:#e8eaf0;">PoC generated for CVE-2023-4911</div>
+          <div class="tl-sub">09:43:08 · ExploitEngine</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:#06B6D4;"></div>
+          <div class="tl-title" style="color:#8890a8;">Probing /api/orders endpoint</div>
+          <div class="tl-sub">09:43:01 · AgentBrain</div>
+        </div>
+        <div class="tl-item" style="padding-bottom:0;">
+          <div class="tl-dot" style="background:#444a60;"></div>
+          <div class="tl-title" style="color:#444a60;">Deduplicating 8 findings</div>
+          <div class="tl-sub">09:42:55 · FindingsJudge</div>
+        </div>
+      </div>
+    </div>
+    <button class="choose" onclick="alert('Option A — Timeline chosen!')">Choose A</button>
+  </div>
+
+  <!-- Option B: Bordered Cards -->
+  <div class="option">
+    <div class="lbl">Option B — Bordered cards</div>
+    <div class="phone">
+      <div class="sec">Live events</div>
+      <div class="ev-card" style="border-left:2px solid #f87171;">
+        <div class="ev-type" style="color:#f87171;">Critical finding</div>
+        <div class="ev-msg">SQLi on /api/users</div>
+        <div class="ev-meta">09:43:12 · ExploitEngine</div>
+      </div>
+      <div class="ev-card" style="border-left:2px solid #06B6D4;">
+        <div class="ev-type" style="color:#06B6D4;">Agent action</div>
+        <div class="ev-msg" style="color:#8890a8;">PoC generated for CVE-2023-4911</div>
+        <div class="ev-meta">09:43:08 · ExploitEngine</div>
+      </div>
+      <div class="ev-card" style="border-left:2px solid #444a60;">
+        <div class="ev-type" style="color:#444a60;">Info</div>
+        <div class="ev-msg" style="color:#444a60;">Deduplicating 8 findings</div>
+        <div class="ev-meta">09:42:55 · FindingsJudge</div>
+      </div>
+    </div>
+    <button class="choose" onclick="alert('Option B — Bordered cards chosen!')">Choose B</button>
+  </div>
+
+  <!-- Option C: Terminal -->
+  <div class="option">
+    <div class="lbl">Option C — Terminal log</div>
+    <div class="phone">
+      <div class="sec">Live events</div>
+      <div class="term">
+        <div class="term-row"><span style="color:#f87171;flex-shrink:0;">[CRIT]</span><span style="color:#f87171;">SQLi on /api/users</span></div>
+        <div class="term-row"><span style="color:#06B6D4;flex-shrink:0;">[AGNT]</span><span style="color:#8890a8;">ExploitEngine: PoC generated</span></div>
+        <div class="term-row"><span style="color:#06B6D4;flex-shrink:0;">[AGNT]</span><span style="color:#8890a8;">AgentBrain: probing /api/orders</span></div>
+        <div class="term-row"><span style="color:#444a60;flex-shrink:0;">[INFO]</span><span style="color:#444a60;">FindingsJudge: deduplicating 8</span></div>
+        <div class="term-row"><span style="color:#4ade80;flex-shrink:0;">[DONE]</span><span style="color:#4ade80;">ExploitEngine: complete</span></div>
+        <div class="term-row"><span style="color:#06B6D4;">▋</span><span style="color:#444a60;">waiting...</span></div>
+      </div>
+    </div>
+    <button class="choose" onclick="alert('Option C — Terminal chosen!')">Choose C</button>
+  </div>
+
+  <!-- Option D: Grouped -->
+  <div class="option">
+    <div class="lbl">Option D — Grouped by agent</div>
+    <div class="phone">
+      <div class="sec">Live events</div>
+      <div class="group">
+        <div class="group-hd">
+          <div class="group-dot" style="background:#4ade80;"></div>
+          <span class="group-name">ExploitEngine</span>
+          <span class="group-status" style="color:#444a60;">2 events</span>
+        </div>
+        <div class="group-body">
+          <div class="group-ev" style="color:#f87171;">✕ SQLi found on /api/users</div>
+          <div class="group-ev" style="color:#8890a8;">PoC generated for CVE-2023-4911</div>
+        </div>
+      </div>
+      <div class="group">
+        <div class="group-hd">
+          <div class="group-dot" style="background:#06B6D4;"></div>
+          <span class="group-name">AgentBrain</span>
+          <span class="group-status" style="color:#06B6D4;">running</span>
+        </div>
+        <div class="group-body">
+          <div class="group-ev" style="color:#8890a8;">Probing /api/orders endpoint</div>
+          <div class="group-ev" style="color:#444a60;">Analyzing auth headers...</div>
+        </div>
+      </div>
+      <div class="group">
+        <div class="group-hd" style="border-bottom:none;">
+          <div class="group-dot" style="background:#444a60;"></div>
+          <span class="group-name" style="color:#444a60;">FindingsJudge</span>
+          <span class="group-status" style="color:#444a60;">waiting</span>
+        </div>
+      </div>
+    </div>
+    <button class="choose" onclick="alert('Option D — Grouped chosen!')">Choose D</button>
+  </div>
+
+</div>
+</body>
+</html>
