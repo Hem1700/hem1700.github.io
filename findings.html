@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Findings &mdash; Hem Parekh</title>
+<meta name="description" content="Memory-safety vulnerabilities found and fixed upstream in the Linux kernel, PyTorch, and curl." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="findings.html" class="active">Findings</a>
+      <a href="projects.html">Projects</a>
+      <a href="writing.html">Writing</a>
+      <a href="about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<header class="page wrap">
+  <div class="eyebrow">Findings</div>
+  <h1>Vulnerabilities I found by reading the code.</h1>
+  <p class="lead">Each of these came from manual source review &mdash; diffing a function against its safe siblings and git history, hypothesizing the missing invariant, then confirming with a sanitizer and shipping the patch upstream.</p>
+</header>
+<section class="body wrap">
+  <a class="finding reveal" href="https://lore.kernel.org/linux-cifs/20260602235646.23581-1-hemparekh1596@gmail.com/T/#u" target="_blank" rel="noopener">
+    <div class="top"><h3>Heap out-of-bounds read in the Linux kernel's SMB server</h3><span class="status live">Applied &middot; stable</span></div>
+    <p><code>smb_check_perm_dacl()</code> failed to verify an ACE was large enough to hold its declared sub-authorities, letting an authenticated client trigger an OOB read past the security-descriptor allocation via a crafted ACL stored with SMB2_SET_INFO and read on a later SMB2_CREATE. Fixed by adding the missing bounds check before dereference; Cc'd to stable.</p>
+    <div class="where">linux &middot; fs/smb/server/smbacl.c &middot; ksmbd &middot; view patch on lore &rarr;</div>
+  </a>
+
+  <a class="finding reveal" href="https://github.com/pytorch/pytorch/pull/186672" target="_blank" rel="noopener">
+    <div class="top"><h3>Crashing PyTorch with a 176-byte model file</h3><span class="status live">Open PR</span></div>
+    <p>An attacker-controlled <code>class_type</code> index parsed from an untrusted flatbuffer model was used in an unchecked <code>operator[]</code> and dereferenced &mdash; a wild pointer dereference reachable from <code>torch.jit.load</code>. The FlatBuffers verifier validates structure but not this cross-reference, so a crafted module passes verification yet SIGSEGVs. Fix routes both registration sites through the bounds-checked accessor with a null guard.</p>
+    <div class="where">pytorch &middot; torch/csrc/jit/mobile/flatbuffer_loader.cpp &middot; PR #186672 &rarr;</div>
+  </a>
+
+  <a class="finding reveal" href="mailto:hemparekh1596@gmail.com">
+    <div class="top"><h3>Slipping past curl's SSRF filter with percent-encoding</h3><span class="status">Disclosed</span></div>
+    <p><code>parse_authority()</code> normalized the URL before decoding, so a <code>%2e</code>-encoded host could bypass the SSRF filter. Responsibly disclosed and under review.</p>
+    <div class="where">curl &middot; url parsing &middot; under review</div>
+  </a>
+
+  <a class="finding reveal" href="mailto:hemparekh1596@gmail.com">
+    <div class="top"><h3>Out-of-bounds read in the Linux NTFS driver</h3><span class="status">Submitted</span></div>
+    <p><code>ntfs_readdir()</code> dereferenced an unvalidated on-disk <code>entries_offset</code>, attacker-reachable via <code>getdents64()</code> on a read-only mounted image. Fixed by validating the offset before dereference; submitted to linux-fsdevel.</p>
+    <div class="where">linux &middot; fs/ntfs/dir.c &middot; linux-fsdevel</div>
+  </a>
+
+  <div class="next reveal" style="margin-top:34px"><a href="projects.html">Projects &rarr;</a><a href="writing.html">Writing &rarr;</a></div>
+</section>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

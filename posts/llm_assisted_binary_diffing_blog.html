@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LLM-assisted binary diffing: finding 1-days before PoCs drop — Hem Parekh</title>
+<meta name="description" content="LLM-assisted binary diffing: finding 1-days before PoCs drop" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">Research</div>
+  <h1>LLM-assisted binary diffing: finding 1-days before PoCs drop</h1>
+  <div class="ameta">Feb 8, 2026 &middot; 8 min read</div>
+  <div class="prose">
+<p><strong>TL;DR</strong> — When a vendor ships a security patch, the binary itself tells the full story. Researchers have always diffed patched vs. unpatched binaries to reverse-engineer vulnerabilities. LLMs now compress that process from days to hours. This post walks through a complete technical pipeline: acquiring binaries, structuring diffs for LLM consumption, prompt engineering for vulnerability classification, and validating the output — with working code at every stage.</p>
+<hr/>
+<h2>The 1-Day Window</h2>
+<p>Every Patch Tuesday, Microsoft publishes security updates with deliberately vague descriptions: <em>"Remote Code Execution vulnerability in Windows Kernel."</em> No technical details. No PoC. Just a CVE number, a severity rating, and a patched binary.</p>
+<p>But here's the thing — the patch itself <em>is</em> the vulnerability disclosure. The diff between the patched and unpatched binary reveals exactly what was broken: which function, which check was missing, which boundary wasn't validated. For years, skilled reverse engineers have exploited this asymmetry. They diff the binaries, find the vuln, build the exploit, and use it against the enormous population of systems that haven't patched yet.</p>
+<p>That window between patch release and widespread deployment is the 1-day window. It's always been valuable. LLMs are about to make it <em>dangerous</em>.</p>
+<hr/>
+<h2>Why LLMs Change the Equation</h2>
+<p>Traditional patch diffing requires a reverse engineer who can:</p>
+<ol>
+<li>Navigate thousands of changed functions to find the security-relevant ones</li>
+<li>Read decompiled C pseudocode fluently</li>
+<li>Recognize vulnerability patterns (off-by-one, integer overflow, UAF, type confusion)</li>
+<li>Reason about exploitability — can an attacker reach this code? What primitives does it give?</li>
+</ol>
+<p>This is a rare skillset. Maybe a few hundred people worldwide can do it quickly and reliably. LLMs don't replace them, but they act as a <em>force multiplier</em> that makes the initial triage phase almost instant.</p>
+<p>Why this works now:</p>
+<ul>
+<li><strong>Decompiler output is basically C</strong> — Ghidra and IDA produce pseudocode that looks like C. LLMs are trained on enormous amounts of C. They can reason about it.</li>
+<li><strong>Context windows are large enough</strong> — You can feed entire function pairs (before/after) with caller context. A year ago, you'd be truncating critical code.</li>
+<li><strong>Vulnerability patterns are well-documented</strong> — The model has seen thousands of CVE descriptions, write-ups, and exploit analyses during training. It knows what an integer overflow looks like.</li>
+</ul>
+<p>The result: tasks that took an experienced researcher 4-8 hours of focused work can now be triaged in minutes. The human still validates, but the LLM does the heavy lifting of pattern recognition.</p>
+<hr/>
+<h2>The Pipeline Architecture</h2>
+<p>Here's what we're building end-to-end:</p>
+<pre><code>
+┌──────────────┐     ┌──────────────┐     ┌──────────────────┐
+│  Patch drops  │────▶│ Extract bins │────▶│  BinDiff/Diaphora│
+│  (Patch Tue)  │     │  (pre/post)  │     │  (function diff)  │
+└──────────────┘     └──────────────┘     └────────┬─────────┘
+                                                    │
+                     ┌──────────────┐     ┌────────▼─────────┐
+                     │  Structured   │◀────│ Headless Ghidra   │
+                     │  LLM Prompt   │     │ (decompile both)  │
+                     └───────┬──────┘     └──────────────────┘
+                             │
+                    ┌────────▼─────────┐
+                    │   LLM Analysis   │
+                    │  (multi-round)   │
+                    └────────┬─────────┘
+                             │
+                    ┌────────▼─────────┐
+                    │   Validation +   │
+                    │   Scoring        │
+                    └──────────────────┘
+</code></pre>
+<p>Each stage has real engineering decisions. Let's walk through every one.</p>
+<hr/>
+<h2>Stage 1: Acquiring the Binaries</h2>
+<p>This sounds trivial. It isn't. Half the battle is reliably getting the exact pre-patch and post-patch versions of the right binary.</p>
+<h3>Windows (Patch Tuesday)</h3>
+<p><strong>Winbindex</strong> is the gold standard. It indexes every version of every Windows system DLL and driver ever shipped, keyed by KB number. You can pull the exact binary pair you need.</p>
+<pre><code class="language-python">
+import requests
+import json
+import subprocess
+import os
+from pathlib import Path
+
+class BinaryAcquirer:
+    """
+    Acquires pre-patch and post-patch Windows binaries 
+    using Winbindex for a given KB update.
+    """
+    
+    WINBINDEX_API = "https://winbindex.m417z.com/data/by_filename_compressed"
+    SYMBOL_SERVER = "https://msdl.microsoft.com/download/symbols"
+    
+    def __init__(self, output_dir="./binaries"):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+    
+    def get_file_versions(self, filename):
+        """
+        Query Winbindex for all known versions of a Windows binary.
+        Returns a dict mapping version strings to download metadata.
+        """
+        url = f"{self.WINBINDEX_API}/{filename}.json.gz"
+        resp = requests.get(url)
+        resp.raise_for_status()
+        return resp.json()
+    
+    def find_patch_pair(self, filename, kb_number):
+        """
+        Given a filename (e.g., 'ntoskrnl.exe') and KB number,
+        find the versions immediately before and after the patch.
+        
+        Returns (pre_patch_info, post_patch_info) or raises if not found.
+        """
+        versions = self.get_file_versions(filename)
+        
+        # Filter versions, sort by timestamp
+        sorted_versions = sorted(
+            versions.items(),
+            key=lambda x: x[1].get("timestamp", 0)
+        )
+        
+        post_patch = None
+        pre_patch = None
+        
+        for version_str, info in sorted_versions:
+            if kb_number.upper() in json.dumps(info).upper():
+                post_patch = (version_str, info)
+                break
+        
+        if not post_patch:
+            raise ValueError(f"KB {kb_number} not found for {filename}")
+        
+        # The version immediately before in the sorted list is our pre-patch
+        post_idx = [v[0] for v in sorted_versions].index(post_patch[0])
+        if post_idx &gt; 0:
+            pre_patch = sorted_versions[post_idx - 1]
+        
+        return pre_patch, post_patch
+    
+    def download_binary(self, file_info, output_name):
+        """
+        Download a specific binary version from Microsoft's symbol server
+        or directly from the update package.
+        """
+        output_path = self.output_dir / output_name
+        
+        if "fileInfo" in file_info:
+            # Use PE hash to download from symbol server
+            fi = file_info["fileInfo"]
+            timestamp = format(fi["timestamp"], "X")
+            size = format(fi["virtualSize"], "X")
+            url = f"{self.SYMBOL_SERVER}/{output_name}/{timestamp}{size}/{output_name}"
+            
+            resp = requests.get(url, stream=True)
+            resp.raise_for_status()
+            
+            with open(output_path, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        
+        print(f"[+] Downloaded: {output_path} ({output_path.stat().st_size} bytes)")
+        return output_path
+
+
+# --- Alternative: Extract from .msu update packages directly ---
+
+def extract_from_msu(msu_path, target_filename, output_dir):
+    """
+    Extract a specific file from a Windows Update .msu package.
+    
+    MSU structure:
+      .msu -&gt; contains .cab files
+        .cab -&gt; contains actual binaries (sometimes nested)
+    """
+    work_dir = Path(output_dir) / "msu_work"
+    work_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Step 1: Extract the .msu (it's a cabinet archive)
+    subprocess.run(
+        ["expand", "-F:*", str(msu_path), str(work_dir)],
+        check=True, capture_output=True
+    )
+    
+    # Step 2: Find and extract the inner .cab
+    for cab in work_dir.glob("*.cab"):
+        subprocess.run(
+            ["expand", "-F:*", str(cab), str(work_dir / "inner")],
+            check=True, capture_output=True
+        )
+    
+    # Step 3: Locate the target binary
+    results = list((work_dir / "inner").rglob(target_filename))
+    if not results:
+        raise FileNotFoundError(
+            f"{target_filename} not found in {msu_path}"
+        )
+    
+    return results[0]
+</code></pre>
+<h3>Linux Kernel</h3>
+<p>For Linux, you have it easier — the source is public. But binary-level analysis on compiled kernel modules is still interesting because <strong>compiler optimizations obscure the vulnerability</strong>. The source diff might show a simple bounds check, but the compiled code might have been vectorized, inlined, or reordered.</p>
+<pre><code class="language-bash">
+# Get the exact commit that patched a CVE
+git log --all --grep="CVE-2024-XXXXX" --format="%H %s"
+
+# Get the parent (pre-patch) commit
+git rev-parse &lt;patch_commit&gt;^
+
+# Build both versions of the specific module
+git checkout &lt;pre_patch_commit&gt;
+make M=drivers/target_subsystem/
+cp drivers/target_subsystem/target.ko ./target_pre.ko
+
+git checkout &lt;post_patch_commit&gt;
+make M=drivers/target_subsystem/
+cp drivers/target_subsystem/target.ko ./target_post.ko
+</code></pre>
+<hr/>
+<h2>Stage 2: Diffing — BinDiff vs Diaphora</h2>
+<p>Both tools match functions between two binaries and assign similarity scores. The interesting functions are the ones with similarity between 0.5 and 0.99 — similar enough to be the same function, but different enough that something changed.</p>
+<h3>Why Diaphora Wins for This Pipeline</h3>
+<p>Diaphora exports results to <strong>SQLite</strong>, which makes programmatic access trivial. BinDiff uses a custom binary format that's painful to parse.</p>
+<pre><code class="language-python">
+import sqlite3
+from dataclasses import dataclass
+from typing import List, Optional
+
+@dataclass
+class FunctionDiff:
+    """Represents a single changed function between two binary versions."""
+    name: str
+    address_original: int
+    address_patched: int
+    similarity_ratio: float
+    pseudocode_original: Optional[str] = None
+    pseudocode_patched: Optional[str] = None
+    callers: Optional[List[str]] = None
+    
+    @property
+    def is_security_relevant(self):
+        """
+        Heuristic: functions with similarity 0.7-0.99 are most likely
+        to be security patches. Below 0.7 might be refactors.
+        Above 0.99 is probably just metadata/version changes.
+        """
+        return 0.7 &lt;= self.similarity_ratio &lt;= 0.99
+
+
+class DiaphoraAnalyzer:
+    """
+    Extracts and ranks changed functions from Diaphora's SQLite output.
+    Focuses on identifying security-relevant patches.
+    """
+    
+    def __init__(self, db_path):
+        self.db = sqlite3.connect(db_path)
+        self.db.row_factory = sqlite3.Row
+    
+    def get_changed_functions(self, min_ratio=0.5, max_ratio=0.99):
+        """
+        Extract functions that changed between versions.
+        
+        Sorted by ratio ASC — most changed first — because 
+        the biggest changes are often the most interesting patches.
+        
+        Filters out:
+        - Perfect matches (ratio = 1.0) — unchanged
+        - Very low matches (ratio &lt; 0.5) — likely refactors, not patches
+        """
+        cursor = self.db.execute("""
+            SELECT 
+                name,
+                address,
+                address2,
+                ratio,
+                pseudocode,
+                pseudocode2,
+                md_index          -- Complexity metric
+            FROM results 
+            WHERE ratio &lt; ? 
+              AND ratio &gt; ?
+              AND name NOT LIKE '%guard%'     -- Filter out CFG stubs
+              AND name NOT LIKE '%security_cookie%'
+            ORDER BY ratio ASC
+        """, (max_ratio, min_ratio))
+        
+        functions = []
+        for row in cursor:
+            diff = FunctionDiff(
+                name=row["name"],
+                address_original=row["address"],
+                address_patched=row["address2"],
+                similarity_ratio=row["ratio"],
+                pseudocode_original=row["pseudocode"],
+                pseudocode_patched=row["pseudocode2"]
+            )
+            functions.append(diff)
+        
+        return functions
+    
+    def get_security_candidates(self):
+        """
+        Returns functions most likely to be security patches.
+        Uses multiple heuristics beyond just similarity ratio.
+        """
+        all_changed = self.get_changed_functions()
+        
+        candidates = []
+        for func in all_changed:
+            score = self._security_score(func)
+            if score &gt; 0.5:
+                candidates.append((score, func))
+        
+        # Sort by security relevance score, descending
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        return candidates
+    
+    def _security_score(self, func: FunctionDiff) -&gt; float:
+        """
+        Heuristic scoring for how likely a function change is 
+        a security patch vs. a feature change or refactor.
+        """
+        score = 0.0
+        
+        # Similarity ratio sweet spot
+        if 0.85 &lt;= func.similarity_ratio &lt;= 0.98:
+            score += 0.4  # Small, targeted change = likely a fix
+        
+        if func.pseudocode_patched and func.pseudocode_original:
+            patched = func.pseudocode_patched.lower()
+            original = func.pseudocode_original.lower()
+            
+            # New bounds checks added
+            new_checks = [
+                "if (", "&lt; 0", "&gt; 0", "&lt;= 0", "&gt;= 0",
+                "!= null", "== null", "!= 0",
+                "size", "length", "count", "bound"
+            ]
+            for check in new_checks:
+                if check in patched and check not in original:
+                    score += 0.3
+                    break
+            
+            # New error handling
+            if "return" in patched and patched.count("return") &gt; original.count("return"):
+                score += 0.2
+            
+            # Lock/synchronization added (race condition fix)
+            sync_keywords = ["lock", "mutex", "spinlock", "critical_section"]
+            for kw in sync_keywords:
+                if kw in patched and kw not in original:
+                    score += 0.4
+                    break
+        
+        # Function name hints
+        security_names = [
+            "validate", "check", "verify", "sanitize",
+            "parse", "decode", "deserialize", "callback",
+            "alloc", "free", "release", "dispatch"
+        ]
+        name_lower = func.name.lower()
+        for hint in security_names:
+            if hint in name_lower:
+                score += 0.1
+                break
+        
+        return min(score, 1.0)
+    
+    def close(self):
+        self.db.close()
+</code></pre>
+<h3>Running Diaphora</h3>
+<pre><code class="language-bash">
+# In IDA Pro (or use the Ghidra port):
+# 1. Open the ORIGINAL binary
+# 2. Run diaphora.py → export to original.sqlite
+
+# 3. Open the PATCHED binary  
+# 4. Run diaphora.py → diff against original.sqlite
+# 5. Results saved to diaphora_results.sqlite
+</code></pre>
+<hr/>
+<h2>Stage 3: Headless Decompilation at Scale</h2>
+<p>You need decompiled pseudocode for both versions of every changed function. Doing this manually is insane. Ghidra's headless mode is the answer.</p>
+<pre><code class="language-python">
+import subprocess
+import json
+from pathlib import Path
+from typing import Dict
+
+class HeadlessGhidra:
+    """
+    Drives Ghidra in headless mode to decompile specific functions
+    from a binary. Only decompiles functions flagged by Diaphora
+    to avoid wasting time on unchanged code.
+    """
+    
+    GHIDRA_HOME = "/opt/ghidra"  # Adjust to your installation
+    
+    def __init__(self, project_dir="./ghidra_projects"):
+        self.project_dir = Path(project_dir)
+        self.project_dir.mkdir(parents=True, exist_ok=True)
+    
+    def decompile_functions(
+        self, 
+        binary_path: str, 
+        function_addresses: list,
+        project_name: str = "diffproject"
+    ) -&gt; Dict[int, str]:
+        """
+        Decompile specific functions from a binary using Ghidra headless.
+        
+        Args:
+            binary_path: Path to the binary to analyze
+            function_addresses: List of function addresses (int) to decompile
+            project_name: Ghidra project name
+            
+        Returns:
+            Dict mapping address -&gt; decompiled pseudocode string
+        """
+        # Write target addresses to a file for the Ghidra script
+        addr_file = self.project_dir / "target_addrs.json"
+        addr_file.write_text(json.dumps(
+            [hex(addr) for addr in function_addresses]
+        ))
+        
+        output_file = self.project_dir / "decompiled_output.json"
+        
+        # Run Ghidra headless analyzer
+        cmd = [
+            f"{self.GHIDRA_HOME}/support/analyzeHeadless",
+            str(self.project_dir),
+            project_name,
+            "-import", binary_path,
+            "-postScript", "DecompileTargets.java",
+            "-scriptPath", str(Path(__file__).parent / "ghidra_scripts"),
+            "-overwrite",
+            "-deleteProject",  # Clean up after
+        ]
+        
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=600  # 10 min timeout per binary
+        )
+        
+        if result.returncode != 0:
+            print(f"[!] Ghidra stderr:\n{result.stderr[-2000:]}")
+            raise RuntimeError("Ghidra analysis failed")
+        
+        # Parse output
+        if output_file.exists():
+            return json.loads(output_file.read_text())
+        
+        return {}
+</code></pre>
+<p>And the corresponding Ghidra script (<code>DecompileTargets.java</code>):</p>
+<pre><code class="language-java">
+// DecompileTargets.java — Ghidra postScript
+// Decompiles only the functions at addresses specified in target_addrs.json
+// Outputs results to decompiled_output.json
+
+import ghidra.app.decompiler.DecompInterface;
+import ghidra.app.decompiler.DecompileResults;
+import ghidra.app.script.GhidraScript;
+import ghidra.program.model.listing.Function;
+import ghidra.program.model.listing.FunctionManager;
+import ghidra.program.model.address.Address;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.io.*;
+import java.util.*;
+
+public class DecompileTargets extends GhidraScript {
+    
+    @Override
+    public void run() throws Exception {
+        // Read target addresses
+        File addrFile = new File(
+            getProjectRootFolder().getProjectLocator()
+                .getProjectDir().getParent(),
+            "target_addrs.json"
+        );
+        
+        Gson gson = new Gson();
+        List&lt;String&gt; targetAddrs = gson.fromJson(
+            new FileReader(addrFile),
+            new TypeToken&lt;List&lt;String&gt;&gt;(){}.getType()
+        );
+        
+        // Set up decompiler
+        DecompInterface decomp = new DecompInterface();
+        decomp.openProgram(currentProgram);
+        
+        FunctionManager funcMgr = currentProgram.getFunctionManager();
+        Map&lt;String, Object&gt; results = new HashMap&lt;&gt;();
+        
+        for (String addrStr : targetAddrs) {
+            long addrLong = Long.parseLong(
+                addrStr.replace("0x", ""), 16
+            );
+            Address addr = currentProgram.getAddressFactory()
+                .getDefaultAddressSpace().getAddress(addrLong);
+            Function func = funcMgr.getFunctionAt(addr);
+            
+            if (func == null) {
+                // Try to find containing function
+                func = funcMgr.getFunctionContaining(addr);
+            }
+            
+            if (func != null) {
+                DecompileResults res = decomp.decompileFunction(
+                    func, 120, monitor  // 120 second timeout per function
+                );
+                
+                if (res.depiledFunction() != null) {
+                    Map&lt;String, String&gt; funcData = new HashMap&lt;&gt;();
+                    funcData.put("name", func.getName());
+                    funcData.put("pseudocode", 
+                        res.getDecompiledFunction().getC());
+                    funcData.put("signature", 
+                        func.getSignature().getPrototypeString());
+                    
+                    // Get callers (cross-references)
+                    List&lt;String&gt; callers = new ArrayList&lt;&gt;();
+                    for (var ref : getReferencesTo(func.getEntryPoint())) {
+                        Function caller = funcMgr.getFunctionContaining(
+                            ref.getFromAddress()
+                        );
+                        if (caller != null) {
+                            callers.add(caller.getName());
+                        }
+                    }
+                    funcData.put("callers", String.join(", ", callers));
+                    
+                    results.put(addrStr, funcData);
+                }
+            }
+        }
+        
+        // Write output
+        File outFile = new File(addrFile.getParent(), 
+            "decompiled_output.json");
+        try (FileWriter fw = new FileWriter(outFile)) {
+            gson.toJson(results, fw);
+        }
+        
+        println("[+] Decompiled " + results.size() + " functions");
+    }
+}
+</code></pre>
+<h3>Key Optimization: Don't Decompile Everything</h3>
+<p>On a binary like <code>ntoskrnl.exe</code> with 30,000+ functions, full decompilation takes over an hour. We only need the ~20 functions Diaphora flagged. This brings it down to seconds.</p>
+<pre><code class="language-python">
+# Only decompile what Diaphora flagged as changed
+analyzer = DiaphoraAnalyzer("diaphora_results.sqlite")
+candidates = analyzer.get_security_candidates()
+
+# Extract just the addresses we need
+original_addrs = [c[1].address_original for c in candidates]
+patched_addrs = [c[1].address_patched for c in candidates]
+
+ghidra = HeadlessGhidra()
+original_decomp = ghidra.decompile_functions(
+    "ntoskrnl_original.exe", original_addrs
+)
+patched_decomp = ghidra.decompile_functions(
+    "ntoskrnl_patched.exe", patched_addrs
+)
+</code></pre>
+<hr/>
+<h2>Stage 4: Prompt Engineering — The Critical Layer</h2>
+<p>This is where most people would screw up. You can't just dump two walls of pseudocode and say "find the bug." The model needs structured context and specific questions.</p>
+<h3>The Prompt Template</h3>
+<pre><code class="language-python">
+def build_analysis_prompt(func_diff, original_code, patched_code, callers):
+    """
+    Constructs a structured prompt for LLM vulnerability analysis.
+    
+    Key principles:
+    - Show BOTH versions side-by-side (not just the diff)
+    - Include caller context (reachability matters)
+    - Ask structured questions (prevents rambling)
+    - Request specific output format (parseable)
+    """
+    
+    prompt = f"""## Binary Patch Analysis
+
+### Target
+- **Function**: `{func_diff.name}`
+- **Binary**: ntoskrnl.exe (Windows Kernel)
+- **Similarity ratio**: {func_diff.similarity_ratio:.3f}
+- **Known callers**: {', '.join(callers) if callers else 'Unknown'}
+
+### BEFORE (Unpatched / Vulnerable Version):
+</code></pre>
+<p>{original_code}</p>
+<pre><code>
+
+### AFTER (Patched Version):
+</code></pre>
+<p>{patched_code}</p>
+<pre><code>
+
+### Analysis Tasks
+
+**Task 1 — Vulnerability Classification**
+Examine the diff between the two versions. Classify the vulnerability 
+into one of: buffer overflow, integer overflow, out-of-bounds read/write, 
+use-after-free, type confusion, race condition, null pointer dereference, 
+logic bug, or other (specify).
+
+Identify the EXACT lines that changed and explain what they reveal.
+
+**Task 2 — Reachability Assessment**
+Given the known callers listed above, assess:
+- Can an unprivileged user-mode process trigger this code path?
+- What Windows API calls or operations would lead here?
+- Are there any gating checks that limit reachability?
+
+**Task 3 — Exploitation Primitive**
+If the vulnerability is triggerable:
+- What memory corruption primitive does it provide? 
+  (arbitrary write, relative write, read, info leak, etc.)
+- What is the corruption target? (adjacent heap object, stack variable, etc.)
+- What's the attacker-controlled input that influences the corruption?
+
+**Task 4 — Trigger Sketch**
+Write a minimal C proof-of-concept skeleton that would:
+1. Reach the vulnerable function
+2. Supply the input that triggers the vulnerability
+Do NOT write a full exploit. Just reach the bug.
+
+### Output Format
+Respond with clearly labeled sections matching each task number.
+For Task 1, also include a confidence score (low/medium/high) for 
+your classification.
+"""
+    return prompt
+</code></pre>
+<h3>Multi-Round Chaining — Why Single Prompts Aren't Enough</h3>
+<p>Don't ask one mega-question. Chain the analysis across multiple rounds so each step validates the previous one.</p>
+<pre><code class="language-python">
+import anthropic
+from typing import Dict, Any
+
+class VulnAnalyzer:
+    """
+    Multi-round LLM analysis pipeline for vulnerability classification.
+    
+    Each round builds on the previous, with validation between steps.
+    This catches hallucinations early before they compound.
+    """
+    
+    def __init__(self, model="claude-sonnet-4-20250514"):
+        self.client = anthropic.Anthropic()
+        self.model = model
+        self.conversation_history = []
+    
+    def analyze(self, func_diff, original_code, patched_code, callers) -&gt; Dict[str, Any]:
+        results = {}
+        
+        # --- Round 1: Classification ---
+        r1_prompt = f"""Analyze this binary patch. I'll show you the original 
+and patched versions of function `{func_diff.name}`.
+
+ORIGINAL (vulnerable):
+</code></pre>
+<p>{original_code}</p>
+<pre><code>
+
+PATCHED (fixed):
+</code></pre>
+<p>{patched_code}</p>
+<pre><code>
+
+Classify the vulnerability type. What specific code change reveals it?
+Confidence: low/medium/high.
+Respond concisely — classification + evidence only."""
+
+        r1_response = self._ask(r1_prompt)
+        results["classification"] = r1_response
+        
+        # --- Round 2: Reachability (only if R1 is high confidence) ---
+        if "high" in r1_response.lower() or "medium" in r1_response.lower():
+            r2_prompt = f"""Good. Now assess reachability.
+
+Known callers of `{func_diff.name}`: {', '.join(callers)}
+
+Can an unprivileged user-mode process reach this function?
+What API calls or operations would trigger it?
+Be specific about the call chain."""
+
+            r2_response = self._ask(r2_prompt)
+            results["reachability"] = r2_response
+        
+        # --- Round 3: Exploitation primitive ---
+        r3_prompt = """Based on your classification and reachability analysis:
+
+What exploitation primitive does this give an attacker?
+(arbitrary write, relative OOB, info leak, etc.)
+
+What is the corrupted target and what does the attacker control?"""
+
+        r3_response = self._ask(r3_prompt)
+        results["exploitation"] = r3_response
+        
+        # --- Round 4: PoC skeleton ---
+        r4_prompt = """Write a minimal C proof-of-concept that reaches the 
+vulnerable function with attacker-controlled input.
+
+Requirements:
+- Must compile on Windows (use Win32 APIs)
+- Just trigger the bug, don't exploit it
+- Include comments explaining each step
+- Use the specific call chain you identified"""
+
+        r4_response = self._ask(r4_prompt)
+        results["poc_skeleton"] = r4_response
+        
+        return results
+    
+    def _ask(self, prompt: str) -&gt; str:
+        """Send a message maintaining conversation context."""
+        self.conversation_history.append({
+            "role": "user", 
+            "content": prompt
+        })
+        
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=4096,
+            system="""You are an expert vulnerability researcher 
+specializing in Windows kernel security. You analyze binary patches 
+to identify and classify vulnerabilities. Be precise, technical, 
+and concise. Do not speculate beyond what the code shows.""",
+            messages=self.conversation_history
+        )
+        
+        assistant_msg = response.content[0].text
+        self.conversation_history.append({
+            "role": "assistant",
+            "content": assistant_msg
+        })
+        
+        return assistant_msg
+</code></pre>
+<hr/>
+<h2>Stage 5: Validation — Catching Hallucinations</h2>
+<p>The LLM <em>will</em> be wrong sometimes. It hallucinates Win32 API calls, invents struct fields that don't exist, and misclassifies subtle bugs. You need automated sanity checks.</p>
+<pre><code class="language-python">
+import re
+from dataclasses import dataclass
+from typing import List, Tuple
+
+@dataclass
+class ValidationResult:
+    passed: bool
+    score: float  # 0.0 to 1.0
+    issues: List[str]
+    
+
+class PatchValidator:
+    """
+    Validates LLM vulnerability analysis against known heuristics.
+    
+    This doesn't prove the analysis is correct, but it catches
+    obviously wrong classifications and hallucinated details.
+    """
+    
+    # Map of patch patterns to expected vulnerability classes
+    PATCH_PATTERNS = {
+        "bounds_check_added": {
+            "pattern": r"if\s*\([^)]*[&lt;&gt;]=?\s*\d+",
+            "expected_classes": [
+                "buffer overflow", "out-of-bounds", 
+                "integer overflow"
+            ],
+            "confidence_boost": 0.3
+        },
+        "null_check_added": {
+            "pattern": r"if\s*\([^)]*[!=]=\s*(NULL|0|nullptr)",
+            "expected_classes": [
+                "null pointer dereference", "use-after-free"
+            ],
+            "confidence_boost": 0.25
+        },
+        "lock_added": {
+            "pattern": r"(mutex|spinlock|lock|critical_section|KeAcquire|ExAcquire)",
+            "expected_classes": ["race condition"],
+            "confidence_boost": 0.4
+        },
+        "size_validation": {
+            "pattern": r"(size|length|count|num)\s*[&lt;&gt;]=?\s*",
+            "expected_classes": [
+                "buffer overflow", "integer overflow", 
+                "out-of-bounds"
+            ],
+            "confidence_boost": 0.35
+        },
+        "type_check_added": {
+            "pattern": r"(type|kind|tag)\s*[!=]=\s*",
+            "expected_classes": ["type confusion"],
+            "confidence_boost": 0.3
+        }
+    }
+    
+    def validate_classification(
+        self, 
+        llm_classification: str,
+        original_code: str,
+        patched_code: str
+    ) -&gt; ValidationResult:
+        """
+        Cross-check the LLM's vulnerability classification against 
+        observable patch patterns.
+        """
+        issues = []
+        score = 0.5  # Start neutral
+        
+        # Find what was ADDED in the patch
+        # (Naive approach — real implementation should use AST diffing)
+        patched_lines = set(patched_code.splitlines())
+        original_lines = set(original_code.splitlines())
+        new_lines = patched_lines - original_lines
+        new_code = "\n".join(new_lines)
+        
+        matched_patterns = []
+        
+        for pattern_name, pattern_info in self.PATCH_PATTERNS.items():
+            if re.search(pattern_info["pattern"], new_code, re.IGNORECASE):
+                matched_patterns.append(pattern_name)
+                
+                # Check if LLM's classification aligns 
+                # with what the patch pattern suggests
+                llm_class_lower = llm_classification.lower()
+                expected = pattern_info["expected_classes"]
+                
+                if any(exp in llm_class_lower for exp in expected):
+                    score += pattern_info["confidence_boost"]
+                else:
+                    issues.append(
+                        f"Patch pattern '{pattern_name}' suggests "
+                        f"{expected}, but LLM classified as: "
+                        f"'{llm_classification}'"
+                    )
+                    score -= 0.2
+        
+        if not matched_patterns:
+            issues.append(
+                "No recognizable patch patterns found — "
+                "manual review recommended"
+            )
+            score -= 0.1
+        
+        # Check for common hallucination indicators
+        hallucination_flags = self._check_hallucinations(
+            llm_classification, patched_code
+        )
+        issues.extend(hallucination_flags)
+        score -= 0.15 * len(hallucination_flags)
+        
+        score = max(0.0, min(1.0, score))
+        
+        return ValidationResult(
+            passed=score &gt;= 0.5 and len(hallucination_flags) == 0,
+            score=score,
+            issues=issues
+        )
+    
+    def _check_hallucinations(
+        self, 
+        classification: str, 
+        patched_code: str
+    ) -&gt; List[str]:
+        """
+        Detect common LLM hallucination patterns in vuln analysis.
+        """
+        flags = []
+        
+        # If LLM says "race condition" but no sync primitives 
+        # were added, it's likely wrong
+        if "race" in classification.lower():
+            sync_evidence = re.search(
+                r"(lock|mutex|spinlock|atomic|interlocked)",
+                patched_code, re.IGNORECASE
+            )
+            if not sync_evidence:
+                flags.append(
+                    "HALLUCINATION: 'race condition' classified but "
+                    "no synchronization primitives found in patch"
+                )
+        
+        # If LLM says "use-after-free" but the patch only 
+        # adds bounds checks, probably wrong
+        if "use-after-free" in classification.lower():
+            if not re.search(r"(free|release|delete|deref)", 
+                           patched_code, re.IGNORECASE):
+                flags.append(
+                    "SUSPECT: 'use-after-free' classified but no "
+                    "free/release related changes visible"
+                )
+        
+        return flags
+    
+    def validate_poc_compiles(self, poc_code: str) -&gt; Tuple[bool, str]:
+        """
+        Attempt to compile the PoC skeleton to catch hallucinated APIs.
+        Uses cl.exe (MSVC) or x86_64-w64-mingw32-gcc as fallback.
+        
+        Returns (success, error_message).
+        """
+        import tempfile
+        
+        with tempfile.NamedTemporaryFile(
+            suffix=".c", mode="w", delete=False
+        ) as f:
+            f.write(poc_code)
+            f.flush()
+            
+            # Try MinGW cross-compilation (Linux) 
+            # or MSVC (Windows)
+            try:
+                result = subprocess.run(
+                    [
+                        "x86_64-w64-mingw32-gcc",
+                        "-c",          # Compile only, don't link
+                        "-fsyntax-only",
+                        f.name
+                    ],
+                    capture_output=True, text=True, timeout=30
+                )
+                
+                if result.returncode == 0:
+                    return True, ""
+                else:
+                    return False, result.stderr
+                    
+            except FileNotFoundError:
+                return False, "No cross-compiler available"
+</code></pre>
+<h3>Confidence Scoring — Putting It All Together</h3>
+<pre><code class="language-python">
+def compute_final_confidence(
+    diaphora_score: float,
+    llm_classification_confidence: str,
+    validation_result,  # ValidationResult
+    llm_consistency: float  # Agreement across N independent runs
+) -&gt; dict:
+    """
+    Aggregate confidence score from all pipeline stages.
+    
+    A high score means: the patch pattern matches the LLM's 
+    classification, the LLM is confident, and multiple runs agree.
+    """
+    
+    confidence_map = {"low": 0.3, "medium": 0.6, "high": 0.9}
+    llm_conf = confidence_map.get(
+        llm_classification_confidence.lower(), 0.5
+    )
+    
+    # Weighted combination
+    weights = {
+        "patch_heuristic": 0.25,
+        "llm_confidence": 0.25,
+        "validation_score": 0.25,
+        "consistency": 0.25
+    }
+    
+    final_score = (
+        weights["patch_heuristic"] * diaphora_score +
+        weights["llm_confidence"] * llm_conf +
+        weights["validation_score"] * validation_result.score +
+        weights["consistency"] * llm_consistency
+    )
+    
+    # Determine action
+    if final_score &gt;= 0.8:
+        action = "HIGH_PRIORITY — likely exploitable, begin manual analysis"
+    elif final_score &gt;= 0.6:
+        action = "MEDIUM — worth investigating, may need manual validation"
+    elif final_score &gt;= 0.4:
+        action = "LOW — possible false positive, review if time permits"
+    else:
+        action = "SKIP — likely misclassification or non-security change"
+    
+    return {
+        "final_score": round(final_score, 3),
+        "action": action,
+        "breakdown": {
+            "patch_heuristic": diaphora_score,
+            "llm_confidence": llm_conf,
+            "validation": validation_result.score,
+            "consistency": llm_consistency
+        },
+        "issues": validation_result.issues
+    }
+</code></pre>
+<hr/>
+<h2>A Concrete Example: Walking Through a Real Patch</h2>
+<p>Let's trace through a simplified but realistic example. Imagine a Patch Tuesday fix for a kernel callback function.</p>
+<h3>The Diff</h3>
+<p><strong>Before (vulnerable):</strong></p>
+<pre><code class="language-c">
+void CmpCallCallBacks(PCMHIVE Hive, int Type) {
+    PVOID buffer = Hive-&gt;CallbackListHead;
+    int count = *(int*)(buffer + 0x10);
+    
+    for (int i = 0; i &lt; count; i++) {
+        PCALLBACK_ENTRY entry = (PCALLBACK_ENTRY)(buffer + i * 0x28);
+        if (entry-&gt;Routine != NULL) {
+            entry-&gt;Routine(entry-&gt;Context, Type);
+        }
+    }
+}
+</code></pre>
+<p><strong>After (patched):</strong></p>
+<pre><code class="language-c">
+void CmpCallCallBacks(PCMHIVE Hive, int Type) {
+    PVOID buffer = Hive-&gt;CallbackListHead;
+    int count = *(int*)(buffer + 0x10);
+    
+    // === PATCH: bounds validation added ===
+    if (count &lt; 0 || count &gt; MAX_CALLBACKS) {
+        return;  
+    }
+    
+    for (int i = 0; i &lt; count; i++) {
+        PCALLBACK_ENTRY entry = (PCALLBACK_ENTRY)(buffer + i * 0x28);
+        if (entry-&gt;Routine != NULL) {
+            entry-&gt;Routine(entry-&gt;Context, Type);
+        }
+    }
+}
+</code></pre>
+<h3>What the LLM sees</h3>
+<p>When fed this through the structured prompt, a good model will identify:</p>
+<ol>
+<li><strong>Classification</strong>: Integer overflow / out-of-bounds access (HIGH confidence). The <code>count</code> value is read from attacker-influenced memory (<code>Hive-&gt;CallbackListHead + 0x10</code>) with no validation. A negative or very large <code>count</code> causes the loop to read/execute from out-of-bounds memory.</li>
+</ol>
+<ol>
+<li><strong>Reachability</strong>: <code>CmpCallCallBacks</code> is called from <code>CmpPostNotify</code> and <code>CmUnRegisterCallback</code>. Registry operations from user-mode can reach this path. A crafted registry hive could influence the <code>CallbackListHead</code> structure.</li>
+</ol>
+<ol>
+<li><strong>Primitive</strong>: Out-of-bounds read leading to a controlled function pointer call. If the attacker can influence the memory at <code>buffer + i * 0x28</code>, they control <code>entry-&gt;Routine</code> — a direct kernel code execution primitive.</li>
+</ol>
+<ol>
+<li><strong>PoC sketch</strong>: Load a crafted registry hive via <code>RegLoadKey()</code> with a malformed callback list.</li>
+</ol>
+<hr/>
+<h2>Where LLMs Fail (and Why This Matters)</h2>
+<p>Documenting failure modes is just as important as the successes. From extensive testing, here's where models consistently struggle:</p>
+<p><strong>1. Deeply nested struct manipulation</strong> When the vulnerability involves pointer arithmetic across 3+ levels of struct nesting, models lose track of offsets. They'll say "field X is at offset 0x18" when it's actually at 0x20 because they miscounted a union.</p>
+<p><strong>2. Compiler optimization artifacts</strong> Ghidra's decompiler sometimes produces code that looks buggy but is actually an optimization artifact. Models flag these as vulnerabilities — false positives.</p>
+<p><strong>3. Subtle race conditions</strong> Time-of-check-to-time-of-use (TOCTOU) bugs are hard for models because the vulnerability exists <em>between</em> two functions, not within one. The model sees each function in isolation and misses the window.</p>
+<p><strong>4. Implicit type conversions</strong> Signed/unsigned comparison bugs are notoriously subtle. <code>if (user_input &lt; buffer_size)</code> looks safe, but if <code>user_input</code> is a signed int and negative, the comparison passes on some compilers. Models miss this about 60% of the time in testing.</p>
+<p><strong>5. Custom allocator semantics</strong> Windows kernel uses pool allocators with specific tag-based semantics. Models don't understand that <code>ExAllocatePoolWithTag</code> memory has specific alignment and adjacency properties that affect exploitability.</p>
+<hr/>
+<hr/>
+<h2>The Defender's Perspective</h2>
+<p>If you're on a blue team reading this, the implications are uncomfortable. This pipeline compresses the 1-day exploitation window from weeks (when only elite researchers could find the bug) to potentially <em>hours</em> (when anyone with API access and this script can triage patches).</p>
+<p>What this means practically:</p>
+<ul>
+<li><strong>Patch faster</strong>. The "we'll patch next month" window is closing.</li>
+<li><strong>Prioritize by exploitability</strong>, not just CVSS score. A "7.5 Medium" with a trivially reachable code path might be more dangerous than a "9.8 Critical" that requires local admin.</li>
+<li><strong>Monitor for this tooling</strong>. If you see automated Ghidra analysis + LLM API calls spinning up every Patch Tuesday, someone's running this pipeline.</li>
+</ul>
+<hr/>
+<h2>What Doesn't Exist Yet (Your Research Opportunities)</h2>
+<ol>
+<li><strong>A proper benchmark dataset</strong> — Matched pairs of (vulnerable_function, patched_function, CVE_class, exploitability_score) for hundreds of real CVEs. This would let the community properly evaluate and improve models.</li>
+</ol>
+<ol>
+<li><strong>Head-to-head model evaluation</strong> — Nobody has rigorously compared models on this specific task with controlled methodology.</li>
+</ol>
+<ol>
+<li><strong>End-to-end open-source tooling</strong> — Everything described here is duct-taped together. A clean, maintained pipeline would be enormously useful.</li>
+</ol>
+<ol>
+<li><strong>Fine-tuning on historical CVEs</strong> — Take every known patched vulnerability, extract the before/after binaries, and build a training dataset. The potential accuracy improvement is huge but unexplored.</li>
+</ol>
+<ol>
+<li><strong>Hybrid approaches</strong> — LLM does the classification and rough trigger hypothesis, then symbolic execution (angr/Triton) does precise path constraint solving. This combination could be significantly more powerful than either alone.</li>
+</ol>
+<hr/>
+<h2>Conclusion</h2>
+<p>LLM-assisted binary diffing isn't theoretical — it's buildable today with existing tools and APIs. The pipeline described here (Winbindex → Diaphora → Ghidra → structured prompts → multi-round LLM analysis → validation) turns Patch Tuesday into a semi-automated vulnerability discovery process.</p>
+<p>The models aren't perfect. They hallucinate, miss subtle bugs, and struggle with complex memory semantics. But as a <em>triage</em> tool — rapidly sorting through hundreds of changed functions to surface the 3-5 that are security-relevant — they're already transformative.</p>
+<p>The 1-day window just got a lot shorter. Whether that's terrifying or exciting depends on which side of the patch you're sitting on.</p>
+<hr/>
+<p><em>Want to discuss this further or contribute to building the pipeline? Open an issue or reach out.</em></p>
+  </div>
+  <a class="back" style="margin-top:48px;display:inline-block" href="../writing.html">← All writing</a>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

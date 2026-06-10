@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Projects &mdash; Hem Parekh</title>
+<meta name="description" content="FORGE, ShellScribe, and a patent-pending email threat analysis system." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="findings.html">Findings</a>
+      <a href="projects.html" class="active">Projects</a>
+      <a href="writing.html">Writing</a>
+      <a href="about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<header class="page wrap">
+  <div class="eyebrow">Projects</div>
+  <h1>Things I've built.</h1>
+  <p class="lead">Security tooling, mostly &mdash; autonomous analysis, offline review, and threat triage.</p>
+</header>
+<section class="body wrap">
+  <div class="proj reveal">
+    <div class="head"><h3>FORGE</h3><span class="yr">2025&ndash;2026</span></div>
+    <p>A full-stack, multi-agent autonomous pentesting platform covering web apps, codebases, binaries, and live Linux hosts over SSH. A strategic AgentBrain coordinates a tactical swarm for semantic code modeling, false-positive judging, severity scoring, and adversarial validation &mdash; surfacing 226 candidate findings in a real-world CLI codebase during testing. Five parallel agents feed a ChainDiscoveryAgent that synthesizes multi-step root-escalation paths through Neo4j graph traversal. Per-finding exploit intelligence, CI/CD gating, and a production LLM-orchestration layer with per-org budget caps and tier-based model routing. Shipped v1.0 across 290+ commits.</p>
+    <div class="stack"><span>Python</span><span>FastAPI</span><span>React</span><span>Flutter</span><span>Docker</span><span>PostgreSQL</span><span>Redis</span><span>Qdrant</span><span>Neo4j</span></div>
+  </div>
+
+  <div class="proj reveal">
+    <div class="head"><h3>ShellScribe</h3><span class="yr">2025</span></div>
+    <p>An offline, cross-platform security-analysis CLI running LLM-powered code review, fuzzing, and dependency scanning without sending data to external services &mdash; built for air-gapped and compliance-sensitive environments. Versioned data contracts with JSON Schema validation for reproducible, audit-grade runs, plus policy allowlists, human-in-the-loop gates, and capability tokens to enforce scoped, authorized workflows.</p>
+    <div class="stack"><span>Python</span><span>LLM orchestration</span><span>SQLite</span></div>
+  </div>
+
+  <div class="proj reveal">
+    <div class="head"><h3>SITA / CETAS &mdash; Email Threat Analysis</h3><span class="yr">2024</span></div>
+    <p>Patent pending. A Python desktop application that analyzes email threats with automated checks for URLs, attachments, and sender-reputation signals, backed by a private, isolated AWS sandbox for controlled detonation of suspicious content and analyst-friendly triage output.</p>
+    <div class="stack"><span>Python</span><span>Desktop</span><span>AWS</span></div>
+  </div>
+
+  <div class="next reveal" style="margin-top:34px"><a href="findings.html">Findings &rarr;</a><a href="about.html">About &rarr;</a></div>
+</section>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

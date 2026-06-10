@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>About &mdash; Hem Parekh</title>
+<meta name="description" content="Security engineer at Amazon. M.S. Cybersecurity (RIT). Experience, education, and focus." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="findings.html">Findings</a>
+      <a href="projects.html">Projects</a>
+      <a href="writing.html">Writing</a>
+      <a href="about.html" class="active">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<header class="page wrap">
+  <div class="eyebrow">About</div>
+  <h1>Hem Parekh.</h1>
+  <p class="lead">Security engineer focused on memory-safety and vulnerability research. M.S. in Cybersecurity from RIT (4.0); B.Tech in Computer Engineering from VIIT. Based in Seattle.</p>
+</header>
+<section class="body wrap">
+  <div class="eyebrow reveal">Experience</div>
+  <div class="job reveal"><div class="yr">2025 &mdash; now</div><div><h3>Amazon</h3><div class="role">Security &amp; Privacy Engineer &mdash; Devices &amp; Services</div><div class="loc">Seattle, WA</div></div></div>
+  <div class="job reveal"><div class="yr">2024</div><div><h3>Toshiba Global Commerce Solutions</h3><div class="role">Cybersecurity Engineer Intern</div><div class="loc">Dallas, TX</div></div></div>
+  <div class="job reveal"><div class="yr">2023 &mdash; 2024</div><div><h3>Langan Engineering</h3><div class="role">Cybersecurity Analyst Intern</div><div class="loc">Parsippany, NJ</div></div></div>
+  <div class="job reveal"><div class="yr">2021 &mdash; 2022</div><div><h3>RNS Technology</h3><div class="role">SOC Analyst</div><div class="loc">Pune, India</div></div></div>
+
+  <div class="eyebrow reveal" style="margin-top:52px">Education</div>
+  <div class="job reveal"><div class="yr">2022 &mdash; 2024</div><div><h3>Rochester Institute of Technology</h3><div class="role">M.S. Cybersecurity &middot; GPA 4.0</div><div class="loc">Rochester, NY</div></div></div>
+  <div class="job reveal"><div class="yr">2018 &mdash; 2022</div><div><h3>Vishwakarma Institute of Information Technology</h3><div class="role">B.Tech Computer Engineering &middot; GPA 3.9</div><div class="loc">Pune, India</div></div></div>
+
+  <div class="subhead reveal" style="margin-top:52px">Focus</div>
+  <div class="chips reveal"><span>Vulnerability research</span><span>Memory-safety auditing</span><span>Penetration testing</span><span>Incident response</span><span>Privacy engineering</span></div>
+  <div class="subhead reveal">Languages</div>
+  <div class="chips reveal"><span>C / C++</span><span>Python</span><span>Go</span><span>Bash</span><span>SQL</span></div>
+  <div class="subhead reveal">Tooling</div>
+  <div class="chips reveal"><span>AddressSanitizer / KASAN</span><span>Linux kernel internals</span><span>fuzzing</span><span>Burp Suite</span><span>Ghidra</span><span>responsible disclosure</span></div>
+  <div class="subhead reveal">Certifications</div>
+  <div class="chips reveal"><span>CompTIA PenTest+</span><span>Security+</span><span>CySA+</span><span>AWS SAA</span><span>AWS CCP</span><span>AZ-900</span><span>SC-900</span><span>CCNA</span><span>ISC2 CC</span></div>
+
+  <div class="next reveal" style="margin-top:44px"><a href="findings.html">Findings &rarr;</a><a href="projects.html">Projects &rarr;</a></div>
+</section>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
