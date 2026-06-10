@@ -1,81 +1,20 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Hem Parekh — Security Engineer</title>
-<meta name="description" content="Hem Parekh — security engineer focused on memory-safety and vulnerability research. Upstream fixes in the Linux kernel, PyTorch, and curl." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css" />
-</head>
-<body>
-
-<nav>
-  <div class="wrap">
-    <a href="index.html" class="name">hem parekh</a>
-    <div class="links">
-      <a href="findings.html">Findings</a>
-      <a href="projects.html">Projects</a>
-      <a href="writing.html">Writing</a>
-      <a href="about.html">About</a>
-      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
-    </div>
-  </div>
-</nav>
-
-<header class="hero wrap">
-  <div class="loc">Seattle · Security &amp; Vulnerability Research</div>
-  <h1>I find memory-safety bugs by reading the code, and ship the fix upstream.</h1>
-  <p>Security engineer at Amazon. I read production C/C++ and systems code looking for the one path that drifted from its safe siblings — a missing bounds check, an unchecked attacker-controlled index — then prove it with a sanitizer and send the patch upstream.</p>
-  <div class="meta">
-    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
-    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github.com/Hem1700</a>
-    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
-  </div>
-</header>
-
-<section class="wrap" style="padding:34px 0 70px">
-  <div class="eyebrow reveal">Selected findings</div>
-
-  <a class="finding reveal" href="findings.html">
-    <div class="top">
-      <h3>Heap out-of-bounds read in the Linux kernel's SMB server</h3>
-      <span class="status live">Applied · stable</span>
-    </div>
-    <p><code>smb_check_perm_dacl()</code> failed to verify an ACE was large enough to hold its declared sub-authorities, letting an authenticated client trigger an OOB read past the security-descriptor allocation. Fixed by adding the missing bounds check; Cc'd to stable.</p>
-    <div class="where">linux · fs/smb/server/smbacl.c · ksmbd</div>
-  </a>
-
-  <a class="finding reveal" href="findings.html">
-    <div class="top">
-      <h3>Crashing PyTorch with a 176-byte model file</h3>
-      <span class="status live">Open PR</span>
-    </div>
-    <p>An attacker-controlled <code>class_type</code> index from an untrusted flatbuffer was used in an unchecked <code>operator[]</code> and dereferenced — a crafted module passes the verifier yet SIGSEGVs. Fix routes both call sites through the bounds-checked accessor.</p>
-    <div class="where">pytorch · torch/csrc/jit/mobile/flatbuffer_loader.cpp</div>
-  </a>
-
-  <div class="next reveal" style="margin-top:30px">
-    <a href="findings.html">All findings →</a>
-    <a href="writing.html">Writing →</a>
-  </div>
-</section>
-
-<footer class="wrap">
-  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
-  <div class="links">
-    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
-    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
-    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
-  </div>
-  <div class="fine">© 2026 Hem Parekh</div>
-</footer>
-
-<script>
-  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
-  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-</script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hem Parekh</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="/assets/index-CEOlPgzZ.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-yckG2ieg.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>
