@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Finding an out-of-bounds read in ksmbd by asking “why does the sibling check this?” — Hem Parekh</title>
+<meta name="description" content="Finding a heap out-of-bounds read in the Linux kernel ksmbd SMB server via sibling-pattern review." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">Finding</div>
+  <h1>Finding an out-of-bounds read in ksmbd by asking “why does the sibling check this?”</h1>
+  <div class="ameta">Jun 2026 &middot; 7 min read</div>
+  <div class="prose">
+<p>This is a writeup of a small but real memory-safety bug I found and fixed in <strong>ksmbd</strong>, the in-kernel SMB server that ships with the Linux kernel. The bug is an out-of-bounds read in <code>smb_check_perm_dacl()</code> in <code>fs/smb/server/smbacl.c</code>, reachable over the network by an unprivileged SMB client. The fix has been applied by the maintainer to <code>ksmbd-for-next-next</code> and carries a <code>Cc: stable</code> tag, so it is queued to flow back into stable kernels.</p>
+<p>I want to walk through it the way I actually found it, because the method — auditing a function against its own siblings — is more reusable than the specific bug.</p>
+<hr/>
+<h2>1. The target: ksmbd and the DACL parsing path</h2>
+<p>ksmbd is the kernel-mode SMB3 server. Because it lives <em>in the kernel</em> and parses untrusted data straight off the network, its attack surface is unusually sensitive: a bug that would be a crash in a userspace daemon is a kernel-mode memory-safety issue here, and the data driving it comes from a remote, potentially unauthenticated client.</p>
+<p>The specific code I was looking at handles Windows security descriptors — specifically the <strong>DACL</strong> (Discretionary Access Control List). When a client sends a security descriptor, ksmbd walks the ACL, and for each ACE (Access Control Entry) it parses an SID (Security Identifier). An SID carries a <code>num_subauth</code> field that says how many 32-bit sub-authority values follow it. That count is attacker-controlled, and the structure it describes is variable-length — which is exactly the shape of bug I look for: <em>a length field from the wire that drives how far the parser reads.</em></p>
+<h2>2. How I found it: sibling-pattern mining</h2>
+<p>I wasn't fuzzing. I was reading <code>smbacl.c</code> function by function, and I noticed that the SID-parsing logic appears in more than one place. ksmbd has a few functions that each walk ACEs and dereference SIDs:</p>
+<ul>
+<li><code>parse_sid()</code></li>
+<li><code>sid_to_id()</code> / the owner+group parsing paths</li>
+<li><code>smb_check_perm_dacl()</code></li>
+</ul>
+<p>The sibling functions guarded the SID before trusting it. Concretely, they validated that the SID's <code>num_subauth</code> wouldn't push the structure past the end of the buffer described by <code>ace_size</code> / the ACL bounds <em>before</em> reading the sub-authority array. The pattern looked like a defensive check tying <code>num_subauth</code> to the remaining buffer size.</p>
+<p>In <code>smb_check_perm_dacl()</code>, that guard was missing. The loop advanced through ACEs and accessed the SID's sub-authorities without first confirming the ACE was large enough to actually contain <code>num_subauth</code> sub-authorities. So the structural invariant that every sibling enforced — "don't read sub-authorities you haven't bounds-checked" — simply wasn't enforced on this path.</p>
+<blockquote>
+<p>This is the highest-yield audit heuristic I know: when the same dangerous parse appears in several functions, diff them against each other. The bug usually isn't "nobody thought of the check." It's "somebody thought of it everywhere except here."</p>
+</blockquote>
+<h2>3. Root cause: a missing num_subauth / ace_size bounds check</h2>
+<p>Stripped down, the dangerous shape is this. For each ACE, ksmbd reads the SID and then iterates over its sub-authorities:</p>
+<pre><code class="language-c">/* simplified for illustration */
+for (i = 0; i &lt; dacl-&gt;num_aces; i++) {
+    struct smb_ace *ace = ...;          /* points into the wire buffer */
+    struct smb_sid *sid  = &amp;ace-&gt;sid;
+
+    /* num_subauth comes straight from the client */
+    int n = sid-&gt;num_subauth;
+
+    /* sub-authorities are read here... */
+    for (j = 0; j &lt; n; j++)
+        access |= le32_to_cpu(sid-&gt;sub_auth[j]);   /* &lt;-- OOB read if ace is too small */
+}</code></pre>
+<p>The size of an SID is variable: a base header plus <code>num_subauth * sizeof(__le32)</code> of sub-authority data. If a malicious client sets <code>num_subauth</code> large but sends an ACE (and an ACL) that is too short to actually hold that many sub-authorities, the inner loop walks <code>sub_auth[j]</code> past the end of the received buffer. That's the out-of-bounds read.</p>
+<p>The sibling functions avoided this by validating, before the inner loop, that the declared <code>num_subauth</code> was consistent with the ACE's <code>ace_size</code> and the bytes actually remaining in the ACL. The fix is to add that same guard here.</p>
+<h2>4. Confirming it under AddressSanitizer</h2>
+<p>A code-reading hypothesis isn't a bug until you make the machine agree with you. I built a kernel with <strong>KASAN</strong> (the kernel AddressSanitizer) enabled and drove ksmbd with a crafted security descriptor whose ACE declared a large <code>num_subauth</code> but whose buffer was too small to back it.</p>
+<p>KASAN reported a <strong>slab-out-of-bounds read</strong> originating in <code>smb_check_perm_dacl()</code>, in the sub-authority access — exactly the line the static read predicted. Having the sanitizer name the function and the access type turns "this looks wrong" into "here is the controlled read, on this line, from this input." That report is what made the patch worth sending.</p>
+<h2>5. The fix</h2>
+<p>The fix is deliberately boring: bring <code>smb_check_perm_dacl()</code> in line with its siblings by bounds-checking the SID before reading its sub-authorities. In effect, before trusting <code>num_subauth</code>, confirm the ACE is large enough to contain that many sub-authority entries (and that we stay within the ACL); otherwise stop processing rather than read past the buffer.</p>
+<p>Boring is the point. The bug existed because one path diverged from a safe pattern; the fix is to restore the invariant, not to invent a new one. Patches that look exactly like the surrounding code are easy for a maintainer to reason about and to backport.</p>
+<h2>6. Disclosure outcome</h2>
+<p>I posted the patch to the <code>linux-cifs</code> list on 2026-06-02:</p>
+<ul>
+<li>Subject: <em>[PATCH] ksmbd: fix out-of-bounds read in smb_check_perm_dacl()</em></li>
+<li><code>Fixes: d07b26f39246</code> — pointing at the commit that introduced the path</li>
+<li><code>Cc: stable@vger.kernel.org</code> — so it flows into stable kernels</li>
+</ul>
+<p>The ksmbd maintainer, Namjae Jeon, replied that he <strong>applied it to <code>ksmbd-for-next-next</code></strong>. The predecessor commit this fix targets already has a CVE assigned (CVE-2026-31712) for the same area, so this region is established as security-relevant. I'd describe my fix as a <strong>strong CVE candidate</strong> once it reaches mainline/stable — but I'm not claiming a CVE yet, because that's not mine to declare and it hasn't landed in mainline at the time of writing.</p>
+<p>Patch thread on lore: <a href="https://lore.kernel.org/linux-cifs/20260602235646.23581-1-hemparekh1596@gmail.com/T/#u">lore.kernel.org/linux-cifs/...</a></p>
+<h2>7. Takeaway: audit against siblings, prove with a sanitizer</h2>
+<p>Two things carried this from a hunch to an applied kernel patch:</p>
+<ul>
+<li><strong>Sibling-pattern mining.</strong> When a dangerous parse is duplicated across functions, the missing-check bug tends to hide in the one copy that drifted. Diffing a function against its own siblings — and against git history — surfaces these cheaply, without fuzzing infrastructure.</li>
+<li><strong>Sanitizer-backed confirmation.</strong> KASAN/ASan converts a suspicious read into a named, reproducible out-of-bounds access. That evidence is what makes a patch credible to a maintainer and what tells you you've found a real bug rather than a misread.</li>
+</ul>
+<p>None of this required novel tooling. It required reading the code carefully, noticing where one path failed to do what its neighbors all did, and then making the machine confirm it. For parsers that sit in the kernel and read untrusted bytes off the network, that's often enough.</p>
+  </div>
+  <a class="back" style="margin-top:48px;display:inline-block" href="../writing.html">← All writing</a>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
