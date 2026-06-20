@@ -14,7 +14,7 @@ security findings, then projects, writing, and background. No build step, no fra
 |------|--------------|
 | `index.html` | Home — hero and a short "selected findings" teaser |
 | `findings.html` | Upstream vulnerability findings (ksmbd, PyTorch, curl, NTFS) with links to the patches |
-| `projects.html` | FORGE, bug-hunter, ShellScribe, SITA/CETAS |
+| `projects.html` | FORGE, bug-hunter, CRIP, RAVEN, PatchProbe, ShellScribe, SITA/CETAS |
 | `writing.html` | Index of all 18 writeups |
 | `posts/*.html` | One page per writeup, full content in the site's typography |
 | `about.html` | Experience, education, focus areas, tooling, certifications |

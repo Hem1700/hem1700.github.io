@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Projects &mdash; Hem Parekh</title>
-<meta name="description" content="FORGE, bug-hunter, ShellScribe, and a patent-pending email threat analysis system." />
+<meta name="description" content="FORGE, bug-hunter, CRIP, RAVEN, PatchProbe, ShellScribe, and a patent-pending email threat analysis system." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -41,6 +41,27 @@
     <p>A reusable security-research skill that audits open-source C/C++ and Go codebases through a five-phase workflow &mdash; orient, discover, human-review, confirm, produce. Candidate discovery is driven by variant analysis on prior CVEs, a CWE-tagged pattern library, and source-to-sink taint inspection; memory-safety candidates are then confirmed with sanitizer-level proof (ASan/UBSan, plus Go fuzzing and the race detector) before generating upstream-ready patches and responsible-disclosure drafts. Bounded by design: proof stops at sanitizer-crash level &mdash; no weaponized exploits &mdash; and nothing is reported until it&rsquo;s confirmed.</p>
     <div class="stack"><span>Claude Skill</span><span>C/C++</span><span>Go</span><span>AddressSanitizer</span><span>cppcheck</span><span>Semgrep</span></div>
     <a class="repo" href="https://github.com/Hem1700/bug-hunter-skill" target="_blank" rel="noopener">github.com/Hem1700/bug-hunter-skill &rarr;</a>
+  </div>
+
+  <div class="proj reveal">
+    <div class="head"><h3>CRIP &mdash; Cyber Risk Intelligence Platform</h3><span class="yr">2026</span></div>
+    <p>An AI-driven cyber-risk platform that ingests asset and vulnerability data into a Neo4j knowledge graph, then reasons over it to surface attack paths, coverage gaps, and remediation priorities. Split into microservices &mdash; a connector-based ingestion layer, a RAG reasoning pipeline (intent classification, graph traversal, LLM generation), an APT-persona service that simulates kill-chains, and a risk dashboard with heatmaps and report generation &mdash; behind a React SPA.</p>
+    <div class="stack"><span>Python</span><span>React</span><span>Neo4j</span><span>DynamoDB</span><span>Docker</span><span>RAG</span><span>Anthropic API</span></div>
+    <a class="repo" href="https://github.com/Hem1700/CRIP" target="_blank" rel="noopener">github.com/Hem1700/CRIP &rarr;</a>
+  </div>
+
+  <div class="proj reveal">
+    <div class="head"><h3>RAVEN</h3><span class="yr">2026</span></div>
+    <p>A CLI-native offensive-security research platform &mdash; Reverse Analysis &amp; Vulnerability Exploitation Network &mdash; that chains multi-agent AI across the research lifecycle: semantic binary analysis, vulnerability discovery, exploit generation, and validation, with dedicated recon, analysis, exploitation, and validation agents. Supports local LLMs for sensitive work and a plugin architecture for custom agents and tools. In active development.</p>
+    <div class="stack"><span>Python</span><span>Multi-agent</span><span>LLM</span><span>Binary analysis</span><span>CLI</span></div>
+    <a class="repo" href="https://github.com/Hem1700/raven" target="_blank" rel="noopener">github.com/Hem1700/raven &rarr;</a>
+  </div>
+
+  <div class="proj reveal">
+    <div class="head"><h3>PatchProbe</h3><span class="yr">2026</span></div>
+    <p>A CLI-first, defender-focused binary patch-diffing tool with LLM-assisted triage. Given before/after binaries, it runs a reproducible pipeline &mdash; ingest, normalize, diff via a Diaphora backend, rank the changed functions, decompile the top candidates, LLM-analyze, validate, and report &mdash; to pinpoint exactly what a security patch changed. Every stage emits hash-stamped, schema-checked artifacts with a per-job audit log for audit-grade reproducibility.</p>
+    <div class="stack"><span>Python</span><span>CLI</span><span>Diaphora</span><span>LLM</span><span>Binary diffing</span></div>
+    <a class="repo" href="https://github.com/Hem1700/Patchprobe" target="_blank" rel="noopener">github.com/Hem1700/Patchprobe &rarr;</a>
   </div>
 
   <div class="proj reveal">
