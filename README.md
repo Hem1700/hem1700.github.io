@@ -14,7 +14,7 @@ security findings, then projects, writing, and background. No build step, no fra
 |------|--------------|
 | `index.html` | Home — hero and a short "selected findings" teaser |
 | `findings.html` | Upstream vulnerability findings (ksmbd, PyTorch, curl, NTFS) with links to the patches |
-| `projects.html` | FORGE, ShellScribe, SITA/CETAS |
+| `projects.html` | FORGE, bug-hunter, ShellScribe, SITA/CETAS |
 | `writing.html` | Index of all 18 writeups |
 | `posts/*.html` | One page per writeup, full content in the site's typography |
 | `about.html` | Experience, education, focus areas, tooling, certifications |
@@ -42,12 +42,8 @@ security findings, then projects, writing, and background. No build step, no fra
 ├── about.html
 ├── 404.html
 ├── style.css               # shared stylesheet for every page
-├── posts/                  # one HTML page per writeup (18)
-└── app/                    # archived HEM-OS React source (no longer deployed)
+└── posts/                  # one HTML page per writeup (18)
 ```
-
-The `app/` directory holds the previous "HEM-OS" desktop-style React portfolio. It is kept for
-reference and is **not** part of the live site anymore.
 
 ---
 
@@ -76,10 +72,6 @@ git push
 ```
 
 The site is live ~1 minute after pushing.
-
-> **Do not run the old `deploy.sh`.** It rebuilds the archived HEM-OS React app and overwrites
-> `index.html` / `style.css` with the OS build, reverting this site. It is kept only for historical
-> reference. Deploy with plain git.
 
 ---
 
