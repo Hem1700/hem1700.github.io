@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Projects &mdash; Hem Parekh</title>
-<meta name="description" content="FORGE, bug-hunter, CRIP, RAVEN, PatchProbe, ShellScribe, and a patent-pending email threat analysis system." />
+<meta name="description" content="FORGE, mcp-tool-poisoning-scanner, bug-hunter, CRIP, RAVEN, PatchProbe, ShellScribe, and a patent-pending email threat analysis system." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -34,6 +34,13 @@
     <p>A full-stack, multi-agent autonomous pentesting platform covering web apps, codebases, binaries, and live Linux hosts over SSH. A strategic AgentBrain coordinates a tactical swarm for semantic code modeling, false-positive judging, severity scoring, and adversarial validation &mdash; surfacing 226 candidate findings in a real-world CLI codebase during testing. Five parallel agents feed a ChainDiscoveryAgent that synthesizes multi-step root-escalation paths through Neo4j graph traversal. Per-finding exploit intelligence, CI/CD gating, and a production LLM-orchestration layer with per-org budget caps and tier-based model routing. Shipped v1.0 across 290+ commits.</p>
     <div class="stack"><span>Python</span><span>FastAPI</span><span>React</span><span>Flutter</span><span>Docker</span><span>PostgreSQL</span><span>Redis</span><span>Qdrant</span><span>Neo4j</span></div>
     <a class="repo" href="https://github.com/Hem1700/forge" target="_blank" rel="noopener">github.com/Hem1700/forge &rarr;</a>
+  </div>
+
+  <div class="proj reveal">
+    <div class="head"><h3>mcp-tool-poisoning-scanner</h3><span class="yr">2026</span></div>
+    <p>A config-driven scanner for tool poisoning &mdash; malicious instructions hidden in the tool descriptions an LLM agent trusts to decide how to call MCP servers, function-calling definitions, and agent skill files. Four collectors (MCP live introspection, static AST parsing for Python/TypeScript, raw JSON) feed a five-detector ensemble: regex heuristics, an LLM-as-judge semantic analyzer, embedding-based anomaly detection that needs no labeled poison data, static taint-graph analysis across tool chains, and a sandboxed behavioral prober that diffs real tool-call sequences against a benign baseline. Baseline suppression, CI-gateable exit codes, and SARIF/JSON/Markdown reporting. 106 tests, zero network access or API key required by default.</p>
+    <div class="stack"><span>Python</span><span>Pydantic</span><span>scikit-learn</span><span>Anthropic API</span><span>MCP</span><span>Docker</span><span>SARIF/CI</span></div>
+    <a class="repo" href="https://github.com/Hem1700/mcp-tool-poisoning-scanner" target="_blank" rel="noopener">github.com/Hem1700/mcp-tool-poisoning-scanner &rarr;</a>
   </div>
 
   <div class="proj reveal">
