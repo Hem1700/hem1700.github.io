@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1210" viewBox="0 0 1800 1210" role="img" aria-labelledby="title desc">
+  <title id="title">Threat model of the macOS Trusted Computing Base</title>
+  <desc id="desc">A systems sketch showing attackers on the left, the macOS trusted computing base in the middle, protected assets on the right, and the supply chain above.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#8a6f34"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#9b4d3c"/>
+    </marker>
+    <style>
+      .bg { fill:#f8f5ee; }
+      .ink { fill:#1c1a17; font-family:Arial, Helvetica, sans-serif; }
+      .muted { fill:#6d665d; font-family:Arial, Helvetica, sans-serif; }
+      .small { font-size:18px; }
+      .body { font-size:20px; }
+      .label { font-size:22px; font-weight:700; }
+      .title { font-size:34px; font-weight:700; }
+      .box { stroke:#b9ad9a; stroke-width:2; rx:16; }
+      .outer { fill:#efe9dc; stroke:#6b5d46; stroke-width:3; rx:24; }
+      .hardware { fill:#e9eef2; }
+      .runtime { fill:#eee8d9; }
+      .identity { fill:#e8f0e8; }
+      .apps { fill:#f4ebe5; }
+      .external { fill:#f4e4df; }
+      .assets { fill:#e7edf3; }
+      .supply { fill:#eee5f0; }
+      .line { stroke:#8a6f34; stroke-width:3; fill:none; marker-end:url(#arrow); }
+      .danger { stroke:#9b4d3c; stroke-width:3; fill:none; stroke-dasharray:10 8; marker-end:url(#arrowRed); }
+      .thin { stroke:#b9ad9a; stroke-width:2; fill:none; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1800" height="1210"/>
+  <text class="ink title" x="45" y="55">macOS TCB threat model</text>
+  <text class="muted body" x="45" y="88">A least-privileged application must not gain authority over the trusted computing base.</text>
+
+  <rect class="supply box" x="335" y="115" width="1235" height="145"/>
+  <text class="ink label" x="365" y="150">Trusted software supply chain</text>
+  <text class="ink small" x="365" y="183">Apple build and signing systems  •  Developer CI and signing keys  •  Notarization  •  MDM  •  Update servers</text>
+  <text class="muted small" x="365" y="216">Threats: compromised build, stolen signing key, malicious update, rollback, malicious management command</text>
+
+  <rect class="external box" x="35" y="300" width="270" height="650"/>
+  <text class="ink label" x="65" y="338">Attackers</text>
+  <text class="ink body" x="65" y="385">Remote attacker</text>
+  <text class="ink body" x="65" y="430">Malicious app</text>
+  <text class="ink body" x="65" y="475">Malicious document</text>
+  <text class="ink body" x="65" y="520">Physical attacker</text>
+  <text class="ink body" x="65" y="565">Malicious peripheral</text>
+  <text class="ink body" x="65" y="610">Compromised user</text>
+  <text class="ink body" x="65" y="655">Compromised MDM</text>
+  <text class="ink body" x="65" y="700">Supply-chain attacker</text>
+  <line class="thin" x1="65" y1="735" x2="270" y2="735"/>
+  <text class="muted small" x="65" y="775">Base case:</text>
+  <text class="muted small" x="65" y="802">one normal-user</text>
+  <text class="muted small" x="65" y="829">process, no admin,</text>
+  <text class="muted small" x="65" y="856">no TCC grants,</text>
+  <text class="muted small" x="65" y="883">no physical access</text>
+  <text class="muted small" x="65" y="910">and no user help</text>
+
+  <rect class="outer" x="335" y="285" width="1235" height="705"/>
+  <text class="ink title" x="375" y="330">macOS Trusted Computing Base</text>
+  <text class="muted small" x="375" y="357">Property-relative trust closure: components whose failure can violate the selected security goal</text>
+
+  <rect class="hardware box" x="370" y="385" width="370" height="260"/>
+  <text class="ink label" x="400" y="425">Hardware and boot</text>
+  <text class="ink body" x="400" y="465">Boot ROM</text>
+  <text class="ink body" x="400" y="500">Secure Enclave</text>
+  <text class="ink body" x="400" y="535">LLB and iBoot</text>
+  <text class="ink body" x="400" y="570">LocalPolicy and anti-replay</text>
+  <text class="ink body" x="400" y="605">RecoveryOS and DFU</text>
+
+  <rect class="runtime box" x="770" y="385" width="425" height="260"/>
+  <text class="ink label" x="800" y="425">Runtime integrity</text>
+  <text class="ink body" x="800" y="465">Signed System Volume</text>
+  <text class="ink body" x="800" y="500">XNU kernel and MAC</text>
+  <text class="ink body" x="800" y="535">SIP, KIP, PAC and memory rules</text>
+  <text class="ink body" x="800" y="570">Trust caches and code signing</text>
+  <text class="ink body" x="800" y="605">Drivers, IOMMU and DMA policy</text>
+
+  <rect class="identity box" x="1225" y="385" width="310" height="260"/>
+  <text class="ink label" x="1255" y="425">Identity and secrets</text>
+  <text class="ink body" x="1255" y="465">Keychain</text>
+  <text class="ink body" x="1255" y="500">Secure Enclave keys</text>
+  <text class="ink body" x="1255" y="535">Authorization Services</text>
+  <text class="ink body" x="1255" y="570">TCC and Data Vault</text>
+  <text class="ink body" x="1255" y="605">Trusted authentication UI</text>
+
+  <rect class="apps box" x="370" y="690" width="1165" height="255"/>
+  <text class="ink label" x="400" y="730">Privilege and exposure boundaries</text>
+  <text class="ink body" x="400" y="770">launchd, LaunchAgents and LaunchDaemons</text>
+  <text class="ink body" x="400" y="805">XPC, Mach services and privileged helpers</text>
+  <text class="ink body" x="400" y="840">Sandbox, entitlements and Hardened Runtime</text>
+  <text class="ink body" x="400" y="875">System Extensions, Network Extension and Endpoint Security</text>
+  <text class="ink body" x="400" y="910">User consent, automation and application delegation</text>
+
+  <rect class="assets box" x="1620" y="300" width="145" height="650"/>
+  <text class="ink label" transform="translate(1650 342) rotate(90)">Protected assets</text>
+  <text class="ink small" transform="translate(1728 390) rotate(90)">Boot integrity  •  Kernel integrity  •  User data  •  Secrets  •  Privacy  •  Availability</text>
+
+  <line class="line" x1="305" y1="430" x2="370" y2="770"/>
+  <line class="line" x1="305" y1="520" x2="370" y2="820"/>
+  <line class="danger" x1="305" y1="610" x2="370" y2="465"/>
+  <line class="danger" x1="305" y1="700" x2="370" y2="730"/>
+
+  <line class="line" x1="740" y1="515" x2="770" y2="515"/>
+  <line class="line" x1="1195" y1="515" x2="1225" y2="515"/>
+  <line class="line" x1="955" y1="645" x2="955" y2="690"/>
+  <line class="line" x1="550" y1="645" x2="550" y2="690"/>
+  <line class="line" x1="1380" y1="645" x2="1380" y2="690"/>
+
+  <line class="line" x1="950" y1="260" x2="950" y2="385"/>
+  <line class="line" x1="1380" y1="260" x2="1380" y2="385"/>
+  <line class="line" x1="1570" y1="510" x2="1620" y2="510"/>
+  <line class="line" x1="1570" y1="815" x2="1620" y2="815"/>
+
+  <text class="muted small" x="400" y="1025">Dashed red arrows show high-impact paths that require separate threat analysis: physical boot changes, privileged persistence, and supply-chain compromise.</text>
+  <text class="muted small" x="400" y="1055">Solid gold arrows show normal authority and data flows that must remain constrained by authentication, authorization, validation, and isolation.</text>
+  <text class="ink label" x="400" y="1120">Core invariant</text>
+  <text class="ink body" x="400" y="1155">A least-privileged application may request work, but it cannot choose the authority, target, or policy used to perform that work.</text>
+</svg>
