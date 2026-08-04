@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Threat modeling the macOS Trusted Computing Base - Hem Parekh</title>
+<meta name="description" content="A property-based threat model of the macOS Trusted Computing Base, from Boot ROM and Secure Enclave to TCC, XPC, updates, and network exposure." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">Research</div>
+  <h1>Threat modeling the macOS Trusted Computing Base</h1>
+  <div class="ameta">Aug 3, 2026 &middot; 25 min read</div>
+  <div class="prose">
+<p><strong>TL;DR</strong> - The macOS Trusted Computing Base is not one feature, one process, or one security boundary. It is the property-relative set of components that must behave correctly for a security promise to hold. For a least-privileged application, the promise is simple: it must not gain authority over trusted system code, protected data, credentials, privacy controls, or security policy.</p>
+<p>This is the first entry in a series about threat modeling everyday technology. The goal is not to produce a feature tour. The goal is to take a new security concept, turn it into a model, and teach it clearly enough that another person can inspect the reasoning.</p>
+<hr/>
+<h2>1. Start with the promise, not the product name</h2>
+<p>Imagine that a product team hands us a new product called <em>TCB</em>. There is no documentation, no architecture diagram, and no list of security features. The only useful starting point is the product promise.</p>
+<blockquote><p>A least-privileged application must not be able to gain authority over the macOS Trusted Computing Base.</p></blockquote>
+<p>This sentence gives us a security property that we can test. It also forces us to define what <em>authority over the TCB</em> means.</p>
+<p>An attacker succeeds if they can:</p>
+<ul>
+<li>Modify trusted boot or system code.</li>
+<li>Execute code with kernel or equivalent system authority.</li>
+<li>Change security policy without the required authorization.</li>
+<li>Cause a trusted service to perform a privileged operation on their behalf.</li>
+<li>Read or alter secrets that the platform is supposed to protect.</li>
+<li>Persist in a way that survives normal cleanup or reboot.</li>
+<li>Disable, falsify, or hide security monitoring.</li>
+<li>Break availability by preventing boot, login, networking, update, or recovery.</li>
+</ul>
+<p>TCB is not a universal list. It depends on the security property. A document editor may not matter for boot integrity, but it matters greatly for the confidentiality of a document that it can open and export.</p>
+<h2>2. Scope and attacker model</h2>
+<p>We begin with the weakest useful attacker: a malicious application already running as a normal user process.</p>
+<p>The attacker has:</p>
+<ul>
+<li>Arbitrary code execution inside its own process.</li>
+<li>Normal user-level filesystem access.</li>
+<li>Access to public macOS APIs.</li>
+<li>Network access subject to the current configuration.</li>
+<li>The ability to send requests to exposed local services.</li>
+<li>The ability to submit malformed files, messages, and device requests.</li>
+</ul>
+<p>The attacker does not initially have:</p>
+<ul>
+<li>Administrator or <code>root</code> privileges.</li>
+<li>Kernel execution or kernel memory access.</li>
+<li>TCC permissions such as Full Disk Access, Accessibility, Screen Recording, or Input Monitoring.</li>
+<li>Permission to change SIP, Secure Boot, FileVault, or recovery policy.</li>
+<li>Physical access to the Mac.</li>
+<li>Cooperation from the user.</li>
+</ul>
+<p>We add stronger attackers as separate models:</p>
+<ol>
+<li>Remote attacker with no local code execution.</li>
+<li>Malicious document or website.</li>
+<li>Local malicious application.</li>
+<li>Local attacker with an account.</li>
+<li>Administrator or <code>root</code>-level attacker.</li>
+<li>Physical attacker.</li>
+<li>Malicious peripheral or device firmware.</li>
+<li>Compromised developer, update service, or MDM.</li>
+</ol>
+<h2>3. Assets and security goals</h2>
+<table>
+<thead><tr><th>Asset</th><th>Security goal</th><th>Example failure</th></tr></thead>
+<tbody>
+<tr><td>Boot code and policy</td><td>Integrity</td><td>Old or attacker-modified code starts before macOS</td></tr>
+<tr><td>Kernel and system services</td><td>Integrity and availability</td><td>Normal application becomes kernel-level code</td></tr>
+<tr><td>User documents</td><td>Confidentiality and integrity</td><td>Data is read or altered without approval</td></tr>
+<tr><td>Passwords and private keys</td><td>Confidentiality and controlled use</td><td>Key material is exported or misused</td></tr>
+<tr><td>Camera, microphone, screen, and input</td><td>Privacy</td><td>Capture occurs without an approved capability</td></tr>
+<tr><td>Security policy</td><td>Integrity</td><td>Permissions or startup policy are silently changed</td></tr>
+<tr><td>Update mechanism</td><td>Authenticity and integrity</td><td>Trusted software delivery installs malicious code</td></tr>
+<tr><td>Audit records</td><td>Integrity and accountability</td><td>An attacker can hide the action that occurred</td></tr>
+<tr><td>System availability</td><td>Availability</td><td>The Mac cannot boot, log in, connect, or recover</td></tr>
+</tbody>
+</table>
+<h2>4. The complete sketch</h2>
+<p>The diagram is the working model for this post. It is intentionally property-based. The middle is not a claim that every box is trusted for every property. It is the union of the trust closures we need to examine.</p>
+<figure>
+<img src="../images/macos-tcb-threat-model.svg" alt="Threat model sketch showing attackers, the macOS Trusted Computing Base, trust boundaries, supply chain, and protected assets" />
+<figcaption>Threat model sketch: attackers enter through software, IPC, hardware, physical access, or supply chain paths. The TCB is the set of components whose failure could violate the selected security property.</figcaption>
+</figure>
+<p>Normal authority and data flows must be constrained by authentication, authorization, validation, and isolation. High-impact paths such as boot changes, privileged persistence, and trusted updates require separate analysis because they can re-enter the TCB with greater authority.</p>
+<hr/>
+<h2>5. Trust boundaries</h2>
+<p>A threat is not simply the existence of an interface. A threat is attacker-controlled input crossing a boundary and causing a trusted component to perform an action the attacker should not control.</p>
+<h3>Application to privileged service</h3>
+<pre><code>Normal application
+        |
+        | XPC or Mach request
+        v
+Privileged service
+        |
+        v
+Protected system state</code></pre>
+<p>A privileged service must answer five questions for every request:</p>
+<ol>
+<li>Can this caller connect?</li>
+<li>Is this caller allowed to request this operation?</li>
+<li>Are the parameters safe?</li>
+<li>Is this caller allowed to affect this exact target?</li>
+<li>Does the result reveal or modify protected state?</li>
+</ol>
+<p>Apple describes XPC as a mechanism for interprocess communication, service lifecycle management, and privilege isolation. A normal XPC service is not the same thing as a root LaunchDaemon. The distinction matters because the daemon, its installation path, and the permissions protecting its dependencies may all be part of the TCB. <a href="https://developer.apple.com/documentation/XPC">Apple XPC documentation</a></p>
+<h3>Application to operation and data</h3>
+<p>A safe privileged operation should be narrow:</p>
+<pre><code>updateTCBConfiguration(approvedConfiguration)</code></pre>
+<p>It should not expose a generic primitive such as:</p>
+<pre><code>writeFile(path, data)
+execute(command)
+loadPlugin(name)
+changePolicy(key, value)</code></pre>
+<p>Generic primitives let the untrusted caller choose the authority, target, and operation. A narrow operation lets the helper choose the destination, permitted fields, ownership, permissions, and commit procedure.</p>
+<p>The helper must also protect against:</p>
+<ul>
+<li>Path traversal.</li>
+<li>Symbolic-link and hard-link confusion.</li>
+<li>Time-of-check/time-of-use races.</li>
+<li>Attacker-controlled configuration consumed by a later privileged service.</li>
+<li>Unsafe deserialization.</li>
+<li>Partial writes and ambiguous failure states.</li>
+<li>Error messages that disclose protected state.</li>
+</ul>
+<h3>Application to the kernel</h3>
+<p>The kernel boundary is wider than system calls. The attacker controls pointers, lengths, file descriptors, Mach messages, shared-memory contents, timing, network packets, and device requests.</p>
+<p>The kernel must preserve invariants such as:</p>
+<ul>
+<li>A process cannot forge a stronger credential.</li>
+<li>A process cannot modify kernel memory.</li>
+<li>A process cannot read another process without authorization.</li>
+<li>A process cannot change security policy directly.</li>
+<li>A process cannot load arbitrary privileged code.</li>
+<li>A process cannot turn a valid object handle into access to a different privileged object.</li>
+</ul>
+<p>A kernel bug can collapse many user-space boundaries at once. Secure Boot and the Signed System Volume help establish that trusted code was loaded, but they do not prove that the code is free of exploitable logic or memory-safety bugs. Apple documents System Integrity Protection as a mandatory restriction that applies even to privileged processes, and Kernel Integrity Protection as a separate hardware-backed runtime control on supported Apple silicon. <a href="https://support.apple.com/guide/security/secb7ea06b49/web">System Integrity Protection</a></p>
+<h3>Application to drivers and hardware</h3>
+<p>Hardware-facing code processes data from devices, firmware, and external interfaces. The flow is:</p>
+<pre><code>Application
+    |
+    v
+Device framework
+    |
+    v
+Driver or system extension
+    |
+    v
+Peripheral, firmware, or DMA engine</code></pre>
+<p>A kernel driver bug can become kernel compromise. A user-space system extension bug may be contained to that extension, depending on the boundary it crosses.</p>
+<p>DMA creates another path from a peripheral to system memory. Apple documents IOMMU-based protections that restrict a device to memory explicitly mapped for it. That reduces the risk of a malicious device writing to arbitrary kernel or process memory, but it does not make the driver trustworthy. The driver still decides which buffers to map. <a href="https://support.apple.com/guide/security/direct-memory-access-protections-seca4960c2b5/web">DMA protections for Mac computers</a></p>
+<h3>Application to physical access and recovery</h3>
+<p>Physical access is not one state. We must model a powered-off Mac, a locked running Mac, an unlocked session, RecoveryOS, and a Mac with a compromised recovery credential separately.</p>
+<p>With FileVault enabled and no valid credential or recovery key, the internal volume is intended to remain encrypted even if the storage is removed. This protects confidentiality, but a physical attacker may still be able to erase the device and destroy availability. <a href="https://support.apple.com/guide/security/sec4c6dc1b6e/web">FileVault in macOS</a></p>
+<p>On Apple silicon, boot policy is represented through a device-specific LocalPolicy with anti-replay protections. Full, Reduced, and Permissive security modes provide different tradeoffs. RecoveryOS is part of the secure boot model, not an untrusted afterthought. <a href="https://support.apple.com/guide/security/secac71d5623/web">Boot process for a Mac with Apple silicon</a></p>
+<p>On Intel Macs with the T2 Security Chip, Startup Security Utility provides Full Security, Medium Security, and No Security configurations. That makes hardware generation a first-class threat-model input. <a href="https://support.apple.com/guide/security/secc7b34e5b/web">Startup Security Utility on a Mac with T2</a></p>
+<h3>Application to post-unlock data</h3>
+<p>After login, FileVault is no longer the main boundary. The relevant controls become:</p>
+<ul>
+<li>Filesystem permissions.</li>
+<li>App Sandbox.</li>
+<li>TCC and Data Vault.</li>
+<li>Keychain access control.</li>
+<li>IPC and automation authorization.</li>
+<li>User consent and trusted UI.</li>
+</ul>
+<p>macOS protects privacy-sensitive categories such as protected folders, camera, microphone, screen recording, input monitoring, accessibility, and automation. Apple documents Data Vault as a control that can protect sensitive data even from processes that are not themselves sandboxed. <a href="https://support.apple.com/guide/security/secc01781f46/web">Protecting app access to user data</a></p>
+<p>One permission must not be treated as a universal permission. A process with Screen Recording is not automatically allowed to read the Keychain. A process with Automation permission is not automatically authorized to export every document from another application.</p>
+<h3>Application to identity and secrets</h3>
+<p>The Keychain protects passwords, certificates, private keys, and tokens. The Secure Enclave is designed to keep sensitive key material isolated from the main application processor. The strongest design is to request a key operation instead of exporting the private key:</p>
+<pre><code>Preferred:
+    “Sign this message with key K.”
+
+Riskier:
+    “Give me the private key bytes for K.”</code></pre>
+<p>Keychain metadata and secret values have different protection paths, and item-level access control can require stronger authentication. <a href="https://support.apple.com/guide/security/keychain-data-protection-secb0694df1a/web">Keychain data protection</a></p>
+<p>Hardware-backed protection does not fix a bad authorization decision. A compromised application may still misuse a key operation that it is legitimately allowed to request, or exfiltrate a token after an authorized service releases it.</p>
+<h3>Application to code execution</h3>
+<p>The application execution chain is:</p>
+<pre><code>Downloaded bytes
+    |
+    v
+Quarantine and provenance
+    |
+    v
+Developer signature
+    |
+    v
+Notarization and revocation
+    |
+    v
+Gatekeeper
+    |
+    v
+Entitlements, Hardened Runtime, Sandbox
+    |
+    v
+Application execution</code></pre>
+<p>Code signing answers who signed these bytes. Notarization tells us that Apple scanned a submitted copy for known malicious content. Gatekeeper makes a launch decision. None of these, individually or together, proves that the application will behave safely after launch. <a href="https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution">Apple notarization documentation</a></p>
+<p>macOS is designed to run general-purpose user code. The security model is layered rather than a simple rule that only Apple-approved code may ever execute. The main risk is not only malicious code entering the system. It is also trusted code loading attacker-controlled plugins, frameworks, scripts, or documents.</p>
+<h3>Application to persistence</h3>
+<p>A least-privileged application may first seek user-level persistence through login items, user LaunchAgents, browser extensions, or application helpers. It may later attempt to obtain system-level persistence through a LaunchDaemon, privileged helper, system extension, MDM profile, or kernel extension.</p>
+<p>The dangerous invariant violation is:</p>
+<pre><code>Normal application
+      |
+      v
+Writable dependency or launch configuration
+      |
+      v
+Root LaunchDaemon
+      |
+      v
+System-level execution</code></pre>
+<p>Root services must not execute code or load dependencies from user-writable locations. Authorization to install a helper must not become permanent authorization to replace it later.</p>
+<h3>Application to network exposure</h3>
+<p>The network stack processes attacker-controlled packets, so it is part of the kernel trust closure. Network-facing services, VPNs, DNS proxies, content filters, and remote-management agents add additional trust boundaries.</p>
+<p>Network Extension can customize VPN, DNS, relay, and content-filter behavior. A content filter that can see user traffic is part of the confidentiality TCB for that traffic. Apple describes a split between data and control providers to limit the ability of a configuration component to export user network content. <a href="https://developer.apple.com/documentation/networkextension/content-filter-providers">Content filter providers</a></p>
+<p>Availability is a security property here. A remote attacker does not need code execution if they can exhaust memory, file descriptors, sockets, CPU, storage, or operator attention. Every network path therefore needs limits, timeouts, authentication, safe parsing, and a defined fail-open or fail-closed behavior.</p>
+<h2>6. The main attack tree</h2>
+<pre><code>Goal: gain authority over the macOS TCB
+|
+|-- Exploit a trusted component
+|   |-- Kernel or driver vulnerability
+|   |-- Privileged daemon vulnerability
+|   |-- XPC or Mach message flaw
+|   |-- Keychain or authorization service flaw
+|   +-- Network-facing parser flaw
+|
+|-- Abuse a trusted component
+|   |-- Confused deputy
+|   |-- Weak caller authentication
+|   |-- Generic privileged API
+|   |-- Unsafe path or plugin handling
+|   +-- Over-broad delegation or automation
+|
+|-- Modify trusted state
+|   |-- Writable launch configuration
+|   |-- Replace helper or dependency
+|   |-- Change security policy
+|   |-- Tamper with update metadata
+|   +-- Reintroduce an old boot policy
+|
+|-- Obtain stronger authorization
+|   |-- Fake password prompt
+|   |-- TCC or Accessibility deception
+|   |-- Stolen admin credential
+|   |-- Recovery key compromise
+|   +-- Compromised MDM enrollment
+|
++-- Break availability
+    |-- Kernel panic
+    |-- Resource exhaustion
+    |-- Malicious peripheral
+    |-- Network or DNS disruption
+    +-- Erase or disable recovery</code></pre>
+<h2>7. The confused-deputy problem</h2>
+<p>The most important cross-layer attack is indirect authority borrowing:</p>
+<pre><code>Malicious application
+        |
+        v
+Trusted application
+        |
+        v
+Privileged helper
+        |
+        v
+Protected resource</code></pre>
+<p>The privileged helper may see a request from a trusted application and fail to notice that the original request came from an attacker-controlled document, automation event, plugin, or IPC client.</p>
+<p>The defense is to preserve the causal chain:</p>
+<ul>
+<li>Who initiated the request?</li>
+<li>What exact action was requested?</li>
+<li>Which resource is affected?</li>
+<li>Was user intent established?</li>
+<li>Is the authority transferable?</li>
+<li>Can the result flow back to the attacker?</li>
+</ul>
+<p>A broad rule such as “Application A may control Application B” is weaker than a scoped capability such as “Application A may export document X to destination Y once, after user confirmation.”</p>
+<h2>8. Security invariants</h2>
+<p>Threat models become useful when they produce invariants that can be tested.</p>
+<h3>Boot and physical state</h3>
+<ul>
+<li>Storage removal does not reveal encrypted user data without valid authorization.</li>
+<li>An attacker cannot silently lower boot security or replay an older weak policy.</li>
+<li>Recovery can erase the system without automatically decrypting confidential data.</li>
+<li>Boot objects and system content are verified before trusted execution.</li>
+</ul>
+<h3>Runtime and kernel</h3>
+<ul>
+<li>A normal application cannot modify trusted system code.</li>
+<li>A normal application cannot load arbitrary kernel-level code.</li>
+<li>Kernel interfaces validate attacker-controlled pointers, lengths, handles, and state.</li>
+<li>A sandbox escape does not automatically become kernel compromise.</li>
+<li>Drivers and extensions have no more authority than their function requires.</li>
+</ul>
+<h3>Services and authorization</h3>
+<ul>
+<li>Connecting to a service does not imply permission to perform every operation.</li>
+<li>Authorization is specific to the action, resource, caller, and time.</li>
+<li>The authorized object is the object actually used.</li>
+<li>Privileged services never trust caller-controlled paths, commands, or plugins.</li>
+<li>Untrusted input cannot become trusted executable state.</li>
+</ul>
+<h3>Data and secrets</h3>
+<ul>
+<li>One TCC permission does not grant unrelated permissions.</li>
+<li>Key material is used through narrow operations where possible.</li>
+<li>A trusted application cannot act as a generic secret or privacy proxy.</li>
+<li>Plaintext secrets do not enter logs, temporary files, or attacker-readable channels.</li>
+<li>Data access remains protected after the user unlocks the Mac.</li>
+</ul>
+<h3>Persistence and updates</h3>
+<ul>
+<li>User-level persistence cannot silently become system-wide persistence.</li>
+<li>Root services do not load code or configuration from user-writable paths.</li>
+<li>Update authorization covers all executable components and dependencies.</li>
+<li>Rollback is limited to known-safe versions.</li>
+<li>Revoked code cannot continue to receive new authority indefinitely.</li>
+</ul>
+<h3>Network and availability</h3>
+<ul>
+<li>Unnecessary services are not reachable.</li>
+<li>Every exposed service authenticates and authorizes its clients.</li>
+<li>Network parsers have size limits, timeouts, and resource quotas.</li>
+<li>Network extensions receive only the visibility needed for their function.</li>
+<li>A security failure does not silently create a permanent denial of recovery.</li>
+</ul>
+<h2>9. TCB closure by security property</h2>
+<p>There is no single answer to “what is the macOS TCB?” The answer depends on what we are protecting.</p>
+<table>
+<thead><tr><th>Security property</th><th>Relevant trust closure</th></tr></thead>
+<tbody>
+<tr><td>Boot integrity</td><td>Boot ROM, Secure Enclave, LLB, iBoot, LocalPolicy, recovery, update authorization, SSV</td></tr>
+<tr><td>Kernel integrity</td><td>Boot chain, XNU, SIP, MAC, KIP, trust caches, kernel collections, drivers, IOMMU</td></tr>
+<tr><td>User-data confidentiality</td><td>FileVault, APFS, kernel access controls, TCC, Data Vault, authorized brokers, applications with access</td></tr>
+<tr><td>Secret protection</td><td>Secure Enclave, Keychain, access-control policy, authentication UI, calling applications, token consumers</td></tr>
+<tr><td>Privacy</td><td>TCC, Data Vault, sandbox, automation and accessibility controls, camera and microphone paths, screen and input paths</td></tr>
+<tr><td>Application integrity</td><td>Developer signing, notarization, Gatekeeper, code-signing enforcement, entitlements, Hardened Runtime, sandbox, updater</td></tr>
+<tr><td>Enterprise management</td><td>Enrollment, MDM server, identity provider, configuration profiles, administrator accounts, recovery-key escrow</td></tr>
+<tr><td>Availability</td><td>Kernel, launchd, storage, drivers, network stack, peripherals, recovery, update and remote-management paths</td></tr>
+</tbody>
+</table>
+<h2>10. What macOS does well</h2>
+<p>Modern macOS reduces the TCB through several design choices:</p>
+<ul>
+<li>Hardware-rooted secure boot.</li>
+<li>Secure Enclave isolation.</li>
+<li>Signed System Volume protection.</li>
+<li>System Integrity Protection.</li>
+<li>Hardware memory and pointer protections.</li>
+<li>App Sandbox and mandatory access controls.</li>
+<li>TCC and Data Vault for privacy-sensitive data.</li>
+<li>Keychain and hardware-backed key operations.</li>
+<li>User-space system extensions instead of unnecessary kernel extensions.</li>
+<li>Signed, notarized application distribution.</li>
+<li>Device-specific update authorization and anti-replay.</li>
+<li>IOMMU-based DMA isolation.</li>
+</ul>
+<p>These controls work together. A malicious application may be blocked from the system volume, contained by the sandbox, denied TCC data, and prevented from loading a kernel extension. If one boundary fails, the other boundaries can still reduce the impact.</p>
+<h2>11. What macOS cannot promise</h2>
+<p>The model also has limits:</p>
+<ul>
+<li>Secure Boot cannot prove that trusted code has no bugs.</li>
+<li>Notarization cannot prove that an application is well-behaved.</li>
+<li>FileVault cannot protect data after an authorized unlock and release.</li>
+<li>The Secure Enclave cannot protect a secret after an authorized application exports it.</li>
+<li>TCC cannot prevent a user from granting a permission to malicious software.</li>
+<li>A root compromise can defeat many user-space assumptions.</li>
+<li>A kernel compromise can make user-space monitoring unreliable.</li>
+<li>A compromised developer, Apple signing system, or MDM can create trusted compromise.</li>
+<li>Physical attackers may still erase or destroy a device even when they cannot decrypt it.</li>
+<li>Availability failures can remain possible even when confidentiality and integrity hold.</li>
+</ul>
+<p>A good threat model is valuable partly because it makes these limits explicit.</p>
+<h2>12. Validation plan</h2>
+<p>The next step after modeling is validation. We should not stop at “the architecture appears secure.” We should create evidence for every invariant.</p>
+<h3>Configuration review</h3>
+<ul>
+<li>Identify Apple silicon, T2 Intel, or older Intel hardware.</li>
+<li>Record Secure Boot, SIP, FileVault, and Lockdown Mode state.</li>
+<li>Inventory LaunchAgents, LaunchDaemons, login items, helpers, and system extensions.</li>
+<li>Review ownership and permissions of privileged executables and dependencies.</li>
+<li>Review TCC grants, automation permissions, and accessibility permissions.</li>
+<li>Review MDM enrollment type, profiles, administrator roles, and recovery-key handling.</li>
+</ul>
+<h3>Boundary testing</h3>
+<ul>
+<li>Send malformed but non-destructive requests to local services in a lab.</li>
+<li>Test every privileged operation with unauthorized callers.</li>
+<li>Test path, link, race, and partial-write behavior.</li>
+<li>Test cross-user and post-logout behavior.</li>
+<li>Test update verification with modified and downgraded packages.</li>
+<li>Test removal of helpers and extensions.</li>
+<li>Test network service resource limits and failure modes.</li>
+<li>Test whether logs remain trustworthy after service failure.</li>
+</ul>
+<h3>Evidence questions</h3>
+<ul>
+<li>What exact code enforces this invariant?</li>
+<li>What happens if the enforcing process crashes?</li>
+<li>What happens if the caller is compromised?</li>
+<li>What happens if the user approves the wrong prompt?</li>
+<li>What happens if the network is unavailable?</li>
+<li>What happens if the system is downgraded?</li>
+<li>What happens if the device is physically stolen?</li>
+<li>What happens if an authorized update is malicious?</li>
+</ul>
+<h2>13. Final verdict</h2>
+<p>The macOS TCB is broad, but it is not one undifferentiated blob.</p>
+<p>It is a set of property-specific trust closures connected by boundaries:</p>
+<pre><code>Hardware root of trust
+        |
+        v
+Boot policy and recovery
+        |
+        v
+Signed system and kernel
+        |
+        v
+Privileged services and IPC
+        |
+        v
+Data, identity, and privacy controls
+        |
+        v
+Applications, extensions, updates, and network services</code></pre>
+<p>The most important design principle is:</p>
+<blockquote><p>A least-privileged application may request work, but it cannot choose the authority, target, or policy used to perform that work.</p></blockquote>
+<p>That principle explains why narrow privileged APIs are safer than generic ones, why a trusted application can become a confused deputy, why user-space extensions are preferable to kernel extensions, why FileVault and TCC solve different problems, why authorization must bind to an exact operation, and why update infrastructure belongs in the TCB.</p>
+<p>For a modern Apple-silicon Mac with strong startup security, FileVault, SIP, no unnecessary kernel extensions, narrow privacy permissions, secure updates, and careful physical security, the attack surface is substantially reduced. It is not eliminated. The remaining risk lives at the boundaries: parsers, privileged services, delegated authority, kernel bugs, drivers, user approval, recovery credentials, trusted updates, MDM, and availability.</p>
+<p>That is the point of threat modeling. It turns a product name into a set of claims that can be challenged, tested, and explained.</p>
+<hr/>
+<h2>Sources</h2>
+<ul>
+<li><a href="https://support.apple.com/guide/security/welcome/1/web">Apple Platform Security</a></li>
+<li><a href="https://support.apple.com/guide/security/hardware-security-overview-secf020d1074/web">Hardware security overview</a></li>
+<li><a href="https://support.apple.com/guide/security/secac71d5623/web">Boot process for a Mac with Apple silicon</a></li>
+<li><a href="https://support.apple.com/guide/security/signed-system-volume-security-secd698747c/web">Signed System Volume security</a></li>
+<li><a href="https://support.apple.com/guide/security/secb7ea06b49/web">System Integrity Protection</a></li>
+<li><a href="https://support.apple.com/guide/security/sec8e454101b/web">Securely extending the kernel in macOS</a></li>
+<li><a href="https://support.apple.com/guide/security/direct-memory-access-protections-seca4960c2b5/web">Direct memory access protections</a></li>
+<li><a href="https://support.apple.com/guide/security/secddd1d86a6/web">Controlling app access to files</a></li>
+<li><a href="https://support.apple.com/guide/security/secc01781f46/web">Protecting app access to user data</a></li>
+<li><a href="https://support.apple.com/guide/security/keychain-data-protection-secb0694df1a/web">Keychain data protection</a></li>
+<li><a href="https://developer.apple.com/documentation/security/authorization-services">Authorization Services</a></li>
+<li><a href="https://developer.apple.com/documentation/XPC">XPC</a></li>
+<li><a href="https://developer.apple.com/documentation/EndpointSecurity">Endpoint Security</a></li>
+<li><a href="https://developer.apple.com/documentation/networkextension">Network Extension</a></li>
+<li><a href="https://support.apple.com/guide/security/sec013b5d35d/web">Device management security overview</a></li>
+</ul>
+  </div>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+</body>
+</html>
