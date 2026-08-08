@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Threat modeling a secure enclave - Hem Parekh</title>
+<meta name="description" content="A secure enclave threat model derived from first principles: three questions that break the pitch open, policy bound to keys instead of requests, a hostile client, a load bearing human, and a manufacturing root that cannot be verified, only trusted." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">Research</div>
+  <h1>Threat modeling a secure enclave</h1>
+  <div class="ameta">Aug 5, 2026 &middot; 24 min read</div>
+  <div class="prose">
+<p><strong>TL;DR</strong> - A secure enclave is not "a safe you cannot open." It is a coprocessor that answers requests from a computer you have already conceded to the attacker, with no screen of its own and no reliable way to know who is really asking. The interesting engineering is not the vault. It is everything downstream of admitting that the enclave's sole caller is hostile: binding policy to keys instead of to requests, treating human presence as a load bearing security primitive with no cryptographic substitute, and accepting that some final root of trust cannot be verified, only trusted.</p>
+<p>This is the second entry in a series about threat modeling everyday technology. The first entry modeled the macOS Trusted Computing Base from the outside in, starting from a promise and working out to the components that had to hold it up. This one goes further in one direction: it takes a single idea, an isolated key custodian on the die, and derives the entire threat model from the shape of that idea, before checking it against anything Apple, Google, or a hardware wallet vendor actually shipped. Apple's Secure Enclave appears once, briefly, near the end, as one instantiation of a pattern this post is trying to derive independently.</p>
+<hr/>
+<h2>1. The pitch</h2>
+<p>Someone pitches you a new product. A small, physically isolated coprocessor sits on the same die as the main application processor. It has its own processor core, its own memory, its own storage. It holds cryptographic keys. The main operating system can ask it to perform operations with those keys, sign this, decrypt that, but the main OS can never read the key material itself. The pitch's closing line is always some version of: so even if the rest of the system is fully compromised, the keys stay safe.</p>
+<p>That sentence is airtight against a question nobody asked. It promises that the key cannot be read out. It says nothing about whether the key can be misused without ever being read. Three narrower questions pull that gap open, and everything in this post follows from them.</p>
+<h2>2. Three questions that break the pitch open</h2>
+<h3>Safe how?</h3>
+<p>Not extractable, or not usable. Those are two different products, and the pitch quietly assumes the second while only proving the first.</p>
+<p>If I cannot steal your key but can ask you to sign anything I want, I never needed to steal it. Confidentiality of the key material and authorized use of the key are separate security properties, and the second one is the harder engineering problem by a wide margin. A vault that a thief can never pick, but that opens for anyone who asks it politely, is not a vault. It is a formality with good marketing.</p>
+<h3>Who is your client?</h3>
+<p>The enclave has exactly one channel in and out of itself: the main processor. In this threat model, the main processor is already conceded to the attacker, because that concession is the entire premise of building an enclave in the first place. So structurally, one hundred percent of the enclave's callers, on every single request, are potentially the attacker. There is no separate wire for "the legitimate app" and "the attacker." They are the same wire.</p>
+<p>Authenticating the caller through that channel is not merely difficult. It is structurally impossible. Whatever arrives labeled "this request came from the banking app, approved by the user" is, from the enclave's position, just bytes that the untrusted OS chose to send. The label is not evidence. It is a claim made by the party you have already stopped trusting.</p>
+<h3>You have no screen.</h3>
+<p>When a human approves an operation, how do they learn what they are approving? The prompt text, the amount, the recipient, the operation name, all of it is rendered by the main OS: the exact party this whole design distrusts. The consent mechanism, reduced to its actual mechanics, is: ask a liar to describe a question accurately, then treat the human's answer as informed consent to that question.</p>
+<p>These three questions are the spine of everything that follows. Each one produces a constraint the architecture has no way around, only ways to live inside.</p>
+<h2>3. Constraint one: policy has to be bound at creation, not at request</h2>
+<p>You cannot stop the hostile client from asking. Extraction resistance, keeping the bits themselves from leaving the die, is a tractable engineering problem: shielding, doping tricks, tamper sensors, all covered later in this post. Use resistance enforced <em>through the request channel</em> is not tractable, for a simple reason: anything the enclave checks at request time is itself attacker controlled. A flag that says "this operation was pre-approved by the user" is just another field in a message from the party you distrust. Checking it proves nothing.</p>
+<p>So the decision has to move. Instead of deciding at request time whether an operation is allowed, the key itself carries its own rules, fixed permanently at the moment it is created: requires presence, requires a specific biometric enrollment, expires after a date, is scoped to one algorithm and nothing else. Those rules cannot be renegotiated later by a request, because a request is exactly the thing you cannot trust.</p>
+<p>Generalized, the pattern is: when you cannot trust the ask, bind authority to the object instead of the request. This shows up anywhere a system has to make decisions on behalf of an untrusted caller, it is the underlying reason capability-based designs tend to outlive access-control-list designs under adversarial pressure.</p>
+<p>There is a sharp consequence hiding in this. Whoever creates the key decides its policy, permanently, at a moment when the pressure is to ship something that works. A convenient API default that mints unconditional keys, no presence requirement, no biometric binding, quietly discards the entire model above, and it does so at the one layer, the API surface, where nothing in the hardware architecture can catch the mistake. The enclave's threat model has, at this point, become a human factors problem inherited by the architecture rather than solved by it.</p>
+<h2>4. Constraint two: living with a hostile client</h2>
+<p>You cannot authenticate the caller. But you do own state the caller cannot touch: your own memory, your own counters, your own execution. Every workable defense against a hostile client comes from that one asymmetry, and the pattern is consistent enough to state as a rule: a defense only counts if the enclave can enforce it alone, without needing the caller's honesty for any part of it.</p>
+<ul>
+<li><strong>Counting has to happen inside.</strong> You can track failed attempts, but only if the counter lives in memory the caller cannot write to. An external counter is just more attacker-controlled state: rewrite it, replay an old value, and the count resets for free.</li>
+<li><strong>Refuse to be a general-purpose oracle.</strong> Offer narrow business operations, "sign this transaction of this exact shape," not generic primitives like "decrypt this blob" or "sign this hash." A generic primitive lets the caller decide what the operation means. A narrow one keeps that decision inside the boundary.</li>
+<li><strong>Make requests non-replayable.</strong> Nonces and session binding mean a captured request and response pair cannot be recorded and reissued later to reproduce an approval that happened once.</li>
+<li><strong>Control what answers reveal.</strong> Timing, error codes, and response length are all side channels once you accept that the hostile caller can invoke you as many times as it wants. A distinct error for "wrong PIN" versus "no such key" is a free oracle for account enumeration. Every answer needs to look the same regardless of which internal branch produced it.</li>
+<li><strong>Refuse to let concurrent requests interleave.</strong> Two half-finished operations executing side by side inside the one component that was supposed to be safe is exactly how a race condition gets built inside the trust boundary meant to prevent races.</li>
+</ul>
+<p>Notice what all five have in common: none of them require the caller to behave. That is the actual design constraint here, not a style preference. Anything that depends on the caller being honest for even one step has already been defeated by the premise of this section.</p>
+<h2>5. Constraint three: the human is the only thing the attacker cannot forge</h2>
+<p>An attacker can produce any bit pattern the enclave will accept. They cannot produce a person. That single asymmetry makes human presence a load bearing security primitive, with a physical basis instead of a cryptographic one, and it deserves the same scrutiny as any other primitive in this model.</p>
+<p>There are two channels here, and they are wildly different in difficulty.</p>
+<p><strong>Inbound, human to enclave, is solvable.</strong> Wire the sensor or the button directly to the silicon, and bind the peripheral cryptographically, so that a swapped sensor, one that always reports "yes" regardless of what actually touched it, is not trusted by the enclave. This is a hardware engineering problem with hardware engineering answers.</p>
+<p><strong>Outbound, enclave to human, is the hard one</strong>, because it inherits the liar-screen problem from section two directly. There are only three honest options, and none of them make the problem disappear.</p>
+<ol>
+<li>Give the enclave its own display. It is worth pausing on the fact that an entire industry, hardware wallets, arrived at this exact constraint independently and added a screen. That convergence is evidence the constraint is real, not evidence that a screen is a nice-to-have feature.</li>
+<li>Accept the lying screen, and make the approval gesture unforgeable and specific enough that a compromise cannot be silent or operate at scale: a distinct physical action per approval, rate limited, with no "approve everything for the next hour" toggle reachable through that same untrusted screen.</li>
+<li>Find an out-of-band path entirely, a second device or a second channel, which trades one set of problems (cost, usability, another thing to lose) for the original one, and which still ultimately renders something, somewhere, in software.</li>
+</ol>
+<p>The irreducible result, stated plainly: without a trusted output path, you can prove that a human approved <em>something</em>. You cannot prove they approved <em>this</em> operation, on <em>this</em> resource, for <em>this</em> amount. The design consequence is to bound tightly what sits behind a single approval, one narrowly scoped operation rather than a standing grant, and to keep presence fresh and tied to that one operation instead of opening a window of implicit trust after it.</p>
+<p>One more trap belongs here, distinct from the liar screen: presence is not the same thing as consent. A finger touching a sensor proves a finger touched a sensor. It does not prove a mind agreed to the operation, someone can physically guide another person's hand to the sensor. The two failures, an untrustworthy description of the request and an untrustworthy interpretation of the gesture, are separate, and a design that only solves one has only solved half the problem.</p>
+<h2>6. State that must survive power loss, and the rollback trap</h2>
+<p>The enclave needs some state to survive a power cycle: attempt counters, revocation records, key metadata. On-die non-volatile storage is expensive and has limited write endurance, so in practice some of this state ends up living outside the enclave, in ordinary storage the main OS can reach.</p>
+<p>Here is the trap. Encryption gives confidentiality. Authentication gives integrity. Neither one gives freshness. An old message that was validly encrypted and validly signed is not a forged message, it is a completely genuine message from an earlier point in time, replayed. Two consequences follow immediately: rewind the attempt counter and brute force becomes unlimited again, because every rewind buys a fresh set of tries. Restore a snapshot from before a key was revoked and that key is alive again, with a perfectly valid signature attesting to a state of the world that no longer holds.</p>
+<p>The fix has to be state that is physically monotonic, something that literally cannot decrease even for an attacker with full read and write access to the external storage and full knowledge of whatever secret is supposed to protect it, because any secret protecting freshness is itself just more state with the identical rollback problem. That chain has to terminate somewhere physical: a fuse that can be blown but never unblown, or a dedicated tamper-resistant counter chip with its own limited endurance.</p>
+<p>Two related traps are easy to miss. First, an attacker who cannot roll state backward can instead simply withhold it, refuse to deliver the latest value at all, which has to be treated as equivalent to a rollback attempt: fail closed, or withholding becomes a slower version of the same reset. Second, a power cut in the middle of a state write is a hazard independent of any attacker intent, persistent updates must be atomic, commit or do not commit, with nothing observable in between, or a well-timed power interruption becomes its own manipulation primitive with no attacker sophistication required at all.</p>
+<h2>7. Boot: the thing that verifies everything cannot itself be verified</h2>
+<p>If the main processor is the one loading the enclave's firmware, the enclave inherits its trust from precisely the component it exists to be independent of. So it has to boot on its own, before, and independently of, the main processor being trusted at all.</p>
+<p>Something in that boot chain has to go first, and by construction, the very first thing cannot be checked against anything else, only trusted outright. That first thing is immutable mask ROM, physically burned in at fabrication. State the bargain this makes plainly: unforgeability was purchased by giving up patchability. A bug discovered in that first-stage code is permanent for the entire life of that hardware generation. No update will ever reach it, because updatability is exactly the property that was traded away to get unforgeability.</p>
+<p>Firmware loaded after that first stage reintroduces the freshness problem from section six in a new form. An old firmware image was validly signed at the time it was released, which means old-but-signed is not the same thing as safe, so anti-rollback protection for firmware versions is required for the same underlying reason attempt counters need it. Signatures on that firmware also have to bind to the specific device, or at minimum a narrow device class, or a single old, validly signed image becomes a universal skeleton key: capture it once, replay it onto every unit of that model, and downgrade the entire fleet at once.</p>
+<p>Debug and test interfaces used during bring-up and manufacturing have to be irreversibly fused off before the device ever leaves that controlled environment. Skip this and the hardware marketed as tamper resistant ships with its own back door, installed as a manufacturing convenience nobody remembered to remove.</p>
+<p>One structural inversion is worth naming directly, because it is easy to walk past. Since the enclave boots first and independently, it is positioned to gate whether the main processor is allowed to boot at all. The small, mostly forgotten coprocessor becomes the arbiter for the large general-purpose one, not the other way around. That is an unusual power relationship for a component most users have never heard of.</p>
+<h2>8. Side channels and physical attacks</h2>
+<p>These layer by required attacker capability, from a laptop to a lab.</p>
+<p><strong>Passive, no physical intrusion required.</strong> Timing, power draw, electromagnetic emission, and contention on anything the enclave shares with the untrusted world, cache lines, a bus, a power rail. The sting specific to this design is section four's hostile client: it can invoke the enclave a million times overnight and average away noise that no single measurement would ever reveal. Constant-time behavior is therefore not a hardening pass bolted on afterward, it is structural. Any branch or memory access pattern that depends on secret data is a channel a patient, unauthenticated, effectively unlimited caller will eventually resolve.</p>
+<p><strong>Active fault injection.</strong> The goal is not reading the secret directly, it is making the enclave skip a comparison: a glitched clock edge or a voltage spike timed to turn a rejection check into a pass-through. Defenses are redundant checks (compute the same comparison twice, independently, and compare the results too), randomized timing so an attacker cannot predict the exact instant to glitch, and self-monitoring of voltage and clock so the enclave can refuse to operate at all outside its specified envelope, rather than operate incorrectly inside a manipulated one.</p>
+<p><strong>Invasive.</strong> Decapsulation, physical probing, optically reading fuse states under a microscope. Defended with shielding, signal routing buried away from the surface, and tamper sensors that trigger a response, key zeroization, on detected intrusion.</p>
+<p>External memory, the state discussed in section six, needs the same three properties as any data crossing a hostile channel: encryption, authentication, and replay protection, with a key that itself changes every boot, so that physically extracting the encrypted blob does not help without also breaking the current session's key.</p>
+<p>The honest framing to close on: none of this raises the cost to infinity. It raises the cost, and more importantly, it requires physical possession of the specific device. That asymmetry, not invulnerability, is the actual product. An attacker who breaks one unit in a lab has not broken the fleet, and that is by design rather than by accident.</p>
+<h2>9. Availability: your own defenses are a weapon you hand to the attacker</h2>
+<p>Lockout is a deliberate feature: fail attempts enough times and the enclave locks. But whoever can trigger failed attempts controls the lockout, and if lockout means wipe, that hands the attacker a destruction primitive for free. They do not need to break in. They only need to trigger the failure path.</p>
+<p>There is no clean setting here, only a choice of preferred failure. Wipe-on-lockout stops brute force at the cost of enabling attacker-triggered destruction. No-wipe avoids that destruction at the cost of a weaker deterrent. Either choice is defensible. Presenting either one as if it were the obviously correct answer is not.</p>
+<p>Hardware death is its own failure mode: if the chip physically dies, the keys inside die with it. Someone always proposes escrow to soften that. Escrow is usually the point where the careful architecture built across the rest of this post unravels, because it opens a second route to the secret, and that route typically lives somewhere far softer than tamper-resistant silicon, a cloud account reachable by phishing a support representative, for instance. Every property described so far, unforgeable channels, physical resistance, fail-closed state, buys nothing if there is a parallel path around all of it.</p>
+<p>The single most important availability point in this whole model: the attacker does not need to defeat the enclave. They only need to block it, and observe what the rest of the system does in its absence. Any software fallback anywhere, "enclave unreachable, continuing with a software-only path", is the actual attack surface, and everything described in this post becomes irrelevant to reaching it. Fail-closed has to be enforced by every caller of the enclave, not merely asserted inside the enclave itself, because the enclave has no mechanism to enforce behavior in a caller it has already conceded is hostile.</p>
+<p>A smaller, related failure mode: finite key storage. An attacker, or simply careless key management, can exhaust the enclave's storage slots, which is its own denial-of-service surface, distinct from lockout but living in the same family of problems.</p>
+<h2>10. Manufacturing: the boundary you cannot re-cross, and the trust you cannot check</h2>
+<p>The device secret at the root of everything: was it generated on the die itself, or injected from outside during manufacturing? These are very different claims. Generated on die means, in principle, that no external party ever possessed it. Injected means some external system generated it and wrote it in, which quietly makes that system, and everyone with access to it, part of the trust base whether or not it is documented as such.</p>
+<p>If it was injected, destruction of that external copy is a claim, not a checkable fact. Nobody downstream of the factory can verify that the injection system deleted its copy rather than, say, logging it.</p>
+<p>Whoever holds the private key matching the verification key burned into the boot ROM can sign firmware that every device in the field will accept, indefinitely, until a hardware revision changes the embedded verification key. That makes this fundamentally an organizational problem sitting underneath the silicon: key custody, insider risk, and legal compulsion of whoever holds that signing key, not just an engineering one.</p>
+<p>The supply chain compounds this. The part is handled by the fab, by packaging, by test, each a separate organization with separate access. Factory test interfaces need to be irreversibly disabled before the part leaves that environment, and the honest open question is: verified by whom? Someone has to attest that the fuse actually blew, and that attestation is itself unverifiable by the eventual end customer.</p>
+<p>The close, stated directly: none of this is verifiable from outside. Attestation is circular, because the enclave proves its identity using a key whose own provenance is the exact question being asked. Every hardware root of trust bottoms out in trust the manufacturer. That is not a flaw waiting for one more layer of cryptography to fix. It is the axiom the entire model rests on. The honest move is to say so plainly, and ask what breaks if it turns out to be false, rather than let a long enough chain of signatures quietly stand in for an answer.</p>
+<h2>11. The complete sketch</h2>
+<p>The diagram below is the working model for this post: the untrusted main processor on one side of a single narrow channel, the enclave with its internal blocks on the other, the human wired in directly but with no way back except through the processor it should be bypassing, external state that only means anything relative to an on-die counter, a manufacturing boundary crossed exactly once, and a ring of physical attack surface around all of it.</p>
+<figure>
+<img src="../images/secure-enclave-threat-model.svg" alt="Threat model sketch of a secure enclave showing the untrusted main processor connected to the enclave by a single narrow message channel, the enclave's internal blocks including its own boot ROM, key store with per key policy, monotonic counter, crypto engine and isolated memory, a direct human presence channel bypassing the main processor, external encrypted state storage, a manufacturing boundary crossed once, and a physical attack surface ring around the whole system. Three numbered weak points are marked: the hostile client channel, the missing trusted display path, and the unverifiable manufacturing root." />
+<figcaption>Threat model sketch: a hostile main processor is the enclave's only caller, the human's outbound path has no trusted return leg, and the manufacturing root can never be re-verified after it is sealed. Gold arrows are flows the enclave still governs. Dashed red arrows mark where that control runs out.</figcaption>
+</figure>
+<hr/>
+<h2>12. Security invariants</h2>
+<h3>Policy and keys</h3>
+<ul>
+<li>A key's authorization policy is fixed at creation and cannot be loosened by a later request.</li>
+<li>No API path mints a key with no presence or authentication requirement by default.</li>
+<li>The enclave exposes narrow, named operations, never a generic sign-anything or decrypt-anything primitive.</li>
+</ul>
+<h3>Client and requests</h3>
+<ul>
+<li>Every counter that gates an attempt lives in memory the caller cannot write.</li>
+<li>Requests are bound to a session and cannot be replayed from a captured transcript.</li>
+<li>Error responses do not vary in timing, content, or shape based on which internal branch produced them.</li>
+<li>Concurrent requests cannot interleave inside a single stateful operation.</li>
+</ul>
+<h3>Human presence</h3>
+<ul>
+<li>The sensor or button reporting presence is cryptographically bound to the enclave; a substituted peripheral is rejected.</li>
+<li>A single approval authorizes one specific, narrowly scoped operation, never a standing window of future operations.</li>
+<li>Presence freshness is checked per operation, not cached across a session.</li>
+</ul>
+<h3>State and freshness</h3>
+<ul>
+<li>Security-relevant counters are physically monotonic and cannot be rolled back even with full access to external storage.</li>
+<li>Withholding the latest state is treated the same as an attempted rollback: the enclave fails closed.</li>
+<li>State updates are atomic; a power interruption mid-write never leaves an ambiguous or exploitable partial state.</li>
+</ul>
+<h3>Boot and firmware</h3>
+<ul>
+<li>The enclave's first-stage code is immutable and boots independently of the main processor.</li>
+<li>Firmware anti-rollback prevents an old, validly signed image from being reinstalled.</li>
+<li>Firmware signatures bind to the specific device or a narrow device class, not to the model as a whole.</li>
+<li>Debug and test interfaces are irreversibly disabled before the device leaves the manufacturing environment.</li>
+</ul>
+<h3>Physical and side channel</h3>
+<ul>
+<li>No enclave operation has a data-dependent timing, power, or memory access signature.</li>
+<li>Security checks are redundant and independently computed, not single points of failure against fault injection.</li>
+<li>The enclave refuses to operate outside its specified voltage and clock envelope.</li>
+<li>External state storage is encrypted, authenticated, and replay-protected with a key that rotates every boot.</li>
+</ul>
+<h3>Availability</h3>
+<ul>
+<li>No caller anywhere in the system has a software fallback path that bypasses the enclave.</li>
+<li>The consequence of lockout, whether wipe or freeze, is a documented, deliberate choice, not an accident of implementation.</li>
+<li>No key escrow path exists outside the enclave's own tamper-resistant boundary.</li>
+</ul>
+<h3>Manufacturing</h3>
+<ul>
+<li>Device secret provenance, generated on die versus injected, is documented and not asserted without evidence.</li>
+<li>Firmware signing key custody is treated as a governed organizational control, not merely a technical one.</li>
+<li>Factory test access disablement is independently verified, not only self-attested by the party performing it.</li>
+</ul>
+<h2>13. The attack tree</h2>
+<pre><code>Goal: extract or misuse a key protected by the enclave
+|
+|-- Extract the key material directly
+|   |-- Passive side channel (timing, power, EM) over many calls
+|   |-- Active fault injection to skip a comparison
+|   |-- Invasive probing after decapsulation
+|   +-- Compromise the manufacturing injection path
+|
+|-- Misuse the key without extracting it
+|   |-- Send requests as the hostile client, no presence needed
+|   |   (only works if policy binding at creation failed)
+|   |-- Replay a captured request or response
+|   |-- Exploit an interleaved, racing pair of requests
+|   +-- Exploit a generic sign-anything or decrypt-anything primitive
+|
+|-- Defeat the human presence requirement
+|   |-- Spoof or substitute the presence sensor
+|   |-- Render a misleading prompt on the untrusted screen
+|   |-- Physically guide presence without informed consent
+|   +-- Abuse a standing approval window instead of a single operation
+|
+|-- Defeat freshness and rollback protection
+|   |-- Roll back the attempt counter via a restored snapshot
+|   |-- Roll back firmware to an old, validly signed version
+|   |-- Withhold the latest state instead of rewinding it
+|   +-- Interrupt a state write mid-commit
+|
+|-- Force the system around the enclave entirely
+|   |-- Trigger lockout to force a software fallback path
+|   |-- Exhaust finite key storage as denial of service
+|   +-- Reach an escrowed copy of the key through a softer channel
+|
++-- Undermine the root of trust itself
+    |-- Compromise the firmware signing key's custody
+    |-- Falsify or bypass factory test-interface disablement
+    +-- Exploit an unverified claim about secret provenance
+</code></pre>
+<h2>14. Residual risk</h2>
+<p>Even a carefully built enclave, one that satisfies every invariant above, leaves risk on the table. Naming it plainly is the point of a threat model, not a mark against the design.</p>
+<ul>
+<li>A compromised OS can still obtain anything a key's policy allows without presence, for any key whose creator chose not to require presence. The enclave enforces policy; it does not choose good policy on your behalf.</li>
+<li>Presence does not distinguish coerced presence from consenting presence. A held hand and a willing one produce the same signal.</li>
+<li>Even with an unforgeable approval gesture, the lying screen can still obtain broad, vague consent. It cannot obtain silent, bulk consent, but "please confirm" is not the same guarantee as "confirm this exact transfer of this exact amount to this exact recipient."</li>
+<li>The hardware root of trust is fundamentally unverifiable from outside. Trust in the manufacturer is irreducible, not a temporary gap waiting on better tooling.</li>
+<li>Physical attacks do not scale, but they do work, and they work well against one specific, high-value, targeted individual, which is a meaningfully different risk than mass compromise.</li>
+<li>A software fallback path anywhere in the system defeats fail-closed behavior entirely, regardless of how well the enclave itself is built.</li>
+<li>Any escrow path defeats every property in this document at once, because it offers a second, usually softer, route to the same secret.</li>
+</ul>
+<h2>15. Validation: what you can actually go check</h2>
+<p>A threat model is only useful once it produces something a reader can test against a real system.</p>
+<ul>
+<li><strong>Enumerate which of your keys require no user presence at all.</strong> That list is your standing blast radius the moment the main OS is ever fully compromised.</li>
+<li><strong>Test that a biometric-bound key actually invalidates when enrollment changes.</strong> Add a new fingerprint or face, and check whether keys bound to the old enrollment still work. If they do, the binding is cosmetic.</li>
+<li><strong>Measure how many operations succeed after a single authentication event.</strong> That count is the real size of the window an attacker gets from one moment of presence, not the size the documentation claims.</li>
+<li><strong>Deny a permission prompt and watch what happens next.</strong> Does the app simply fail, or does it fall back to something weaker that never asked for presence at all?</li>
+<li><strong>Read your own prompt text as literally as an attacker would want a user to.</strong> Does it name the specific operation and the specific resource, or could the same text plausibly describe almost any request the app might send?</li>
+</ul>
+<h2>16. Final verdict</h2>
+<p>None of the constraints in this post came from reading a datasheet. They came from taking the pitch seriously and asking what has to be true for it to hold: safe against extraction is not safe against misuse, a component with one caller and no way to authenticate that caller has to defend itself without the caller's cooperation, and a component with no display of its own can never fully close the gap between "a human approved something" and "a human approved this."</p>
+<p>Apple's Secure Enclave, and the hardware wallets that independently converged on adding their own screens, are instantiations of this pattern, not the source of it. The pattern holds for any coprocessor that holds a secret, answers a hostile client, and has to involve a human it cannot directly see or speak to. That is the useful part of a threat model: it turns a specific product into a general shape, one that can be checked, argued with, and applied somewhere the vendor never tested it.</p>
+  </div>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+</body>
+</html>
