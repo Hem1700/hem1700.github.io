@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Threat modeling full disk encryption, and what I missed - Hem Parekh</title>
+<meta name="description" content="A full disk encryption pitch taken through an actual threat modeling process, then written up as a formal report: scope, asset register, trust boundaries, a 26 row threat register, attack trees, residual risk, and a validation plan. Then the reveal: BitLocker." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">Research</div>
+  <h1>Threat modeling full disk encryption, and what I missed</h1>
+  <div class="ameta">Aug 6, 2026 &middot; 34 min read</div>
+  <div class="prose">
+<p><strong>TL;DR</strong> - Full disk encryption is not one product. "The drive is unreadable outside this machine" is true in a state the device is almost never in and false in the state it spends most of its life in. Part one of this post is the honest, compressed account of how a real threat model gets produced: a pitch, a design doc, an intuition-led review that found the one finding that mattered most and missed eight others, and a mechanical STRIDE pass that caught what intuition could not. Part two is the thing that review process should have produced and did not get shown in the first cut of this post: an actual threat model report, with a scope statement, an asset register, trust boundaries, an attacker capability ladder, a 26 row threat register, attack trees, residual risk, an assumptions register, and a validation plan. Then the reveal: this is BitLocker, and every derived weakness has a real, documented, still-live counterpart.</p>
+<p>This is the third entry in a series about threat modeling everyday technology. The first modeled the macOS Trusted Computing Base from the outside in. The second derived a threat model from a single hardware pattern before checking it against Apple's Secure Enclave. This one is shaped differently again: it follows one feature, full disk encryption, through the process that actually produces a threat model, then writes up the result the way a reviewer would actually expect to receive it. The product under review is called DDP throughout, on purpose, until part one reaches the point where it stops needing a fake name.</p>
+<hr/>
+<p><strong>Part one: how this model was produced.</strong> This half is compressed on purpose. It is the narrative, kept honest about the misses, in roughly half the space it took the first time. Part two, starting after the reveal, is the report itself.</p>
+<h2>1. The pitch</h2>
+<p>A product team walks in with a pitch: full disk encryption, on by default, on every device that ships, no password prompt at boot. The volume key is held by a platform security processor and released automatically when the machine boots into a configuration it recognizes as normal. We will call it DDP for now. The pitch's closing line is always some version of the same sentence: the drive is never readable outside this machine, and the user never has to think about it.</p>
+<p>Nobody threat models that sentence directly. A five-minute pitch is not a system, and the first real conversation only produces a list of questions the design has to answer: which states is this protecting, what proves the requesting machine is the provisioned one, what happens the day the key does not release. The team returns later with a written design, and the model gets built jointly against that document, because a model written by security alone gets filed and ignored, and one written by the product team alone misses whole categories it never had reason to visit.</p>
+<p>Two things about this are worth saying plainly. By the time a design document exists, a decision like "no password at boot" already has a business case and a release date behind it; the model does not get to reopen that decision, only to document what it costs. And the most dangerous weaknesses tend to live on the seam between two teams who each modeled their own half correctly, not inside either half.</p>
+<h2>2. The four questions</h2>
+<p><strong>Which state are you protecting?</strong> Powered off, hibernated, asleep, at the lock screen, and unlocked are five different products wearing one sentence, and a key released automatically at boot says nothing about four of them: the measurements already matched, and the key is already sitting in memory. Laptops get stolen asleep, not powered off, and a lock screen is a user interface decision, not a cryptographic boundary.</p>
+<p><strong>Who authenticates?</strong> No pre-boot secret means possession is the credential, which converts what sounds like a cryptography problem into a boot integrity problem in its entirety. Unlocking the disk and signing into the account are separate events, and the attacker only wants the first one. With no secret to get wrong there is also nothing to rate limit, so an attacker with the device on a bench gets unlimited attempts. A pre-boot PIN's real value is giving the chip something to count.</p>
+<p><strong>What is measured?</strong> A chain, extend only, compared once at release. Sealing to a signing authority rather than a specific binary means a genuine, correctly signed, obsolete component satisfies the policy, because the policy proves provenance, not safety, and revocation has to be a separate mechanism that in practice lags for compatibility. Usability pressure keeps pushing that binding looser, and looser binding is exactly what an attacker needs.</p>
+<p><strong>What happens on recovery?</strong> Lockouts are inevitable, so there has to be a recovery key that bypasses everything else unconditionally. Users will not retain it, so it gets escrowed, and that one choice quietly redefines the whole feature: the strength of the disk encryption becomes the strength of whatever protects the escrow copy. The attacker does not attack AES. They attack a password reset.</p>
+<h2>3. The design doc</h2>
+<p>The team returns with version 0.9 of a written design, and it exhibits, almost point for point, the failure modes documents like this one characteristically exhibit: non-goals that quietly exclude the states that matter (sleep is never addressed until it resurfaces as an open question deferred to another team); an assumptions section carrying more risk than the threats table (one assumption states that devices are powered off when lost or stolen, close to the opposite of how they are actually stolen); a threats table listing five rows, every one an attack the design already defeats; the single most important component, recovery key escrow, marked out of scope with retrieval UX left as a literal "TBD"; and a deadline requesting sign-off within two weeks, explicitly to avoid holding the release train.</p>
+<p>None of this is unusual, and none of it is written in bad faith. It is what a design document produced under real organizational pressure looks like almost every time, which is exactly why a review process has to expect it rather than be surprised by it.</p>
+<h2>4. The first pass</h2>
+<p>The first pass is intuition led, and three findings from it matter enough to block sign-off. The recovery key unwraps the volume key unconditionally, bypassing the platform security processor, the measurements, and the boot chain entirely, and the design escrows it automatically while declaring its handling out of scope. Sealing to a signing authority rather than a binary is a defensible response to a real operational problem, but the document never states that it silently depends on prompt revocation. And sleep is never addressed as its own state, even though the volume key sits resident in DRAM exactly like an unlocked machine, which is the state a laptop is actually in when it goes missing.</p>
+<p>Of the three, the escrow finding is the one that invalidates the rest. Tighten the sealing policy, specify the sleep state, and both fixes are still protecting a door while the wall next to it stays open.</p>
+<h2>5. What it missed</h2>
+<p>The honest part comes next, and it does not get softened. The first pass missed eight things, and several of them are worse than what it caught.</p>
+<ul>
+<li>No integrity protection for data at rest: the cipher is length preserving and unauthenticated, so ciphertext is malleable and offline tampering goes undetected.</li>
+<li>Used space only encryption on existing drives leaves plaintext remnants that wear leveling makes unreliable to overwrite.</li>
+<li>A suspension window during firmware updates places the key on disk in the clear.</li>
+<li>Hibernation and page files write memory, including keys, outside the encryption model's coverage.</li>
+<li>The boot partition stays unencrypted and holds attacker-writable configuration.</li>
+<li>Crypto erase does not revoke an already escrowed key, so a wiped or resold device leaves a valid key with the previous holder.</li>
+<li>On a managed fleet, one directory administrator can read every recovery key in the organization.</li>
+<li>Availability was never modeled: a forced measurement mismatch locks people out at scale, all at once.</li>
+</ul>
+<h2>6. The mechanical pass</h2>
+<p>Intuition finds what it already recognizes and is blind to categories it never thought to visit. STRIDE does not depend on recognition: it forces every element and interaction through six fixed questions regardless of whether any of them feel relevant walking in. Asking the tampering question specifically at data at rest is what surfaces the missing integrity check. Asking the denial of service question near the measurement policy is what surfaces mass lockout. Asking the repudiation question at key retrieval is what surfaces the missing audit trail.</p>
+<p>The mechanical pass produced findings judgment never reached on its own: the platform security processor is never itself authenticated; the escrow upload endpoint at provisioning is unauthenticated; the device signs into the same account that holds its own recovery key, so malware already running as the signed in user can retrieve the key for the disk it is running on, and that key survives a reimage; escrow is a single point of availability failure on its own terms; deliberate chip lockout is a usable denial of service that pushes a targeted user into recovery; activation telemetry is, structurally, a queryable list of unencrypted devices; three separate repudiation gaps exist around measurement, escrow, and key retrieval; and on-device access control for the recovery key is left entirely unspecified.</p>
+<p>Neither approach was sufficient alone. Structure buys coverage: every category gets asked about, whether or not it looks interesting. Judgment buys depth, and more importantly it buys prioritization, because a checklist has no opinion about which finding actually blocks a release. A mechanical pass alone would never have identified escrow-out-of-scope as the finding that invalidates the rest of the document. Judgment alone left holes a junior reviewer with nothing but a template would have filled in an afternoon.</p>
+<h2>7. The reveal</h2>
+<p>DDP is BitLocker, and every weakness derived above has a documented, named, still relevant counterpart.</p>
+<p>The unauthenticated bus finding is discrete TPM sniffing. On systems where the platform security processor is a separate chip, the boot manager talks to it in the clear over LPC or SPI, and a logic analyzer clipped onto that bus during boot captures the volume master key as it is released. The technique has been public for years, and it is still live enough in 2026 that HP shipped dedicated hardware, HP TPM Guard, specifically to cryptographically bind a discrete TPM to its host processor and close the gap. <a href="https://pulsesecurity.co.nz/articles/TPM-sniffing">Pulse Security's writeup on TPM sniffing</a> and <a href="https://www.hp.com/us-en/newsroom/press-releases/2026/hp-leads-security-for-the-future-of-work.html">HP's TPM Guard announcement</a> cover both sides of that timeline.</p>
+<p>The "signed but obsolete" finding is Bitpixie, CVE-2023-21563. The Windows boot manager fails to wipe the volume master key from memory across a PXE soft reboot, so an attacker forces that reboot path and then boots their own environment to read the key straight out of memory, no hardware required, software only, and it works precisely because the boot manager involved is genuinely, validly signed. Microsoft's mitigation is a Secure Boot certificate rotation, the Windows UEFI CA 2023 certificate replacing the Windows Production PCA 2011 certificate through the DBX revocation list, and as of May 2026 that rotation had still not been enforced across the fleet, with the old, vulnerable certificate not set to expire on its own until October 2026. See the <a href="https://msrc.microsoft.com/update-guide/vulnerability/CVE-2023-21563">MSRC advisory for CVE-2023-21563</a> and Microsoft's own <a href="https://support.microsoft.com/en-us/topic/enterprise-deployment-guidance-for-cve-2023-24932-88b8f034-20b7-4a45-80cb-c6049b0f9967">enterprise guidance for the certificate rotation</a>.</p>
+<p>The sleeping machine finding is cold boot and DMA, bounded rather than solved. Kernel DMA Protection blocks unauthorized device access over Thunderbolt and PCIe, but only for the period after the operating system has already loaded. The pre-boot window, and any port not covered by that protection, is left entirely to the firmware, and a machine asleep with the key resident in DRAM is exactly the target that class of attack was built for. Microsoft documents the boundary directly in its own <a href="https://learn.microsoft.com/en-us/windows/security/hardware-security/kernel-dma-protection-for-thunderbolt">Kernel DMA Protection guidance</a>.</p>
+<p>And the escrow finding is not a corner case. Since Windows 11 24H2, a clean install where the user signs in with a Microsoft account silently turns on device encryption and uploads the recovery key to that same account, no separate prompt, no separate notice. Enterprise devices escrow the equivalent key to Entra ID or Active Directory through the standard managed-device flow. The finding that a first-pass reviewer would be tempted to treat as a worst case, the recovery key sitting behind the very account the device signs into, is the default configuration on a very large number of machines running today. Microsoft's own documentation on <a href="https://support.microsoft.com/en-us/windows/security/encryption/device-encryption-in-windows">device encryption in Windows</a> describes exactly this flow.</p>
+<hr/>
+<p><strong>Part two: the threat model report.</strong> Everything above is the process. What follows is the artifact that process should have produced: scope, architecture, assets, trust boundaries, attacker capabilities, the full threat register, attack trees, invariants, residual risk, assumptions, and a validation plan. It refers to the system as DDP throughout, matching the design and review documents it is drawn from.</p>
+<h2>8. Scope and system description</h2>
+<table>
+<thead><tr><th>Field</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>System</td><td>DDP (Device Data Protection), default-on full disk encryption</td></tr>
+<tr><td>Design document reviewed</td><td>v0.9, draft, pre-implementation</td></tr>
+<tr><td>Design document owner</td><td>Platform Storage team</td></tr>
+<tr><td>Reviewers</td><td>Platform Security (lead), with Firmware and Identity as named reviewers</td></tr>
+<tr><td>Sign-off target (as requested by the design doc)</td><td>Within two weeks, to hold the release train</td></tr>
+<tr><td>This report compiled</td><td>Aug 6, 2026</td></tr>
+</tbody>
+</table>
+<p><strong>In scope for this review</strong> (expanded from the original design doc by the review process itself): volume key generation, sealing to the platform security processor, and release logic; boot chain measurement across firmware, boot manager, and OS loader, and the sealing policy that governs it; recovery key generation and its full escrow path, including which account it lands in; default-on activation behavior during setup; and behavior across the states the device actually occupies over its working life, which the original design doc did not treat as in scope until this review put it there.</p>
+<p><strong>Out of scope</strong>, as stated in the original design document's non-goals: protecting data while a user is signed in and the system is running normally; defending against malware running on an already-unlocked system; protecting individual files from other authenticated users on the same device; and attackers with sustained physical access and laboratory equipment. The last exclusion is revisited in the attacker capability ladder and residual risk sections below, because parts of it still matter more than the original document assumed.</p>
+<h2>9. Architecture summary</h2>
+<p>The diagram below is the working model for this report: the boot chain running left to right from firmware through the boot manager to the OS loader, the platform security processor holding the sealed volume key, the encrypted volume it releases into, the recovery key sitting in escrow inside a cloud account, and the device's own sign-in pointed at that same account, which is the loop that makes the escrow finding what it is. Device states are laid out with the key marked present or absent in memory for each one, and the physical attack surfaces sit on the buses and ports around the whole system.</p>
+<figure>
+<img src="../images/bitlocker-threat-model.svg" alt="Threat model sketch of a full disk encryption design showing the boot chain from firmware through the boot manager to the OS loader, a platform security processor holding a sealed volume key that unlocks an encrypted volume, a recovery key escrowed in a cloud account, the device's own sign-in pointed back at that same account forming a loop, five device states along the bottom (powered off, asleep, hibernated, at the lock screen, unlocked) each marked with whether the volume key is present in memory, and physical attack surfaces marked on the platform security processor bus and on exposed ports during sleep. Four weak points are marked: the unauthenticated bus between the processor and the boot manager, a signed but obsolete boot component satisfying the sealing policy, the volume key resident in DRAM while asleep, and the escrow loop back to the sign-in account." />
+<figcaption>Threat model sketch: gold arrows are flows the design still governs. Red-brown arrows mark where that control runs out, including the loop from the device's own sign-in back to the account holding its recovery key.</figcaption>
+</figure>
+<div style="overflow-x:auto;">
+<table>
+<thead><tr><th>Step</th><th>Flow</th><th>Trust boundary crossed</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Firmware measures itself and platform configuration into the PSP</td><td>Boot / manufacturing root</td></tr>
+<tr><td>2</td><td>Firmware measures the boot manager, then transfers control to it</td><td>Code integrity boundary</td></tr>
+<tr><td>3</td><td>Boot manager measures boot configuration and the OS loader</td><td>Code integrity boundary</td></tr>
+<tr><td>4</td><td>Boot manager requests the volume key from the PSP</td><td>Main processor to PSP bus</td></tr>
+<tr><td>5</td><td>PSP compares accumulated measurements to sealed policy, releases the key on match</td><td>Main processor to PSP bus</td></tr>
+<tr><td>6</td><td>Boot manager unlocks the volume and hands off to the OS</td><td>Boot to OS handoff</td></tr>
+<tr><td>7</td><td>OS presents the sign-in screen, downstream of key release</td><td>Disk unlock to account authentication</td></tr>
+<tr><td>8</td><td>At provisioning, the recovery key is generated and uploaded to escrow</td><td>Device to cloud account or directory</td></tr>
+<tr><td>9</td><td>At sign-in, the device authenticates into the same cloud account that holds its recovery key</td><td>Device to identity provider (the loop)</td></tr>
+<tr><td>10</td><td>On lockout, the recovery key unwraps the volume key directly, bypassing steps 1 through 6</td><td>Recovery bypass boundary</td></tr>
+</tbody>
+</table>
+</div>
+<h2>10. Asset register</h2>
+<div style="overflow-x:auto;">
+<table>
+<thead><tr><th>Asset</th><th>Where it lives</th><th>Security goals</th><th>Impact if lost</th></tr></thead>
+<tbody>
+<tr><td>Volume key (VK)</td><td>Sealed inside the PSP; transiently in DRAM after release</td><td>Confidentiality, integrity</td><td>Full plaintext disclosure of the volume</td></tr>
+<tr><td>Recovery key (RK)</td><td>Generated at provisioning; escrowed to a cloud account or directory</td><td>Confidentiality, authenticity of retrieval</td><td>Equivalent to the VK; unconditional bypass of every other control</td></tr>
+<tr><td>Boot measurements and sealing policy</td><td>PSP, extend-only registers</td><td>Integrity</td><td>A falsified or loosely bound policy releases the VK to an unauthorized boot state</td></tr>
+<tr><td>PSP identity and attestation</td><td>Silicon, boot ROM rooted</td><td>Authenticity</td><td>An unauthenticated PSP cannot be trusted to be the provisioned chip</td></tr>
+<tr><td>Encrypted user data (the volume)</td><td>Fixed storage</td><td>Confidentiality (stated); integrity (not currently promised)</td><td>Confidentiality breach on VK compromise; undetected tampering regardless</td></tr>
+<tr><td>Escrow record</td><td>Cloud account or organizational directory</td><td>Confidentiality, availability, auditability</td><td>Deletion or account loss means permanent data loss; unaudited access is undetectable compromise</td></tr>
+<tr><td>Boot partition and configuration</td><td>Unencrypted fixed storage</td><td>Integrity</td><td>Attacker-writable with physical access alone</td></tr>
+<tr><td>Activation telemetry</td><td>Metrics and backend systems</td><td>Confidentiality</td><td>Aggregated, becomes a targeting list of unencrypted devices</td></tr>
+<tr><td>Sign-in account credentials</td><td>Identity provider</td><td>Confidentiality, authenticity</td><td>Compromise of this account now also compromises the disk</td></tr>
+</tbody>
+</table>
+</div>
+<h2>11. Trust boundary table</h2>
+<div style="overflow-x:auto;">
+<table>
+<thead><tr><th>Boundary</th><th>What crosses it</th><th>What enforces it</th><th>What is assumed</th></tr></thead>
+<tbody>
+<tr><td>Main processor to PSP (bus)</td><td>Measurement submissions, key release requests and responses</td><td>Physical bus protocol (LPC or SPI)</td><td>Bus is not observable, false for discrete parts</td></tr>
+<tr><td>Boot manager to PSP (logical)</td><td>Sealing policy comparison</td><td>PSP firmware logic</td><td>Firmware correctly measures what it claims to measure</td></tr>
+<tr><td>Firmware and boot manager to signing authority</td><td>Code signatures</td><td>Signature verification against embedded trust roots</td><td>Signing authority is not compromised; revocation propagates promptly</td></tr>
+<tr><td>Device to escrow account</td><td>Recovery key upload at provisioning, retrieval at recovery</td><td>Account authentication on the identity provider side</td><td>Provisioning endpoint is authenticated (it is not); account recovery flow is adequate (unexamined)</td></tr>
+<tr><td>Device sign-in to escrow account</td><td>Session authentication</td><td>Whatever authenticates the signed-in OS session</td><td>The signing-in account is a different trust domain from the account holding the key (it is not)</td></tr>
+<tr><td>Physical enclosure to a possessing attacker</td><td>Power state, exposed ports and buses</td><td>Sleep and hibernate policy; Kernel DMA Protection, post-boot only</td><td>Device is powered off when lost or stolen</td></tr>
+<tr><td>Directory to fleet devices</td><td>Managed key escrow</td><td>Directory access control</td><td>Access to escrowed keys is scoped per device, not organization-wide</td></tr>
+</tbody>
+</table>
+</div>
+<h2>12. Attacker capability ladder</h2>
+<div style="overflow-x:auto;">
+<table>
+<thead><tr><th>Level</th><th>Capabilities</th><th>In scope</th></tr></thead>
+<tbody>
+<tr><td>L0</td><td>Remote attacker, no code execution, no physical access</td><td>Not addressed, not contradicted</td></tr>
+<tr><td>L1</td><td>Malicious or compromised app running as the already signed-in user</td><td>Yes, this review's finding</td></tr>
+<tr><td>L2</td><td>Possession of a powered-off device, no credentials</td><td>Yes, the design doc's core claim</td></tr>
+<tr><td>L3</td><td>Possession of a sleeping or locked device, no credentials</td><td>Yes per this review; excluded by the design doc's implicit assumption</td></tr>
+<tr><td>L4</td><td>Bench access with hardware tools: logic analyzer, cold boot rig</td><td>Explicitly out of scope in the design doc; flagged as residual risk here</td></tr>
+<tr><td>L5</td><td>Insider or administrator with directory or support-desk access</td><td>Partially, only the escrow path is examined</td></tr>
+<tr><td>L6</td><td>Attacker who compromises the account recovery flow directly: phishing, support-desk social engineering, password reset</td><td>Yes, this is the attacker the escrow finding actually describes</td></tr>
+</tbody>
+</table>
+</div>
+<h2>13. Threat register</h2>
+<p>Twenty-six findings: five originally flagged blocking, twenty-one significant. This is the centerpiece of the report and it stays a table rather than being summarized into prose, split in two so it stays legible on a narrow screen: identification first, then assessment and disposition. Match rows by ID.</p>
+<h3>13.1 Identification</h3>
+<div style="overflow-x:auto;">
+<table>
+<thead><tr><th>ID</th><th>Threat</th><th>STRIDE category</th><th>Affected element / boundary</th><th>Attack path</th></tr></thead>
+<tbody>
+<tr><td>B1</td><td>Recovery key escrow left out of scope; unwrapping the VK via escrow bypasses every other control</td><td>Elevation of privilege</td><td>Escrow record; recovery key</td><td>Attacker reaches the account recovery flow (phish, reset, support) and pulls the RK directly</td></tr>
+<tr><td>B2</td><td>Device signs into the same account that holds its own recovery key</td><td>Elevation of privilege</td><td>Escrow record; sign-in session</td><td>Malware running as the signed-in user calls the account API and retrieves its own disk's RK; survives reimage</td></tr>
+<tr><td>B3</td><td>Sealing to signing authority admits genuine, signed, obsolete boot components</td><td>Tampering</td><td>Boot manager; sealing policy</td><td>Attacker supplies an old, validly signed, vulnerable boot component; PSP releases the VK anyway</td></tr>
+<tr><td>B4</td><td>No integrity protection for data at rest</td><td>Tampering</td><td>Encrypted volume</td><td>Attacker with offline access flips ciphertext bits; the change is undetectable, plaintext corrupts silently</td></tr>
+<tr><td>B5</td><td>Sleep state unaddressed; VK resident in DRAM</td><td>Information disclosure</td><td>Volume key; DRAM</td><td>Device is taken while asleep, the common theft state; key is live in memory the whole time</td></tr>
+<tr><td>S1</td><td>"PSP interface not observable" is an assumption, false for discrete parts</td><td>Information disclosure</td><td>Main processor to PSP bus</td><td>Logic analyzer on the bus during boot captures the VK in the clear</td></tr>
+<tr><td>S2</td><td>PSP itself is never authenticated</td><td>Spoofing</td><td>PSP identity</td><td>Nothing proves the responding chip is the provisioned one; a substitute could answer requests</td></tr>
+<tr><td>S3</td><td>No pre-boot secret means no rate limiting</td><td>Elevation of privilege</td><td>Boot path</td><td>Unlimited offline attempts against the boot path, at leisure, no lockout, no signal</td></tr>
+<tr><td>S4</td><td>Suspension window during firmware update places the key on disk unprotected</td><td>Information disclosure</td><td>Volume key; firmware update path</td><td>Attacker triggers an update, catches the key during the unprotected window</td></tr>
+<tr><td>S5</td><td>Escrow upload endpoint unauthenticated at provisioning</td><td>Spoofing</td><td>Provisioning endpoint</td><td>RK may be uploaded to an attacker-controlled endpoint at first boot</td></tr>
+<tr><td>S6</td><td>Escrow is a single point of availability failure</td><td>Denial of service</td><td>Escrow record</td><td>Account closure, suspension, or record deletion destroys the only recovery path, permanently</td></tr>
+<tr><td>S7</td><td>Silent activation; setup notice cut</td><td>Privacy, adjacent to information disclosure</td><td>User consent and notice</td><td>User never learns encryption is on or that a key copy left the device, so cannot protect the account holding it</td></tr>
+<tr><td>S8</td><td>Recovery key is static, never rotates</td><td>Elevation of privilege</td><td>Recovery key</td><td>Anyone who ever legitimately held the RK, technician or prior owner, holds it permanently</td></tr>
+<tr><td>S9</td><td>Retrieval security requirements undefined, "TBD"</td><td>Multiple</td><td>Recovery flow</td><td>No specified re-authentication, delay, notification, rate limit, or audit on the most sensitive operation in the system</td></tr>
+<tr><td>S10</td><td>Hibernation and page files write memory, including keys, outside encryption coverage</td><td>Information disclosure</td><td>Hibernation file; page file</td><td>Offline read of the hibernation or page file recovers key material never covered by the volume's own encryption</td></tr>
+<tr><td>S11</td><td>Unencrypted boot partition holds attacker-writable configuration</td><td>Tampering</td><td>Boot partition</td><td>Physical access lets an attacker rewrite boot configuration directly, no encryption in the way</td></tr>
+<tr><td>S12</td><td>Used space only encryption leaves plaintext remnants; wear leveling makes overwrite unreliable</td><td>Information disclosure</td><td>Flash storage</td><td>Forensic read of "unused" flash blocks recovers pre-encryption plaintext</td></tr>
+<tr><td>S13</td><td>Crypto erase does not revoke an escrowed key</td><td>Elevation of privilege</td><td>Recovery key; escrow record</td><td>Device is wiped or resold; the escrowed key remains valid and held by the previous owner</td></tr>
+<tr><td>S14</td><td>A single directory administrator can read every recovery key in the organization</td><td>Elevation of privilege</td><td>Directory; escrow record</td><td>One compromised or malicious admin account exposes the entire fleet's keys</td></tr>
+<tr><td>S15</td><td>Forced measurement mismatch enables mass lockout</td><td>Denial of service</td><td>Sealing policy</td><td>Attacker, or a bad update, triggers mismatch across many devices at once, pushing all of them into recovery simultaneously</td></tr>
+<tr><td>S16</td><td>Activation telemetry is, structurally, a list of unencrypted devices</td><td>Information disclosure</td><td>Telemetry pipeline</td><td>Metrics data doubles as a targeting list for exactly the devices this feature has not yet reached</td></tr>
+<tr><td>S17</td><td>No audit trail: measurements used, escrow success, or non-retrieval cannot be proven</td><td>Repudiation</td><td>Measurement log; escrow log; retrieval log</td><td>Compromise via escrow, or a disputed retrieval, leaves no record either side can point to</td></tr>
+<tr><td>S18</td><td>On-device access control for the recovery key is unspecified</td><td>Elevation of privilege</td><td>Recovery key, local</td><td>Unclear whether a standard user or its processes can request the RK locally</td></tr>
+<tr><td>S19</td><td>Local account path undefined</td><td>Multiple</td><td>Activation logic</td><td>Device ships silently unencrypted, or encrypted with an unrecoverable key; design picks neither</td></tr>
+<tr><td>S20</td><td>Port and DMA exposure while sleeping not considered</td><td>Information disclosure</td><td>Exposed ports; DRAM</td><td>Cable-connected attacker reaches a sleeping device's memory before Kernel DMA Protection's post-boot coverage applies</td></tr>
+<tr><td>S21</td><td>Threats table lists only defeated attacks; assumptions carry more risk than the threats table</td><td>Process</td><td>Design document itself</td><td>A reviewer reading only the threats table concludes the design is fully examined; it is not</td></tr>
+</tbody>
+</table>
+</div>
+<h3>13.2 Assessment and disposition</h3>
+<div style="overflow-x:auto;">
+<table>
+<thead><tr><th>ID</th><th>Likelihood</th><th>Impact</th><th>Severity</th><th>Mitigation</th><th>Residual risk</th><th>Owner</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>B1</td><td>High</td><td>Critical</td><td>Critical</td><td>Bring escrow retrieval fully into scope; require re-authentication, delay, notification, audit; stop treating account recovery as pre-approved</td><td>Even a hardened flow is only as strong as its own recovery path</td><td>Storage + Identity</td><td>Open, blocks sign-off</td></tr>
+<tr><td>B2</td><td>Medium-High</td><td>Critical</td><td>Critical</td><td>Stop escrowing the RK to the account the device signs into; use a distinct credential, a factor the device cannot supply, or split-key escrow</td><td>A separated credential is itself a target needing its own reset flow</td><td>Storage + Identity</td><td>Open, blocks sign-off</td></tr>
+<tr><td>B3</td><td>Medium</td><td>High</td><td>High</td><td>Name revocation as a dependency with an owner and a propagation SLA; consider tighter binding for high-risk device classes</td><td>Revocation always lags a disclosed break by some window</td><td>Storage + Firmware</td><td>Open, blocks sign-off</td></tr>
+<tr><td>B4</td><td>Medium</td><td>High</td><td>High</td><td>Add authenticated encryption; if infeasible short term, state explicitly that only confidentiality is promised</td><td>Retrofitting integrity does not protect data already at rest under the old scheme</td><td>Storage</td><td>Open, blocks sign-off</td></tr>
+<tr><td>B5</td><td>High</td><td>High</td><td>High</td><td>Hibernate or evict the key on lid close; otherwise remove the "protects stolen laptops" claim from the goals</td><td>Hibernate has its own exposure, see S10</td><td>Storage + Power</td><td>Open, blocks sign-off</td></tr>
+<tr><td>S1</td><td>Low-Medium</td><td>Critical</td><td>High</td><td>Require an integrated PSP, or document residual risk per configuration for discrete parts</td><td>Physical attacks against one targeted individual remain possible regardless</td><td>Storage + Hardware</td><td>Open, tracked</td></tr>
+<tr><td>S2</td><td>Low</td><td>High</td><td>High</td><td>Authenticate the PSP's identity as part of the release protocol</td><td>Adds complexity to a path that must stay reliable at scale</td><td>Firmware</td><td>Open, tracked</td></tr>
+<tr><td>S3</td><td>High</td><td>Medium</td><td>Medium</td><td>Promote the optional pre-boot PIN to a supported, encouraged configuration so there is something to rate limit</td><td>Optional means many devices remain unprotected by it</td><td>Storage</td><td>Open, tracked</td></tr>
+<tr><td>S4</td><td>Low-Medium</td><td>High</td><td>Medium</td><td>Close the suspension window; treat firmware updates as part of the same threat model as boot</td><td>Update mechanisms are an inherently privileged, complex path</td><td>Storage + Firmware</td><td>Open, tracked</td></tr>
+<tr><td>S5</td><td>Medium</td><td>Critical</td><td>High</td><td>Authenticate the provisioning endpoint</td><td>First-boot provisioning is an inherently trust-on-first-use moment</td><td>Identity</td><td>Open, tracked</td></tr>
+<tr><td>S6</td><td>Medium</td><td>High</td><td>High</td><td>Define a secondary escrow or export path; define account-closure handling explicitly</td><td>Any single-account escrow model retains some availability dependency</td><td>Identity</td><td>Open, tracked</td></tr>
+<tr><td>S7</td><td>High</td><td>Medium</td><td>Medium</td><td>Reinstate the setup notice; get Legal and Privacy sign-off in writing</td><td>Ordinary consent fatigue, once notice is restored</td><td>Storage + Legal</td><td>Open, blocks setup-flow ship pending Legal/Privacy</td></tr>
+<tr><td>S8</td><td>Medium</td><td>Medium-High</td><td>Medium</td><td>Rotate the key after every retrieval and after any suspected exposure</td><td>Rotation only helps once implemented; past exposures are unaffected</td><td>Storage</td><td>Open, tracked</td></tr>
+<tr><td>S9</td><td>High</td><td>High</td><td>High</td><td>Specify re-authentication strength, delay, notification, rate limiting, audit logging as requirements, not UX decisions</td><td>None if fully specified and implemented; today's risk is entirely the gap</td><td>Identity</td><td>Open, tracked</td></tr>
+<tr><td>S10</td><td>Medium</td><td>High</td><td>Medium</td><td>Bring hibernation and page files into the same encryption coverage as the volume</td><td>Historical hibernation files predate the fix</td><td>Storage + Power</td><td>Open, tracked</td></tr>
+<tr><td>S11</td><td>Low-Medium</td><td>Medium</td><td>Medium</td><td>Sign or authenticate boot configuration even if the partition itself stays unencrypted</td><td>Full protection would need encrypting boot config, which conflicts with reading it pre-key-release</td><td>Storage</td><td>Open, tracked</td></tr>
+<tr><td>S12</td><td>Medium</td><td>Medium</td><td>Medium</td><td>Encrypt full volumes at provisioning rather than used space only; document residual risk for retrofit encryption</td><td>Cannot be fully closed for drives already encrypted in place</td><td>Storage</td><td>Open, tracked</td></tr>
+<tr><td>S13</td><td>Medium</td><td>High</td><td>High</td><td>Invalidate escrow on crypto erase as part of the wipe procedure</td><td>Requires escrow and device state to stay synchronized, not guaranteed offline</td><td>Storage + Identity</td><td>Open, tracked</td></tr>
+<tr><td>S14</td><td>Medium</td><td>Critical</td><td>High</td><td>Scope key-read access per device with its own audit trail, not a standing organization-wide grant</td><td>Some concentration of trust in directory administration is close to irreducible</td><td>Identity</td><td>Open, tracked</td></tr>
+<tr><td>S15</td><td>Low-Medium</td><td>High</td><td>Medium</td><td>Treat lockout-at-scale as a denial of service class, not only a security feature; stage measurement policy changes</td><td>Any fail-closed design retains this trade-off by construction</td><td>Storage</td><td>Open, tracked</td></tr>
+<tr><td>S16</td><td>High</td><td>Medium</td><td>Medium</td><td>Stop emitting device-level unencrypted-status telemetry, or restrict and audit its access tightly</td><td>Aggregate metrics still say something about fleet posture</td><td>Storage + Privacy</td><td>Open, tracked</td></tr>
+<tr><td>S17</td><td>High</td><td>Medium</td><td>Medium</td><td>Log measurement values used at release, escrow upload confirmation, and retrieval events, independently auditable</td><td>Logging after the fact cannot undo an already-unrecorded past event</td><td>Storage + Identity</td><td>Open, tracked</td></tr>
+<tr><td>S18</td><td>Unknown, unspecified today</td><td>High if unrestricted</td><td>Medium</td><td>Specify and enforce local access control on the RK, at least as strong as other secret material</td><td>Depends entirely on the eventual specification</td><td>Storage</td><td>Open, tracked</td></tr>
+<tr><td>S19</td><td>Medium</td><td>Medium</td><td>Medium</td><td>Decide and document one of the two outcomes explicitly rather than leaving both possible</td><td>Whichever is chosen carries a real trade-off</td><td>Storage</td><td>Open, tracked</td></tr>
+<tr><td>S20</td><td>Low-Medium</td><td>High</td><td>Medium</td><td>Document port and DMA exposure explicitly; consider port lockdown while asleep</td><td>Pre-boot and pre-OS windows stay outside typical DMA protections</td><td>Storage</td><td>Open, tracked</td></tr>
+<tr><td>S21</td><td>High</td><td>Low directly, high indirectly</td><td>Medium</td><td>Require at least one unresolved row per major component in any threats table submitted for review</td><td>A process fix, not a technical one; recurrence is a management problem</td><td>Storage</td><td>Open, tracked</td></tr>
+</tbody>
+</table>
+</div>
+<h2>14. Attack trees</h2>
+<pre><code>Goal: read plaintext from an encrypted volume, or write undetected changes to it
+|
+|-- Extract the volume key from hardware
+|   |-- Sniff a discrete PSP's bus in the clear, LPC or SPI [S1]
+|   |-- Cold boot or DMA the key out of DRAM while the device sleeps [B5, S20]
+|   +-- Fault or probe an integrated PSP (higher cost, still bounded)
+|
+|-- Bypass release without extracting the key
+|   |-- Present a genuine, signed, obsolete boot component, revocation lag [B3]
+|   |-- Exploit an unwiped key across a soft reboot, Bitpixie class bug
+|   |-- Spoof the PSP's identity to a caller expecting attestation [S2]
+|   +-- Roll the measurement policy back to a permissive configuration
+|
+|-- Go around the boot chain entirely
+|   |-- Retrieve the recovery key from its escrow account
+|   |   |-- Phish or reset the account holding it [B1]
+|   |   |-- Run as the already signed in user and read it out [B2]
+|   |   +-- Compel or compromise the escrow holder: directory admin, support [S14]
+|   +-- Exploit an unauthenticated escrow upload endpoint at provisioning [S5]
+|
+|-- Force the system around its own protections
+|   |-- Trigger repeated measurement mismatch to force lockout [S15]
+|   |-- Trigger a firmware-update suspension window [S4]
+|   +-- Exhaust or corrupt state to push the user into the recovery path
+|
+|-- Skip the key entirely and attack the ciphertext or its neighbors
+|   |-- Modify ciphertext offline with no integrity check to catch it [B4]
+|   |-- Read plaintext remnants left by used space only encryption [S12]
+|   +-- Read the unencrypted boot partition's attacker-writable configuration [S11]
+|
++-- Undermine accountability rather than the cryptography
+    |-- Exploit the missing audit trail to act without a provable trace [S17]
+    |-- Harvest activation telemetry as a list of unencrypted targets [S16]
+    +-- Hold a key past its useful life: static RK, no rotation after exposure [S8, S13]
+</code></pre>
+<h2>15. Security invariants</h2>
+<h3>State and scope</h3>
+<ul>
+<li>The design states explicitly which power and session states it protects, and which it does not.</li>
+<li>Sleep and hibernate are treated as first class states in the model, not deferred as another team's open question.</li>
+<li>The lock screen is documented as a user interface control, never represented as a cryptographic boundary.</li>
+</ul>
+<h3>Authentication and possession</h3>
+<ul>
+<li>Where no pre-boot secret exists, the document states plainly that possession is the credential and that rate limiting does not apply.</li>
+<li>A pre-boot PIN, where supported, is a documented, supported configuration, not an unlisted concession.</li>
+<li>Signing into the account and unlocking the disk are documented as separate events with no implicit dependency between them.</li>
+</ul>
+<h3>Measurement and revocation</h3>
+<ul>
+<li>The sealing policy states what is not measured, in addition to what is.</li>
+<li>Revocation is named as a dependency with a named owner and a defined propagation time.</li>
+<li>Anti-rollback prevents replay of an old sealed state or an old, validly signed firmware measurement.</li>
+<li>The platform security processor's own identity is authenticated, not merely assumed from its responses.</li>
+</ul>
+<h3>Data at rest</h3>
+<ul>
+<li>The document states whether it promises integrity, confidentiality, or both, and does not let one stand in silently for the other.</li>
+<li>Full volume encryption is used at provisioning, or the plaintext remnants left by used-space-only encryption are documented as residual risk.</li>
+<li>The boot partition's exposure to attacker-writable configuration is documented, not left implicit.</li>
+</ul>
+<h3>Recovery and escrow</h3>
+<ul>
+<li>The recovery key is not escrowed to the same account the device signs into.</li>
+<li>The escrow upload endpoint is authenticated at provisioning time.</li>
+<li>Retrieval requires re-authentication, a delay, notification to the account owner, rate limiting, and an audit record.</li>
+<li>The key rotates after every retrieval and after any suspected exposure.</li>
+<li>Device wipe or crypto erase is documented as not revoking an already escrowed key, or escrow is explicitly invalidated as part of that process.</li>
+</ul>
+<h3>Fleet and availability</h3>
+<ul>
+<li>No single directory administrator can read every recovery key in an organization without that access itself being audited.</li>
+<li>Deliberate lockout through a forced measurement mismatch is treated as a denial of service path, not only as a security feature.</li>
+<li>Activation telemetry is not a queryable list of which devices remain unencrypted.</li>
+</ul>
+<h2>16. Residual risk register</h2>
+<div style="overflow-x:auto;">
+<table>
+<thead><tr><th>Risk</th><th>Why it cannot be fully mitigated</th><th>Accepted by</th><th>Review date</th></tr></thead>
+<tbody>
+<tr><td>Possession remains the credential wherever the pre-boot PIN is off</td><td>The PIN is an available mitigation, not a universal one; default configuration leaves this open</td><td>Storage engineering director (named owner recommended per security review)</td><td>Next major release cycle</td></tr>
+<tr><td>Revocation always lags a disclosed break</td><td>Detection, decision, and propagation take real time across a real fleet</td><td>Storage and Firmware directors</td><td>Continuous, reviewed per major disclosure</td></tr>
+<tr><td>A separated retrieval credential is itself a target</td><td>Any secret needs its own reset flow; this shrinks the problem, it does not remove it</td><td>Identity director</td><td>12 months post-launch</td></tr>
+<tr><td>Retrofitting integrity does not protect already-shipped drives</td><td>Cannot rewrite history for volumes already encrypted under the old scheme</td><td>Storage director</td><td>At next full-disk re-provisioning</td></tr>
+<tr><td>Narrowing fleet key visibility reduces, but does not remove, concentrated trust</td><td>Some administrative access to a directory is structurally necessary</td><td>Identity director</td><td>Annual access review</td></tr>
+<tr><td>Physical possession plus unlimited time still favors a targeted attacker</td><td>No purely software control defeats an attacker holding the device with lab tools</td><td>Accepted at product level (Storage VP)</td><td>Revisit if hardware generation changes</td></tr>
+</tbody>
+</table>
+</div>
+<h2>17. Assumptions register</h2>
+<p>Six assumptions in the original design document, and at least three of them are load bearing. The table below separates the ones that were really requirements in disguise from the one that was really an accepted risk, and names the finding each one turned into.</p>
+<div style="overflow-x:auto;">
+<table>
+<thead><tr><th>Assumption as written</th><th>Really a...</th><th>Why</th><th>Related finding</th></tr></thead>
+<tbody>
+<tr><td>The PSP is trustworthy and its interface to the platform is not observable</td><td>Requirement (hardware)</td><td>Only true for an integrated PSP; a discrete part fails this on the bus</td><td>S1</td></tr>
+<tr><td>Firmware correctly measures what it claims to measure</td><td>Requirement</td><td>A precondition for the entire sealing model, not a safe default to assume</td><td>B3</td></tr>
+<tr><td>Secure boot is enabled and functioning on supported hardware</td><td>Requirement</td><td>Should be a stated hardware and configuration requirement, not an assumption</td><td>B3, S1</td></tr>
+<tr><td>The signing authority for boot components is not compromised</td><td>Accepted risk (organizational)</td><td>Key custody and insider risk at the signing authority is a standing exposure engineering cannot assume away</td><td>B3</td></tr>
+<tr><td>The account recovery flow protecting escrowed keys is adequate</td><td>The load-bearing one: was an assumption, is actually the whole finding</td><td>Nothing in the document examines this flow; the review found it does not hold</td><td>B1, B2, S5, S6</td></tr>
+<tr><td>Devices are powered off when lost or stolen</td><td>False, and should never have been an assumption</td><td>Contradicted by how devices are actually stolen</td><td>B5</td></tr>
+</tbody>
+</table>
+</div>
+<p>The fifth row is the one worth sitting with. An assumption that was never verified turned out to be the entire finding that invalidates the rest of the document. A threats table with no unresolved rows is not a threat model, and an assumptions section is where the unexamined risk actually lives.</p>
+<h2>18. Validation and assurance plan</h2>
+<div style="overflow-x:auto;">
+<table>
+<thead><tr><th>Check</th><th>Method</th><th>Expected result</th></tr></thead>
+<tbody>
+<tr><td>Whether your own recovery key is escrowed, and to which account</td><td>Inspect account recovery-key storage or directory console</td><td>Escrow target identified; a match to the sign-in account flags B1/B2 exposure</td></tr>
+<tr><td>Whether the device sleeps or hibernates on lid close</td><td>Inspect power configuration</td><td>Hibernate confirmed, or B5 exposure accepted explicitly</td></tr>
+<tr><td>Whether the platform security processor is discrete or integrated</td><td>Inspect hardware specification or TPM properties</td><td>Integrated confirmed, or S1 residual risk documented</td></tr>
+<tr><td>Whether a pre-boot PIN is available and enabled</td><td>Inspect boot security configuration</td><td>PIN available and on, or S3 residual risk documented</td></tr>
+<tr><td>Who can read recovery keys in the directory, for fleet owners</td><td>Audit directory role assignments</td><td>Access scoped per device with logging, not standing org-wide read</td></tr>
+<tr><td>Whether the PSP can be spoofed from software</td><td>Protocol-level test against the release request and response path</td><td>Request rejected, or challenge fails, without genuine hardware</td></tr>
+<tr><td>Whether the provisioning endpoint accepts unauthenticated uploads</td><td>Endpoint security test at provisioning time</td><td>Request rejected without valid device credentials</td></tr>
+<tr><td>Whether offline ciphertext tampering is detected</td><td>Modify volume ciphertext offline, then remount</td><td>Modification detected and blocked</td></tr>
+<tr><td>Whether the key is exposed during a firmware update</td><td>Instrumented update test through the suspension window</td><td>No plaintext or unprotected key material observed on disk</td></tr>
+<tr><td>Whether retrieval is properly gated and logged</td><td>Request a recovery key retrieval, then review logs</td><td>Re-authentication, delay, notification, and an audit record are all present</td></tr>
+<tr><td>Whether crypto erase actually revokes the escrowed key</td><td>Wipe a previously escrowed device, then attempt retrieval of its old key</td><td>Old escrowed key is invalidated</td></tr>
+<tr><td>Whether the threats table has any unresolved rows</td><td>Documentation review, applied to this and future revisions</td><td>At least one open, unresolved risk per major component</td></tr>
+</tbody>
+</table>
+</div>
+<h2>19. Findings summary</h2>
+<table>
+<thead><tr><th>Severity</th><th>Count</th></tr></thead>
+<tbody>
+<tr><td>Critical</td><td>2</td></tr>
+<tr><td>High</td><td>10</td></tr>
+<tr><td>Medium</td><td>14</td></tr>
+<tr><td>Total</td><td>26</td></tr>
+</tbody>
+</table>
+<p>All five originally blocking findings, B1 through B5, must be resolved or formally accepted before sign-off. B1 requires a joint session with Identity and cannot be closed by Storage alone. S7 additionally blocks the setup flow specifically, pending a written answer from Legal and Privacy. The remaining twenty findings can proceed in parallel with implementation.</p>
+<p><strong>Recommendation:</strong> resolve B1 through B5 before sign-off. If the release train genuinely cannot accommodate that, the correct action is to record the gap as an explicitly accepted risk with a named director as owner, not to ship it as an unexamined assumption. That is the difference between this report and the document it reviews: every risk here is either mitigated, or named, dated, and owned.</p>
+<h2>20. Final verdict</h2>
+<p>Several of the mitigations above reintroduce exactly the friction the original design existed to remove: a distinct recovery credential is one more thing to lose, a mandatory delay on retrieval is one more thing standing between a locked-out user and their data, a setup notice is one more click in a flow that was being actively shortened. That tension does not resolve on its own. It gets decided, on the record, by someone with the authority to accept the cost, which is the entire point of writing any of this down.</p>
+<p>The broader lesson sits underneath the specific findings. The encryption was never really the product. Key management was the product, and across most of this design, it had been quietly outsourced to the identity system, one decision at a time, none of them wrong in isolation, all of them adding up to a disk whose real protection was only ever as strong as a password reset flow nobody on the storage team had been asked to review. Structure found the seams a reviewer did not think to look for. Judgment decided which of those seams actually mattered enough to block a ship date. Neither one alone would have produced this report.</p>
+<hr/>
+<h2>Sources</h2>
+<ul>
+<li><a href="https://pulsesecurity.co.nz/articles/TPM-sniffing">Extracting BitLocker keys from a TPM, Pulse Security</a></li>
+<li><a href="https://www.hp.com/us-en/newsroom/press-releases/2026/hp-leads-security-for-the-future-of-work.html">HP TPM Guard announcement, HP Imagine 2026</a></li>
+<li><a href="https://msrc.microsoft.com/update-guide/vulnerability/CVE-2023-21563">CVE-2023-21563, BitLocker Security Feature Bypass Vulnerability, MSRC</a></li>
+<li><a href="https://support.microsoft.com/en-us/topic/enterprise-deployment-guidance-for-cve-2023-24932-88b8f034-20b7-4a45-80cb-c6049b0f9967">Enterprise deployment guidance for the Secure Boot certificate rotation, Microsoft</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/security/hardware-security/kernel-dma-protection-for-thunderbolt">Kernel DMA Protection for Thunderbolt, Microsoft Learn</a></li>
+<li><a href="https://support.microsoft.com/en-us/windows/security/encryption/device-encryption-in-windows">Device encryption in Windows, Microsoft Support</a></li>
+</ul>
+  </div>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+</body>
+</html>
