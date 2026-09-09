@@ -82,3 +82,16 @@ See [SECURITY.md](SECURITY.md) for the responsible-disclosure policy.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Playable portfolio
+
+`index.html` is now a 3D mountain drive. Each destination opens an original portfolio page in a modal reader. Select a destination to jump there immediately, or drive with WASD / arrow keys. Space applies the handbrake; C changes the camera; Escape pauses. Touch controls are available on touch devices. Engine sound is opt-in.
+
+The original homepage is preserved byte-for-byte as `profile.html`. Findings, projects, writing, all posts, About, images, and résumé files remain unchanged. The “Read the portfolio” link provides direct access without WebGL or JavaScript. The original pages remain independently addressable.
+
+- `assets/drive.js`: 3D scene, vehicle controls, destination markers, and audio.
+- `assets/portfolio.js`: navigation, reading dialog, touch controls, and graceful fallback.
+- `drive.css`: game interface and responsive layout.
+- `assets/vendor/`: locally vendored Three.js and Sky helper, with the upstream MIT license.
+
+GitHub Pages still serves the root directly; no runtime build or package installation is needed. For a private Sites preview only, run `python3 scripts/build-static.py`; `.openai/hosting.json` points to that output. Do not commit `dist/`.
