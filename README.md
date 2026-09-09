@@ -83,15 +83,18 @@ See [SECURITY.md](SECURITY.md) for the responsible-disclosure policy.
 
 MIT — see [LICENSE](LICENSE).
 
-## Playable portfolio
+## Driveable portfolio
 
-`index.html` is now a 3D mountain drive. Each destination opens an original portfolio page in a modal reader. Select a destination to jump there immediately, or drive with WASD / arrow keys. Space applies the handbrake; C changes the camera; Escape pauses. Touch controls are available on touch devices. Engine sound is opt-in.
+The homepage is a small explorable 3D campus. The car is the navigation: visitors can drive freely with WASD / arrow keys, click a building, or choose a destination. Automatic navigation drives the car along the circular road and parks at the selected place. Arrival reveals the original portfolio content alongside the scene.
 
-The original homepage is preserved byte-for-byte as `profile.html`. Findings, projects, writing, all posts, About, images, and résumé files remain unchanged. The “Read the portfolio” link provides direct access without WebGL or JavaScript. The original pages remain independently addressable.
+Six physical destinations correspond to Overview, Findings, Projects, Writing, About, and Contact. There are no race objectives, timers, scores, or unlocks. All content is immediately accessible through navigation. Space brakes, C switches between overview and follow cameras, Escape closes content or pauses the drive. Touch controls support phones. The map-view button shows the entire campus.
 
-- `assets/drive.js`: 3D scene, vehicle controls, destination markers, and audio.
-- `assets/portfolio.js`: navigation, reading dialog, touch controls, and graceful fallback.
-- `drive.css`: game interface and responsive layout.
-- `assets/vendor/`: locally vendored Three.js and Sky helper, with the upstream MIT license.
+Content is read from the existing HTML pages and inserted into the side panel without rewriting its wording. Internal portfolio links drive the car to the corresponding place; writeups open within the same panel. External links retain their destinations. `profile.html` preserves the original homepage byte-for-byte. The original pages, articles, images, and résumé documents remain independently accessible. The “Read portfolio” link works without JavaScript or WebGL.
 
-GitHub Pages still serves the root directly; no runtime build or package installation is needed. For a private Sites preview only, run `python3 scripts/build-static.py`; `.openai/hosting.json` points to that output. Do not commit `dist/`.
+- `assets/campus.js`: 3D places, car, controls, lighting, and camera.
+- `assets/navigation.mjs`: destinations and automatic route following.
+- `assets/portfolio.js`: arrival-driven content and navigation.
+- `drive.css`: responsive interface and original-content reader styling.
+- `assets/vendor/`: locally vendored Three.js and Sky with the upstream MIT license.
+
+GitHub Pages still serves the repository root with no build step or package installation. Run `python3 -m http.server 8000` to preview locally. For a private Sites preview only, run `python3 scripts/build-static.py`; `.openai/hosting.json` points to the staged output. Do not commit `dist/`.
