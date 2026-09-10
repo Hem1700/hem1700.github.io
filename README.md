@@ -83,19 +83,18 @@ See [SECURITY.md](SECURITY.md) for the responsible-disclosure policy.
 
 MIT — see [LICENSE](LICENSE).
 
-## Driveable portfolio
+## Driveable portfolio playground
 
-The homepage is a sculptural 3D island with open portfolio exhibits. The car is the navigation: visitors can drive freely with WASD / arrow keys, click a building, or choose a destination. Automatic navigation drives the car along the circular road and parks at the selected place. Arrival reveals the original portfolio content alongside the scene.
+The homepage is a free-roam 3D playground with a detailed car, two ramps, and 36 movable cones, crates and barrels. Explore in any order, knock objects over, or follow optional automatic navigation to a portfolio exhibit. Manual driving never forces the reader open: park near a place and press E or use the onscreen Explore button.
 
-Six physical destinations correspond to Overview, Findings, Projects, Writing, About, and Contact. There are no race objectives, timers, scores, or unlocks. All content is immediately accessible through navigation. Space brakes, C switches between overview and follow cameras, Escape closes content or pauses the drive. Touch controls support phones. The map-view button shows the entire campus.
+- WASD / arrows: accelerate, reverse, and steer.
+- Space: brake. R: restore the car and loose objects. C: change camera.
+- Escape: close content or pause/resume.
+- Touch driving buttons and onscreen reset are available on phones.
+- Selecting a place traces a visible route and drives there. Arriving through automatic navigation opens its original content.
 
-Content is read from the existing HTML pages and inserted into the side panel without rewriting its wording. Internal portfolio links drive the car to the corresponding place; writeups open within the same panel. External links retain their destinations. `profile.html` preserves the original homepage byte-for-byte. The original pages, articles, images, and résumé documents remain independently accessible. The “Read portfolio” link works without JavaScript or WebGL.
+The original homepage is preserved exactly in `profile.html`. Existing résumé pages, writeups, images and documents are unchanged, and content is read directly from those pages. Visitors can use “Read portfolio” without WebGL or JavaScript. GitHub Pages continues serving the repository root with no build step.
 
-- `assets/campus.js`: open research terminals, project workshop, library, experience timeline, contact garden, car, controls, lighting, and cameras.
-- The island opens unobstructed; content appears when you arrive. Screen-projected place labels remain readable and clickable.
-- `assets/navigation.mjs`: destinations and automatic route following.
-- `assets/portfolio.js`: arrival-driven content and navigation.
-- `drive.css`: responsive interface and original-content reader styling.
-- `assets/vendor/`: locally vendored Three.js and Sky with the upstream MIT license.
+`assets/campus.js` creates the world, `assets/navigation.mjs` plans routes, `assets/physics.mjs` handles movable-object collisions, and `assets/portfolio.js` connects movement to original content. The car model and credits are in `assets/models/`; Three.js and its MIT license are vendored in `assets/vendor/`.
 
-GitHub Pages still serves the repository root with no build step or package installation. Run `python3 -m http.server 8000` to preview locally. For a private Sites preview only, run `python3 scripts/build-static.py`; `.openai/hosting.json` points to the staged output. Do not commit `dist/`.
+Run `python3 -m http.server 8000` for a local preview. `python3 scripts/build-static.py` stages the unchanged static architecture for private Sites hosting when available.
