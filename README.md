@@ -85,13 +85,14 @@ MIT — see [LICENSE](LICENSE).
 
 ## Driveable portfolio
 
-The homepage is a small explorable 3D campus. The car is the navigation: visitors can drive freely with WASD / arrow keys, click a building, or choose a destination. Automatic navigation drives the car along the circular road and parks at the selected place. Arrival reveals the original portfolio content alongside the scene.
+The homepage is a sculptural 3D island with open portfolio exhibits. The car is the navigation: visitors can drive freely with WASD / arrow keys, click a building, or choose a destination. Automatic navigation drives the car along the circular road and parks at the selected place. Arrival reveals the original portfolio content alongside the scene.
 
 Six physical destinations correspond to Overview, Findings, Projects, Writing, About, and Contact. There are no race objectives, timers, scores, or unlocks. All content is immediately accessible through navigation. Space brakes, C switches between overview and follow cameras, Escape closes content or pauses the drive. Touch controls support phones. The map-view button shows the entire campus.
 
 Content is read from the existing HTML pages and inserted into the side panel without rewriting its wording. Internal portfolio links drive the car to the corresponding place; writeups open within the same panel. External links retain their destinations. `profile.html` preserves the original homepage byte-for-byte. The original pages, articles, images, and résumé documents remain independently accessible. The “Read portfolio” link works without JavaScript or WebGL.
 
-- `assets/campus.js`: 3D places, car, controls, lighting, and camera.
+- `assets/campus.js`: open research terminals, project workshop, library, experience timeline, contact garden, car, controls, lighting, and cameras.
+- The island opens unobstructed; content appears when you arrive. Screen-projected place labels remain readable and clickable.
 - `assets/navigation.mjs`: destinations and automatic route following.
 - `assets/portfolio.js`: arrival-driven content and navigation.
 - `drive.css`: responsive interface and original-content reader styling.
