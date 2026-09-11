@@ -85,11 +85,11 @@ MIT — see [LICENSE](LICENSE).
 
 ## Driveable portfolio playground
 
-The homepage is a physics sandbox in the spirit of bruno-simon.com: a chunky 4x4 on real raycast suspension, your name in giant pixel letters to crash through, a brick wall, jump ramps, and cones, crates and barrels that tumble. Portfolio exhibits sit around the island; drive up to one and press E, or pick a place and the car drives itself there and opens the original content.
+The homepage is a physics sandbox in the spirit of bruno-simon.com: a chunky 4x4 on real raycast suspension, your name in giant pixel letters to crash through, a brick wall, jump ramps, and cones, crates and barrels that tumble. There are no walls: the ground runs on forever, exhibit platforms can be driven onto, and street lamps fall over when you hit them. Portfolio exhibits sit around the island; drive up to one and press E, or pick a place and the car drives itself there and opens the original content. Taking the wheel always works, even with a page open: the reader closes and you drive off.
 
 - W A S D / arrows: drive and steer. Shift: boost. Space: handbrake. C: change camera.
 - R: put the car and every loose object back. The car also rights itself if it lands on its roof.
-- Escape: close content or pause/resume. Any drive key resumes a paused drive.
+- Escape: close content or pause/resume. Any drive key resumes a paused drive, and switching windows never pauses it.
 - Touch driving buttons are available on phones.
 
 The original homepage is preserved exactly in `profile.html`. Existing résumé pages, writeups, images and documents are unchanged, and content is read directly from those pages. Visitors can use “Read portfolio” without WebGL or JavaScript. GitHub Pages continues serving the repository root with no build step.

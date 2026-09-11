@@ -18,7 +18,8 @@ export function createRoute(position,destination){
  const nodes=[...roadPoints,{x:position.x,z:position.z},{x:destination.x,z:destination.z}],n=nodes.length,start=n-2,end=n-1,edges=nodes.map(()=>[]);const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
  function link(a,b){const weight=distance(nodes[a],nodes[b]);edges[a].push([b,weight]);edges[b].push([a,weight]);}
  for(let i=0;i<roadPoints.length;i++)link(i,(i+1)%roadPoints.length);
- for(const index of [start,end]){const candidates=roadPoints.map((p,i)=>({i,d:distance(nodes[index],p)})).filter(c=>clearSegment(nodes[index],nodes[c.i])).sort((a,b)=>a.d-b.d).slice(0,3);candidates.forEach(c=>link(index,c.i));}
+ // Free roaming can leave the car anywhere (on a platform, far off the island); if nothing is clearly reachable, join the nearest road points anyway.
+ for(const index of [start,end]){const nearest=roadPoints.map((p,i)=>({i,d:distance(nodes[index],p)})).sort((a,b)=>a.d-b.d);const clear=nearest.filter(c=>clearSegment(nodes[index],nodes[c.i]));(clear.length?clear:nearest).slice(0,3).forEach(c=>link(index,c.i));}
  const distances=Array(n).fill(Infinity),prev=Array(n).fill(-1),seen=new Set();distances[start]=0;
  for(let step=0;step<n;step++){let u=-1;for(let i=0;i<n;i++)if(!seen.has(i)&&(u===-1||distances[i]<distances[u]))u=i;if(u<0||!Number.isFinite(distances[u]))break;if(u===end)break;seen.add(u);for(const [v,w] of edges[u])if(distances[u]+w<distances[v]){distances[v]=distances[u]+w;prev[v]=u;}}
  if(!Number.isFinite(distances[end]))throw new Error('No clear route available');const route=[];for(let u=end;u!==start;u=prev[u])route.unshift({...nodes[u]});return route;
