@@ -1,81 +1,13 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Hem Parekh — Security Engineer</title>
-<meta name="description" content="Hem Parekh — security engineer focused on memory-safety and vulnerability research. Upstream fixes in the Linux kernel, PyTorch, and curl." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css" />
-</head>
-<body>
-
-<nav>
-  <div class="wrap">
-    <a href="index.html" class="name">hem parekh</a>
-    <div class="links">
-      <a href="findings.html">Findings</a>
-      <a href="projects.html">Projects</a>
-      <a href="writing.html">Writing</a>
-      <a href="about.html">About</a>
-      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
-    </div>
-  </div>
-</nav>
-
-<header class="hero wrap">
-  <div class="loc">Seattle · Security &amp; Vulnerability Research</div>
-  <h1>I find memory-safety bugs by reading the code, and ship the fix upstream.</h1>
-  <p>Security engineer at Amazon. I read production C/C++ and systems code looking for the one path that drifted from its safe siblings — a missing bounds check, an unchecked attacker-controlled index — then prove it with a sanitizer and send the patch upstream.</p>
-  <div class="meta">
-    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
-    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github.com/Hem1700</a>
-    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
-  </div>
-</header>
-
-<section class="wrap" style="padding:34px 0 70px">
-  <div class="eyebrow reveal">Selected findings</div>
-
-  <a class="finding reveal" href="findings.html">
-    <div class="top">
-      <h3>Heap out-of-bounds read in the Linux kernel's SMB server</h3>
-      <span class="status live">Applied · stable</span>
-    </div>
-    <p><code>smb_check_perm_dacl()</code> failed to verify an ACE was large enough to hold its declared sub-authorities, letting an authenticated client trigger an OOB read past the security-descriptor allocation. Fixed by adding the missing bounds check; Cc'd to stable.</p>
-    <div class="where">linux · fs/smb/server/smbacl.c · ksmbd</div>
-  </a>
-
-  <a class="finding reveal" href="findings.html">
-    <div class="top">
-      <h3>Crashing PyTorch with a 176-byte model file</h3>
-      <span class="status live">Open PR</span>
-    </div>
-    <p>An attacker-controlled <code>class_type</code> index from an untrusted flatbuffer was used in an unchecked <code>operator[]</code> and dereferenced — a crafted module passes the verifier yet SIGSEGVs. Fix routes both call sites through the bounds-checked accessor.</p>
-    <div class="where">pytorch · torch/csrc/jit/mobile/flatbuffer_loader.cpp</div>
-  </a>
-
-  <div class="next reveal" style="margin-top:30px">
-    <a href="findings.html">All findings →</a>
-    <a href="writing.html">Writing →</a>
-  </div>
-</section>
-
-<footer class="wrap">
-  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
-  <div class="links">
-    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
-    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
-    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
-  </div>
-  <div class="fine">© 2026 Hem Parekh</div>
-</footer>
-
-<script>
-  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
-  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-</script>
-</body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hem Parekh — Security Engineer</title><meta name="description" content="Hem Parekh — security engineer focused on memory-safety and vulnerability research. Drive through findings, projects, writing, and experience."><link rel="stylesheet" href="drive.css"><script type="importmap">{"imports":{"three":"./assets/vendor/three.module.js"}}</script></head><body>
+<div id="world" tabindex="-1" aria-label="Driveable 3D portfolio. Use WASD or arrow keys to drive; select a place for automatic navigation."></div>
+<header class="masthead"><a class="identity" href="profile.html"><b>HP<span>↗</span></b><span>HEM PAREKH<small>SECURITY & VULNERABILITY RESEARCH</small></span></a><div class="top-actions"><button id="camera">Follow car ◇</button><button id="reset" title="Reset car and loose objects (R)">Reset ↻</button><a href="profile.html">Read portfolio ↗</a><a href="Hem_Parekh_Resume.pdf" target="_blank" rel="noopener">Résumé ↓</a></div></header>
+<main><section class="orientation"><span class="eyebrow">SEATTLE · SECURITY ENGINEER</span><h1>HEM<br/>PAREKH<span>.</span></h1><p>Security engineer at Amazon.<br/>A little world of things I’ve<br/>found, built, and written.</p><button id="begin-tour">Let’s explore <span>↗</span></button><button id="tour-findings">Drive to my findings →</button><small>Drive anywhere. Knock things over.<br/>Find my work along the way.</small></section>
+<aside id="reader" aria-labelledby="reader-title"><header class="reader-bar"><div><span class="eyebrow" id="chapter">YOU’RE AT</span><h2 id="reader-title" tabindex="-1">Overview</h2></div><button id="close" aria-label="Close content and drive freely">×</button></header><div id="reader-body" tabindex="0"><p>Loading portfolio…</p></div><footer class="reader-bottom"><a id="full-page" href="profile.html" target="_blank" rel="noopener">Read full page ↗</a><button id="next-place">Drive to Findings →</button></footer></aside>
+<div id="arrival" hidden><span id="arrival-label">You’re near Findings</span><button id="enter-place">Explore →</button></div>
+</main>
+<div class="journey-status" role="status"><i></i><span id="status">Choose a place to explore</span><button id="pause" hidden>Pause</button></div>
+<nav class="places" aria-label="Drive to a portfolio destination"><span class="places-label">GO TO</span><button data-destination="0"><i style="--dot:#e8f4aa"></i>Overview</button><button data-destination="1"><i style="--dot:#81dcc9"></i>Findings</button><button data-destination="2"><i style="--dot:#f0bc78"></i>Projects</button><button data-destination="3"><i style="--dot:#aabcf2"></i>Writing</button><button data-destination="4"><i style="--dot:#d6b1e8"></i>About</button><button data-destination="5"><i style="--dot:#edac9e"></i>Contact</button></nav>
+<div class="drive-help"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows to drive</span><span><kbd>SPACE</kbd> Brake</span><span><kbd>E</kbd> Explore nearby · <kbd>R</kbd> Reset</span><button id="explore">Drive freely ↗</button></div>
+<div class="touch" aria-label="Touch driving controls"><button data-key="a" aria-label="Steer left">←</button><button data-key="d" aria-label="Steer right">→</button><button data-key="s" aria-label="Reverse">↓</button><button data-key="w" aria-label="Accelerate">↑</button></div>
+<div id="fallback" hidden role="status">3D navigation is unavailable. Select any section below to read the same content.</div>
+<noscript><div class="no-script">This portfolio is also available without 3D. <a href="profile.html">Read the complete portfolio →</a></div></noscript><script type="module" src="assets/portfolio.js"></script></body></html>
