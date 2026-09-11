@@ -85,16 +85,15 @@ MIT — see [LICENSE](LICENSE).
 
 ## Driveable portfolio playground
 
-The homepage is a free-roam 3D playground with a detailed car, two ramps, and 36 movable cones, crates and barrels. Explore in any order, knock objects over, or follow optional automatic navigation to a portfolio exhibit. Manual driving never forces the reader open: park near a place and press E or use the onscreen Explore button.
+The homepage is a physics sandbox in the spirit of bruno-simon.com: a chunky 4x4 on real raycast suspension, your name in giant pixel letters to crash through, a brick wall, jump ramps, and cones, crates and barrels that tumble. Portfolio exhibits sit around the island; drive up to one and press E, or pick a place and the car drives itself there and opens the original content.
 
-- WASD / arrows: accelerate, reverse, and steer.
-- Space: brake. R: restore the car and loose objects. C: change camera.
-- Escape: close content or pause/resume.
-- Touch driving buttons and onscreen reset are available on phones.
-- Selecting a place traces a visible route and drives there. Arriving through automatic navigation opens its original content.
+- W A S D / arrows: drive and steer. Shift: boost. Space: handbrake. C: change camera.
+- R: put the car and every loose object back. The car also rights itself if it lands on its roof.
+- Escape: close content or pause/resume. Any drive key resumes a paused drive.
+- Touch driving buttons are available on phones.
 
 The original homepage is preserved exactly in `profile.html`. Existing résumé pages, writeups, images and documents are unchanged, and content is read directly from those pages. Visitors can use “Read portfolio” without WebGL or JavaScript. GitHub Pages continues serving the repository root with no build step.
 
-`assets/campus.js` creates the world, `assets/navigation.mjs` plans routes, `assets/physics.mjs` handles movable-object collisions, and `assets/portfolio.js` connects movement to original content. The car model and credits are in `assets/models/`; Three.js and its MIT license are vendored in `assets/vendor/`.
+`assets/campus.js` builds the world, the car and the physics, `assets/navigation.mjs` plans routes between places, and `assets/portfolio.js` connects driving to the original content. Three.js (MIT) and cannon-es 0.20.0 (MIT) are vendored in `assets/vendor/` with their licenses.
 
-Run `python3 -m http.server 8000` for a local preview. `python3 scripts/build-static.py` stages the unchanged static architecture for private Sites hosting when available.
+Run `python3 -m http.server 8000` for a local preview.

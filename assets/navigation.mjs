@@ -23,10 +23,3 @@ export function createRoute(position,destination){
  for(let step=0;step<n;step++){let u=-1;for(let i=0;i<n;i++)if(!seen.has(i)&&(u===-1||distances[i]<distances[u]))u=i;if(u<0||!Number.isFinite(distances[u]))break;if(u===end)break;seen.add(u);for(const [v,w] of edges[u])if(distances[u]+w<distances[v]){distances[v]=distances[u]+w;prev[v]=u;}}
  if(!Number.isFinite(distances[end]))throw new Error('No clear route available');const route=[];for(let u=end;u!==start;u=prev[u])route.unshift({...nodes[u]});return route;
 }
-export function advanceRoute(car,path,dt){
- if(!path.length){car.speed=0;return true;}let target=path[0],distance=Math.hypot(target.x-car.x,target.z-car.z);
- while(distance<.65&&path.length>1){path.shift();target=path[0];distance=Math.hypot(target.x-car.x,target.z-car.z);}
- if(distance<.3&&path.length===1){car.x=target.x;car.z=target.z;car.speed=0;path.length=0;return true;}
- const desired=Math.atan2(target.x-car.x,target.z-car.z),difference=angleDifference(desired,car.yaw);car.yaw+=Math.max(-3*dt,Math.min(3*dt,difference));
- const targetSpeed=Math.min(11,path.length===1?Math.sqrt(distance*9):11)*Math.max(0,Math.cos(difference));car.speed+=(targetSpeed-car.speed)*Math.min(1,dt*4);const move=Math.min(distance,car.speed*dt);car.x+=(target.x-car.x)/distance*move;car.z+=(target.z-car.z)/distance*move;return false;
-}
