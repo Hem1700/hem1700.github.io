@@ -141,3 +141,11 @@ footer .fine{margin-top:40px;font-family:var(--mono);font-size:11px;color:var(--
 .prose figure{margin:20px 0}
 .prose figcaption{font-size:13px;color:var(--faint);margin-top:6px;text-align:center}
 @media(max-width:560px){.article h1{font-size:26px}.prose{font-size:16px}}
+
+/* game mode */
+nav .links a.game{color:#b4551f;font-family:var(--mono);font-size:12px;letter-spacing:.4px}
+nav .links a.game:hover{color:#8d3f14}
+.cta-row{display:flex;align-items:center;gap:15px;flex-wrap:wrap;margin-top:28px}
+a.cta{display:inline-flex;align-items:center;gap:9px;background:var(--ink);color:var(--bg);padding:13px 19px;border-radius:4px;font-size:15px;transition:background .18s}
+a.cta:hover{background:#b4551f}
+.cta-note{font-size:13px;color:var(--muted);max-width:300px;line-height:1.5}

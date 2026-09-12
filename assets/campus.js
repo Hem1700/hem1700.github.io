@@ -357,8 +357,8 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBrea
 
  // ---------------------------------------------------------------- state and input
  let path=[],destination=null,parked=false,mode='manual',paused=false,panelOpen=false,frame,last=0,send=0;
- let grounded=4,seaNormals=0,swimming=false,afloat=false,steer=0,engine=0,soundState={},braking=0,impactShake=0,flipTime=0,stuckTime=0,travelTime=0;const keys=new Set();
- const forward=new CANNON.Vec3(),up=new CANNON.Vec3(),dragForce=new CANNON.Vec3(),floatForce=new CANNON.Vec3(),LOCAL_FORWARD=new CANNON.Vec3(0,0,1),LOCAL_UP=new CANNON.Vec3(0,1,0);
+ let grounded=4,seaNormals=0,swimming=false,afloat=false,swimYaw=0,swimPitch=0,swimRoll=0,swimRpm=850,steer=0,engine=0,soundState={},braking=0,impactShake=0,flipTime=0,stuckTime=0,travelTime=0;const keys=new Set();
+ const forward=new CANNON.Vec3(),up=new CANNON.Vec3(),dragForce=new CANNON.Vec3(),swimTarget=new CANNON.Quaternion(),LOCAL_FORWARD=new CANNON.Vec3(0,0,1),LOCAL_UP=new CANNON.Vec3(0,1,0);
  function placeCar(x,z,yaw,y=GROUND+1.25){chassis.position.set(x,y,z);chassis.quaternion.setFromEuler(0,yaw,0);chassis.velocity.setZero();chassis.angularVelocity.setZero();steer=0;flipTime=0;stuckTime=0;}
  placeCar(SPAWN.x,SPAWN.z,SPAWN.yaw);
  chassis.addEventListener('collide',event=>{const hit=Math.abs(event.contact.getImpactVelocityAlongNormal());if(hit>3){impactShake=Math.min(1,Math.max(impactShake,hit*.07));sound.impact(Math.min(1,hit*.075));}});
@@ -428,33 +428,53 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBrea
   if(!wasAfloat){const wind=(-DRAG*Math.abs(speed)*speed-ROLL_DRAG*speed)/chassis.mass;chassis.velocity.x+=forward.x*wind*dt;chassis.velocity.z+=forward.z*wind*dt;}
   engine=reverse?Math.abs(driveForce)*.55:-driveForce;
   steer+=(steerTarget-steer)*Math.min(1,dt*6.5);
-  // Water. Two states, and the difference is what was broken before: while the wheels still reach the
-  // bottom the car keeps driving (wading, just heavier), and only once they lift off does it swim.
-  // Buoyancy and paddling go straight into the velocity, because a force applied once per frame is
-  // diluted by the physics substepping while gravity is not.
+  // Water. Two states: wading, where the wheels still reach the bottom and it drives as normal but heavier,
+  // and swimming, which is a boat — throttle drives it, the bow lifts, it banks into turns and holds a
+  // heading. Velocity and orientation are set directly here: a force applied once per frame is diluted by
+  // the physics substepping, and a floating car steered by torque alone just wallows.
   const waterline=SEA_LEVEL+waveAt(position.x,position.z),depth=waterline+.45-position.y,wet=depth>-.35;
   const afloat_=wet&&grounded===0;
   if(wet&&!swimming){swimming=true;sound.splash(Math.min(1,Math.abs(speed)*.06+.4));for(let i=0;i<16;i++)puff(position.x+(Math.random()-.5)*3.4,waterline+.3,position.z+(Math.random()-.5)*3.4,2.2);}
   if(!wet&&swimming){swimming=false;sound.splash(.3);}
   if(wet){
-   wake.visible=true;wake.position.set(position.x,waterline+.06,position.z);wake.scale.setScalar(1+Math.sin(seaTime*5)*.08+Math.min(Math.abs(speed),8)*.05);
-   if(Math.abs(speed)>1.2&&Math.random()<dt*18)puff(position.x-forward.x*2.6+(Math.random()-.5),waterline+.3,position.z-forward.z*2.6+(Math.random()-.5),1.2);
+   wake.visible=true;wake.position.set(position.x,waterline+.06,position.z);
    if(afloat_){
-    // Swimming: hold the car at the waterline, paddle on the throttle, steer like a boat.
-    const push=throttle*(reverse?-4:13);
-    chassis.velocity.y+=(24+THREE.MathUtils.clamp(depth*9,-6,9)-chassis.velocity.y*3.2)*dt;
-    chassis.velocity.x+=(forward.x*push-chassis.velocity.x*1.5)*dt;
-    chassis.velocity.z+=(forward.z*push-chassis.velocity.z*1.5)*dt;
-    const slopeX=(waveAt(position.x+1.6,position.z)-waveAt(position.x-1.6,position.z))/3.2,slopeZ=(waveAt(position.x,position.z+1.6)-waveAt(position.x,position.z-1.6))/3.2;
-    chassis.angularVelocity.x+=(slopeZ*2.6-chassis.angularVelocity.x*.6)*dt;
-    chassis.angularVelocity.z+=(-slopeX*2.6-chassis.angularVelocity.z*.6)*dt;
-    chassis.angularVelocity.y+=steer*dt*1.9;
-    chassis.angularVelocity.scale(Math.exp(-dt*1.2),chassis.angularVelocity);
+    if(!wasAfloat)swimYaw=Math.atan2(forward.x,forward.z);
+    const top=boost?25:19,thrust=throttle*(reverse?-11:30);
+    // Along and across the hull: thrust and drag forward, sideways slip bled off like a keel.
+    const rightX=-forward.z,rightZ=forward.x;
+    let along=chassis.velocity.x*forward.x+chassis.velocity.z*forward.z,across=chassis.velocity.x*rightX+chassis.velocity.z*rightZ;
+    along+=(thrust-along*.9-along*Math.abs(along)*.03)*dt;
+    along=THREE.MathUtils.clamp(along,-9,top);
+    across-=across*Math.min(1,dt*2.4);
+    chassis.velocity.x=forward.x*along+rightX*across;chassis.velocity.z=forward.z*along+rightZ*across;
+    chassis.velocity.y+=(24+THREE.MathUtils.clamp(depth*10,-7,10)-chassis.velocity.y*3.4)*dt;
+    // Steering turns the hull at a rate that grows with speed, and the boat banks into it.
+    const bite=Math.min(1,Math.abs(along)/5.5),turn=steer*2.05*bite*(along<-.5?-1:1);
+    swimYaw+=turn*dt;
+    const pace=Math.min(1,Math.abs(along)/top);
+    const slopeAlong=(waveAt(position.x+forward.x*1.8,position.z+forward.z*1.8)-waveAt(position.x-forward.x*1.8,position.z-forward.z*1.8))/3.6;
+    const slopeAcross=(waveAt(position.x+rightX*1.8,position.z+rightZ*1.8)-waveAt(position.x-rightX*1.8,position.z-rightZ*1.8))/3.6;
+    swimPitch+=((-.16*pace-throttle*.06+slopeAlong*.9)-swimPitch)*Math.min(1,dt*3.5);
+    swimRoll+=((-steer*.42*bite+slopeAcross*.9)-swimRoll)*Math.min(1,dt*3.5);
+    swimTarget.setFromEuler(swimPitch,swimYaw,swimRoll,'YXZ');
+    chassis.quaternion.slerp(swimTarget,1-Math.exp(-dt*7),chassis.quaternion);
+    chassis.angularVelocity.set(0,0,0);
+    // Wheels keep turning like paddles, and the hull throws spray as it goes.
+    for(const wheel of vehicle.wheelInfos)wheel.rotation-=along*dt/WHEEL_RADIUS;
     engine=0;braking=0;rearBrake=null;
+    wake.scale.setScalar(1.1+pace*1.5+Math.sin(seaTime*5)*.06);
+    const spray=Math.abs(along)/top;
+    if(Math.random()<dt*(6+spray*54)){const side=Math.random()<.5?1:-1;
+     puff(position.x+forward.x*2.2+rightX*side*1.5,waterline+.35,position.z+forward.z*2.2+rightZ*side*1.5,.8+spray*1.6);}
+    if(spray>.25&&Math.random()<dt*22)puff(position.x-forward.x*3+(Math.random()-.5),waterline+.3,position.z-forward.z*3+(Math.random()-.5),1.4);
+    swimRpm=IDLE_RPM+pace*4200+throttle*900+(boost?500:0);
    }else{
-    // Wading: the wheels still bite, so keep driving — heavier, with the water holding some weight.
-    engine*=.55;chassis.velocity.y+=Math.max(0,depth*3.5)*dt;
+    // Wading: the wheels still bite, so keep driving — heavier, with the water taking some of the weight.
+    engine*=.6;chassis.velocity.y+=Math.max(0,depth*3.5)*dt;
     chassis.velocity.x-=chassis.velocity.x*Math.min(1,dt*.85);chassis.velocity.z-=chassis.velocity.z*Math.min(1,dt*.85);
+    wake.scale.setScalar(1+Math.min(Math.abs(speed),8)*.06);
+    if(Math.abs(speed)>1.2&&Math.random()<dt*18)puff(position.x-forward.x*2.6+(Math.random()-.5),waterline+.3,position.z-forward.z*2.6+(Math.random()-.5),1.2);
    }
   }else wake.visible=false;
   // Grip: the rear lets go under a bootful at low speed and when the handbrake is on, and comes back.
@@ -469,7 +489,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBrea
   if(up.y<.35){flipTime+=dt;if(flipTime>1.3)placeCar(position.x,position.z,Math.atan2(forward.x,forward.z),Math.max(GROUND+1.25,position.y+1));}else flipTime=0;
   if(position.y<SEA_LEVEL-9)placeCar(SPAWN.x,SPAWN.z,SPAWN.yaw);
   headlight.emissiveIntensity=1.3;taillight.emissiveIntensity=braking>5||rearBrake||reverse?2.4:.5;
-  soundState={rpm,throttle:shifting?.1:throttle,speed,sliding:0,grounded:grounded>0,shifting,swimming};afloat=afloat_;
+  afloat=afloat_;soundState={rpm:afloat_?swimRpm:rpm,throttle:shifting?.1:throttle,speed:afloat_?chassis.velocity.length():speed,sliding:0,grounded:grounded>0,shifting,swimming:afloat_};
  }
 
  function animate(now){frame=requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05)||FIXED_STEP;last=now;

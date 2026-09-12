@@ -12,7 +12,8 @@ security findings, then projects, writing, and background. No build step, no fra
 
 | Page | What's on it |
 |------|--------------|
-| `index.html` | Home — hero and a short "selected findings" teaser |
+| `index.html` | Home — hero, a short "selected findings" teaser, and the way into game mode |
+| `drive.html` | Game mode — the driveable island |
 | `findings.html` | Upstream vulnerability findings (ksmbd, PyTorch, curl, NTFS) with links to the patches |
 | `projects.html` | FORGE, mcp-tool-poisoning-scanner, bug-hunter, CRIP, RAVEN, PatchProbe, ShellScribe, SITA/CETAS |
 | `writing.html` | Index of all 18 writeups |
@@ -83,7 +84,11 @@ See [SECURITY.md](SECURITY.md) for the responsible-disclosure policy.
 
 MIT — see [LICENSE](LICENSE).
 
-## Driveable portfolio playground
+## Two modes
+
+The site has a normal mode and a game mode. `index.html` and the rest of the pages are the quiet, content-first portfolio, with a **Drive ▸** link in the nav and a call to action on the home page. `drive.html` is the game; its header links back to the portfolio. Both read from the same pages, so nothing is duplicated.
+
+## Game mode: the driveable island
 
 The homepage is a physics sandbox in the spirit of bruno-simon.com: a chunky 4x4 on real raycast suspension, your name in giant pixel letters to crash through, a brick wall, jump ramps, and cones, crates and barrels that tumble. The world is an island in the sea: a round plaza in the middle with your name on it, a ring road, and a spur running out to each place. Drive off the beach and the car splashes in and is put back on the sand. The six places are spread far across the island — up to 160 units out from the middle, each at the end of its own road — so you drive out and find them. There are no walls: the ground runs on forever, exhibit platforms can be driven onto, and street lamps fall over when you hit them. Portfolio exhibits sit around the island; drive up to one and press E, or pick a place and the car drives itself there and opens the original content. Taking the wheel always works, even with a page open: the reader closes and you drive off.
 

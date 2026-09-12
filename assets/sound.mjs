@@ -68,10 +68,10 @@ export function createSound(){
   update({rpm=800,throttle=0,speed=0,sliding=0,grounded=true,shifting=false,swimming=false}={}){
    if(!context||!enabled)return;
    const pace=Math.abs(speed),firing=Math.max(11,rpm/30),load=shifting?.12:throttle;
-   const muffle=swimming?.35:1;
+   const muffle=swimming?.62:1;
    for(const voice of voices)ramp(voice.oscillator.frequency,firing*voice.ratio,.045);
    ramp(engineFilter.frequency,(360+rpm*.12+load*1500+(grounded?0:300))*muffle,.07);
-   ramp(engineGain.gain,(.042+load*.1+Math.min(rpm,6500)*.000012)*(swimming?.55:1),.07);
+   ramp(engineGain.gain,(.042+load*.1+Math.min(rpm,6500)*.000012)*(swimming?.9:1),.07);
    ramp(intakeFilter.frequency,520+rpm*.16,.08);
    ramp(intakeGain.gain,load*.05+(rpm>5200?.02:0),.08);
    // Road roar only while a wheel is actually on the ground.
