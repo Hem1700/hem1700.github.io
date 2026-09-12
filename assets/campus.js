@@ -16,14 +16,27 @@ const PIXEL_FONT={H:['1.1','1.1','111','1.1','1.1'],E:['111','1..','11.','1..','
 const DRIVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','shift'];
 
 export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
- const scene=new THREE.Scene();scene.background=new THREE.Color('#deddd3');const fog=new THREE.Fog('#deddd3',190,430);scene.fog=fog;
- const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(container.clientWidth,container.clientHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;container.append(renderer.domElement);
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#e3ddcf');const fog=new THREE.Fog('#e3ddcf',185,430);scene.fog=fog;
+ const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(container.clientWidth,container.clientHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;container.append(renderer.domElement);
  const camera=new THREE.PerspectiveCamera(37,container.clientWidth/container.clientHeight,.1,4000);
- const sun=new THREE.DirectionalLight('#fff0d2',4);sun.position.set(-65,90,35);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-82,right:82,top:82,bottom:-82,far:250});sun.shadow.bias=-.0003;sun.shadow.normalBias=.08;const SUN_OFFSET=sun.position.clone();scene.add(sun,sun.target,new THREE.HemisphereLight('#eef4ff','#b29972',2.4));
+ const sun=new THREE.DirectionalLight('#fff2d8',4.6);sun.position.set(-52,72,28);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-58,right:58,top:58,bottom:-58,far:220});sun.shadow.bias=-.00022;sun.shadow.normalBias=.05;sun.shadow.radius=1.6;const SUN_OFFSET=sun.position.clone();scene.add(sun,sun.target,new THREE.HemisphereLight('#e7f1ff','#a68f6a',1.25));
  const environment=new THREE.Scene();environment.background=new THREE.Color('#cad9de');const ceiling=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshBasicMaterial({color:'#fff9e9',side:THREE.DoubleSide}));ceiling.position.y=70;ceiling.rotation.x=Math.PI/2;environment.add(ceiling);const fill=new THREE.Mesh(new THREE.PlaneGeometry(70,120),new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide}));fill.position.set(-40,20,-40);fill.rotation.y=.7;environment.add(fill);const pmrem=new THREE.PMREMGenerator(renderer),env=pmrem.fromScene(environment,.03);scene.environment=env.texture;
  const material=(color,roughness=.8,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
  const cream=material('#d6c4a6'),paper=material('#f0e7d7'),dark=material('#303d3c'),black=material('#1b272a'),orange=material('#dc713b'),moss=material('#7d9277'),metal=material('#657774',.4,.7);
  const textures=[],interactive=[];
+ // Surfaces are drawn on canvases at load: grit and wear that a flat colour cannot give, with no image files.
+ function grain(base,fleck,{size=256,count=5200,scale=1.9,alpha=.16,repeat=1}={}){
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=size;const ctx=canvas.getContext('2d');
+  ctx.fillStyle=base;ctx.fillRect(0,0,size,size);
+  for(let i=0;i<count;i++){ctx.fillStyle=`rgba(${fleck},${(Math.random()*alpha+.03).toFixed(3)})`;const r=Math.random()*scale+.35;ctx.fillRect(Math.random()*size,Math.random()*size,r,r);}
+  const texture=new THREE.CanvasTexture(canvas);texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(repeat,repeat);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());textures.push(texture);return texture;}
+ const groundTexture=grain('#cec8b7','96,88,72',{count:8000,alpha:.2,repeat:420}),pavingTexture=grain('#f0e7d7','128,118,96',{count:4200,alpha:.1,repeat:7}),asphaltTexture=grain('#646b65','20,24,22',{count:9000,scale:2.6,alpha:.28});
+ asphaltTexture.repeat.set(1,1);
+ // A gradient sky dome instead of a flat background colour.
+ const skyCanvas=document.createElement('canvas');skyCanvas.width=4;skyCanvas.height=256;
+ {const ctx=skyCanvas.getContext('2d'),gradient=ctx.createLinearGradient(0,0,0,256);gradient.addColorStop(0,'#b7cfdc');gradient.addColorStop(.55,'#d6dcda');gradient.addColorStop(1,'#e6e1d3');ctx.fillStyle=gradient;ctx.fillRect(0,0,4,256);}
+ const skyTexture=new THREE.CanvasTexture(skyCanvas);skyTexture.colorSpace=THREE.SRGBColorSpace;textures.push(skyTexture);
+ const sky=new THREE.Mesh(new THREE.SphereGeometry(1500,32,20),new THREE.MeshBasicMaterial({map:skyTexture,side:THREE.BackSide,fog:false,depthWrite:false}));scene.add(sky);
  function box(parent,w,h,d,x,y,z,mat,r=.15){const mesh=new THREE.Mesh(new RoundedBoxGeometry(w,h,d,2,Math.min(r,w/3,h/3,d/3)),mat);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;}
  function cylinder(parent,r,h,x,y,z,mat,segments=32){const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,segments),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
  function sign(parent,title,subtitle,x,y,z,width=9,height=2.4,color='#df9c5c',rotation=Math.PI){const c=document.createElement('canvas');c.width=1024;c.height=256;const ctx=c.getContext('2d');ctx.fillStyle='#263b39';ctx.fillRect(0,0,1024,256);ctx.fillStyle=color;ctx.fillRect(28,35,8,182);ctx.font='bold 76px Arial';ctx.fillText(title,66,115,905);ctx.fillStyle='#d6e2d1';ctx.font='28px Arial';ctx.fillText(subtitle,66,189,900);const texture=new THREE.CanvasTexture(c);texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);const m=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide}));m.position.set(x,y,z);m.rotation.y=rotation;parent.add(m);return m;}
@@ -37,10 +50,18 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  solid(new CANNON.Box(half(3000,.5,3000)),0,GROUND-.5,0);
 
  // ---------------------------------------------------------------- ground, roads and street furniture
- box(scene,128,.1,113,0,.09,-5,paper,.04);
- const floor=new THREE.Mesh(new THREE.PlaneGeometry(9000,9000),material('#dbd7ca'));floor.rotation.x=-Math.PI/2;floor.position.y=.13;floor.receiveShadow=true;scene.add(floor);
- function ribbon(points,width,color,y){const vertices=[],indices=[];for(let i=0;i<points.length;i++){const p=points[i],before=points[(i+points.length-1)%points.length],after=points[(i+1)%points.length];const dx=after.x-before.x,dz=after.z-before.z,l=Math.hypot(dx,dz);for(const s of [-1,1])vertices.push(p.x-dz/l*width/2*s,y,p.z+dx/l*width/2*s);const n=(i+1)%points.length;indices.push(i*2,i*2+1,n*2,i*2+1,n*2+1,n*2);}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();const mesh=new THREE.Mesh(g,material(color));mesh.receiveShadow=true;scene.add(mesh);}
- ribbon(roadPoints,9.3,'#b5ad98',.155);ribbon(roadPoints,8,'#646b65',.165);
+ const paving=new THREE.MeshStandardMaterial({color:'#ffffff',map:pavingTexture,roughness:.92,envMapIntensity:.5});
+ box(scene,128,.1,113,0,.09,-5,paving,.04);
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(9000,9000),new THREE.MeshStandardMaterial({color:'#ffffff',map:groundTexture,roughness:1,envMapIntensity:.4}));floor.rotation.x=-Math.PI/2;floor.position.y=.13;floor.receiveShadow=true;scene.add(floor);
+ function ribbon(points,width,y,surface){const vertices=[],uvs=[],indices=[];let travelled=0;
+  for(let i=0;i<points.length;i++){const p=points[i],before=points[(i+points.length-1)%points.length],after=points[(i+1)%points.length];const dx=after.x-before.x,dz=after.z-before.z,l=Math.hypot(dx,dz);
+   if(i)travelled+=Math.hypot(p.x-points[i-1].x,p.z-points[i-1].z);
+   for(const s of [-1,1]){vertices.push(p.x-dz/l*width/2*s,y,p.z+dx/l*width/2*s);uvs.push(s<0?0:1,travelled/6);}
+   const n=(i+1)%points.length;indices.push(i*2,i*2+1,n*2,i*2+1,n*2+1,n*2);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.setIndex(indices);g.computeVertexNormals();
+  const mesh=new THREE.Mesh(g,surface);mesh.receiveShadow=true;scene.add(mesh);}
+ ribbon(roadPoints,9.3,.155,new THREE.MeshStandardMaterial({color:'#b5ad98',map:pavingTexture,roughness:.95,envMapIntensity:.5}));
+ ribbon(roadPoints,8,.165,new THREE.MeshStandardMaterial({color:'#ffffff',map:asphaltTexture,roughness:.88,envMapIntensity:.45}));
  for(let i=0;i<roadPoints.length;i+=2){const p=roadPoints[i],q=roadPoints[(i+1)%roadPoints.length];const dash=box(scene,.14,.02,.8,p.x,.175,p.z,paper,.005);dash.rotation.y=Math.atan2(q.x-p.x,q.z-p.z);}
  destinations.forEach(d=>{const apron=box(scene,8,.06,7,d.x,.17,d.z,cream,.02);apron.rotation.y=d.rotation;for(const side of [-1,1]){const line=box(scene,.09,.02,4.8,d.x+Math.cos(d.rotation)*side*2.8,.205,d.z-Math.sin(d.rotation)*side*2.8,paper,.01);line.rotation.y=d.rotation;}});
  const lampSpots=[];
@@ -50,7 +71,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  // ---------------------------------------------------------------- portfolio exhibits
  const tags=[];
  destinations.forEach((d,i)=>{
- const exhibit=new THREE.Group();exhibit.position.set(d.bx,0,d.bz);exhibit.rotation.y=d.rotation;scene.add(exhibit);box(exhibit,38,.1,34,0,.09,-6,paper,.04);box(exhibit,20,.55,14,0,.45,0,cream,.6);const tint=material(d.color);let labelHeight=9;
+ const exhibit=new THREE.Group();exhibit.position.set(d.bx,0,d.bz);exhibit.rotation.y=d.rotation;scene.add(exhibit);box(exhibit,38,.1,34,0,.09,-6,paving,.04);box(exhibit,20,.55,14,0,.45,0,cream,.6);const tint=material(d.color);let labelHeight=9;
  // The platform is a low step the car can climb onto; only the built structures on it are solid.
  const footprint=new CANNON.Body({mass:0});footprint.position.set(d.bx,0,d.bz);footprint.quaternion.setFromEuler(0,d.rotation,0);world.addBody(footprint);
  const part=(shape,x,y,z)=>footprint.addShape(shape,new CANNON.Vec3(x,y,z)),post=(r,h,x,y,z)=>part(new CANNON.Cylinder(r,r,h,10),x,y,z);
@@ -111,7 +132,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  const pixel=new RoundedBoxGeometry(.6,.6,.8,1,.06),PIXEL=.6,word='HEM PAREKH.',letters=[];let cursor=0;
  for(const ch of word){if(ch===' '){cursor+=3;continue;}const width=PIXEL_FONT[ch][0].length;letters.push({ch,middle:cursor+width/2});cursor+=width+1;}
  cursor-=1;
- for(const {ch,middle} of letters){const rows=PIXEL_FONT[ch],w=rows[0].length,h=rows.length,group=new THREE.Group(),body=new CANNON.Body({mass:ch==='.'?3:9});
+ for(const {ch,middle} of letters){const rows=PIXEL_FONT[ch],w=rows[0].length,h=rows.length,group=new THREE.Group(),body=new CANNON.Body({mass:ch==='.'?14:42});
   for(let r=0;r<h;r++){let c=0;while(c<w){if(rows[r][c]!=='1'){c++;continue;}let e=c;while(e+1<w&&rows[r][e+1]==='1')e++;const y=((h-1)/2-r)*PIXEL;
    body.addShape(new CANNON.Box(half((e-c+1)*PIXEL/2,PIXEL/2,.4)),new CANNON.Vec3(((c+e)/2-(w-1)/2)*PIXEL,y,0));
    for(let k=c;k<=e;k++){const m=shadowed(new THREE.Mesh(pixel,ch==='.'?dark:orange));m.position.set((k-(w-1)/2)*PIXEL,y,0);group.add(m);}c=e+1;}}
@@ -121,17 +142,17 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
 
  // A brick wall made for smashing.
  const brick=new RoundedBoxGeometry(1.3,.62,.62,1,.05),brickColors=[material('#c9855a'),material('#b9704a'),material('#d49a70')],WALL={x:30,z:25};
- for(let row=0;row<6;row++){const count=7-(row%2);for(let i=0;i<count;i++){const along=(i-(count-1)/2)*1.32,body=new CANNON.Body({mass:2.2,shape:new CANNON.Box(half(.65,.31,.31))});body.position.set(WALL.x+SCREEN_RIGHT.x*along,GROUND+.31+row*.62+.002,WALL.z+SCREEN_RIGHT.z*along);body.quaternion.setFromEuler(0,TOWARD_CAMERA_YAW,0);addLoose(body,shadowed(new THREE.Mesh(brick,brickColors[(row+i)%3])));}}
+ for(let row=0;row<6;row++){const count=7-(row%2);for(let i=0;i<count;i++){const along=(i-(count-1)/2)*1.32,body=new CANNON.Body({mass:9,shape:new CANNON.Box(half(.65,.31,.31))});body.position.set(WALL.x+SCREEN_RIGHT.x*along,GROUND+.31+row*.62+.002,WALL.z+SCREEN_RIGHT.z*along);body.quaternion.setFromEuler(0,TOWARD_CAMERA_YAW,0);addLoose(body,shadowed(new THREE.Mesh(brick,brickColors[(row+i)%3])));}}
 
  // Cones, crates and barrels to knock around.
  const coneGeometry=new THREE.ConeGeometry(.48,1.25,16),bandGeometry=new THREE.ConeGeometry(.3,.34,16),barrelGeometry=new THREE.CylinderGeometry(.7,.7,1.7,20),ringGeometry=new THREE.CylinderGeometry(.73,.73,.12,20);
  function addProp(type,x,z,lift=0,yaw=0){const group=new THREE.Group();let body,height;
-  if(type==='cone'){height=1.4;body=new CANNON.Body({mass:1.2,shape:new CANNON.Cylinder(.22,.55,height,10)});box(group,1.1,.14,1.1,0,-.63,0,black,.08);const cone=shadowed(new THREE.Mesh(coneGeometry,orange));cone.position.y=.07;group.add(cone);const band=new THREE.Mesh(bandGeometry,paper);band.position.y=.18;group.add(band);}
-  else if(type==='crate'){height=1.65;body=new CANNON.Body({mass:3,shape:new CANNON.Box(half(.825,.825,.825))});box(group,1.65,1.65,1.65,0,0,0,cream,.09);for(const y of [-.6,.6])box(group,1.7,.13,1.72,0,y,0,dark,.025);for(const bx of [-.7,.7])box(group,.12,1.65,1.74,bx,0,0,dark,.025);}
-  else{height=1.7;body=new CANNON.Body({mass:4,shape:new CANNON.Cylinder(.72,.72,height,12)});group.add(shadowed(new THREE.Mesh(barrelGeometry,orange)));for(const y of [-.54,.54]){const ring=new THREE.Mesh(ringGeometry,metal);ring.position.y=y;group.add(ring);}}
+  if(type==='cone'){height=1.4;body=new CANNON.Body({mass:5,shape:new CANNON.Cylinder(.22,.55,height,10)});box(group,1.1,.14,1.1,0,-.63,0,black,.08);const cone=shadowed(new THREE.Mesh(coneGeometry,orange));cone.position.y=.07;group.add(cone);const band=new THREE.Mesh(bandGeometry,paper);band.position.y=.18;group.add(band);}
+  else if(type==='crate'){height=1.65;body=new CANNON.Body({mass:14,shape:new CANNON.Box(half(.825,.825,.825))});box(group,1.65,1.65,1.65,0,0,0,cream,.09);for(const y of [-.6,.6])box(group,1.7,.13,1.72,0,y,0,dark,.025);for(const bx of [-.7,.7])box(group,.12,1.65,1.74,bx,0,0,dark,.025);}
+  else{height=1.7;body=new CANNON.Body({mass:18,shape:new CANNON.Cylinder(.72,.72,height,12)});group.add(shadowed(new THREE.Mesh(barrelGeometry,orange)));for(const y of [-.54,.54]){const ring=new THREE.Mesh(ringGeometry,metal);ring.position.y=y;group.add(ring);}}
   body.position.set(x,GROUND+height/2+lift+.01,z);body.quaternion.setFromEuler(0,yaw,0);addLoose(body,group);}
  // Street lamps stand until you hit them.
- for(const {x,z} of lampSpots){const group=new THREE.Group();cylinder(group,.11,5,0,-.1,0,dark,10);box(group,1.7,.18,.7,0,2.5,0,paper);const body=new CANNON.Body({mass:5,shape:new CANNON.Cylinder(.22,.22,5.3,8)});body.position.set(x,GROUND+2.66,z);addLoose(body,group);}
+ for(const {x,z} of lampSpots){const group=new THREE.Group();cylinder(group,.11,5,0,-.1,0,dark,10);box(group,1.7,.18,.7,0,2.5,0,paper);const body=new CANNON.Body({mass:26,shape:new CANNON.Cylinder(.22,.22,5.3,8)});body.position.set(x,GROUND+2.66,z);addLoose(body,group);}
  for(let i=0;i<12;i++)addProp('cone',-19+i*3.3,32+(i%2)*2.4);
  for(const [row,count] of [[0,3],[1,2],[2,1]])for(let i=0;i<count;i++)addProp('crate',42+(i-(count-1)/2)*1.72,-9,row*1.66);
  for(let i=0;i<7;i++)addProp('barrel',-48+(i%3)*2.3,3+Math.floor(i/3)*2.1);
@@ -160,7 +181,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   for(let k=0;k<5;k++)addProp('cone',x+Math.sin(a+k)*7,z+Math.cos(a+k)*7);}
 
  // ---------------------------------------------------------------- the car: a chunky 4x4 on raycast suspension
- const chassis=new CANNON.Body({mass:150,allowSleep:false});chassis.addShape(new CANNON.Box(half(1.05,.45,2.15)),new CANNON.Vec3(0,.3,0));chassis.angularDamping=.35;chassis.linearDamping=.04;
+ const chassis=new CANNON.Body({mass:900,allowSleep:false});chassis.addShape(new CANNON.Box(half(1.05,.45,2.15)),new CANNON.Vec3(0,.3,0));chassis.angularDamping=.28;chassis.linearDamping=.01;
  const vehicle=new CANNON.RaycastVehicle({chassisBody:chassis,indexRightAxis:0,indexUpAxis:1,indexForwardAxis:2});
  const wheelOptions={radius:.62,directionLocal:new CANNON.Vec3(0,-1,0),suspensionStiffness:30,suspensionRestLength:.5,frictionSlip:2.4,dampingRelaxation:2.1,dampingCompression:3.4,maxSuspensionForce:1e5,rollInfluence:.04,axleLocal:new CANNON.Vec3(-1,0,0),maxSuspensionTravel:.42};
  for(const [x,z] of [[1.18,1.45],[-1.18,1.45],[1.18,-1.45],[-1.18,-1.45]])vehicle.addWheel({...wheelOptions,chassisConnectionPointLocal:new CANNON.Vec3(x,0,z)});
@@ -174,9 +195,17 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  box(car,2.34,.34,.42,0,.02,2.24,black,.12);box(car,1.2,.34,.06,0,.42,2.16,dark,.03);for(const x of [-.72,.72])box(car,.36,.2,.06,x,.46,2.16,headlight,.03);
  box(car,2.34,.34,.42,0,.02,-2.24,black,.12);for(const x of [-.76,.76])box(car,.3,.18,.06,x,.46,-2.16,taillight,.03);const spare=cylinder(car,.5,.3,0,.62,-2.36,black,20);spare.rotation.x=Math.PI/2;cylinder(car,.26,.32,0,.62,-2.37,paper,14).rotation.x=Math.PI/2;
  for(const x of [-1.2,1.2])for(const z of [-1.45,1.45])box(car,.62,.16,1.55,x,.66,z,black,.06);
- for(const x of [-1.06,1.06])box(car,.04,.12,2.3,x,.34,.1,paper,.02);
+ for(const x of [-1.06,1.06]){box(car,.04,.12,2.3,x,.34,.1,paper,.02);box(car,.05,.02,2.6,x,.62,-.1,dark,.01);box(car,.16,.1,1.1,x*1.04,-.05,.1,black,.03);}
+ box(car,.62,.16,.08,0,.34,2.26,paper,.02);for(const x of [-.5,.5])cylinder(car,.09,.34,x,-.02,-2.42,metal,10).rotation.x=Math.PI/2;
+ for(const x of [-.72,.72])box(car,.08,.06,1.9,x,1.62,-.45,metal,.02);
  const tireGeometry=new THREE.CylinderGeometry(.62,.62,.52,28).rotateZ(Math.PI/2),rimGeometry=new THREE.CylinderGeometry(.33,.33,.54,14).rotateZ(Math.PI/2),treadGeometry=new RoundedBoxGeometry(.56,.12,.24,1,.04),spokeGeometry=new THREE.BoxGeometry(.58,.1,.52);
  const wheelMeshes=vehicle.wheelInfos.map(()=>{const wheel=new THREE.Group();wheel.add(shadowed(new THREE.Mesh(tireGeometry,black)),new THREE.Mesh(rimGeometry,paper));for(let k=0;k<12;k++){const a=k/12*Math.PI*2,tread=new THREE.Mesh(treadGeometry,black);tread.position.set(0,Math.cos(a)*.61,Math.sin(a)*.61);tread.rotation.x=-a;wheel.add(tread);}for(const turn of [0,Math.PI/2]){const spoke=new THREE.Mesh(spokeGeometry,metal);spoke.rotation.x=turn;wheel.add(spoke);}scene.add(wheel);return wheel;});
+
+ // Tyre marks: a pool of dark patches laid under a sliding wheel, reused oldest-first.
+ const markGeometry=new THREE.PlaneGeometry(.52,2.3).rotateX(-Math.PI/2),markMaterial=new THREE.MeshBasicMaterial({color:'#43423d',transparent:true,opacity:.3,depthWrite:false});
+ const marks=[];let markCursor=0,markTimer=0;
+ for(let i=0;i<190;i++){const mark=new THREE.Mesh(markGeometry,markMaterial);mark.visible=false;mark.renderOrder=1;scene.add(mark);marks.push(mark);}
+ function layMark(x,z,heading){const mark=marks[markCursor++%marks.length];mark.position.set(x,GROUND+.03,z);mark.rotation.y=heading;mark.visible=true;}
 
  // Dust: a small pool of puffs kicked up by wheelspin, skids and hard landings.
  const dustGeometry=new THREE.IcosahedronGeometry(.32,0),dustMaterial=new THREE.MeshStandardMaterial({color:'#e9dfcc',roughness:1,transparent:true,opacity:.85}),dust=[];let dustCursor=0;
@@ -191,8 +220,8 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
 
  // ---------------------------------------------------------------- state and input
  let path=[],destination=null,parked=false,mode='manual',view=1,paused=false,panelOpen=false,frame,last=0,send=0;
- let grounded=4,steer=0,engine=0,braking=0,impactShake=0,flipTime=0,stuckTime=0,travelTime=0;const keys=new Set();
- const forward=new CANNON.Vec3(),up=new CANNON.Vec3(),LOCAL_FORWARD=new CANNON.Vec3(0,0,1),LOCAL_UP=new CANNON.Vec3(0,1,0);
+ let grounded=4,steer=0,engine=0,soundState={},braking=0,impactShake=0,flipTime=0,stuckTime=0,travelTime=0;const keys=new Set();
+ const forward=new CANNON.Vec3(),up=new CANNON.Vec3(),dragForce=new CANNON.Vec3(),LOCAL_FORWARD=new CANNON.Vec3(0,0,1),LOCAL_UP=new CANNON.Vec3(0,1,0);
  function placeCar(x,z,yaw,y=GROUND+1.25){chassis.position.set(x,y,z);chassis.quaternion.setFromEuler(0,yaw,0);chassis.velocity.setZero();chassis.angularVelocity.setZero();steer=0;flipTime=0;stuckTime=0;}
  placeCar(SPAWN.x,SPAWN.z,SPAWN.yaw);
  chassis.addEventListener('collide',event=>{const hit=Math.abs(event.contact.getImpactVelocityAlongNormal());if(hit>3){impactShake=Math.min(1,Math.max(impactShake,hit*.07));sound.impact(Math.min(1,hit*.075));}});
@@ -209,11 +238,18 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  function emit(){chassis.quaternion.vmult(LOCAL_FORWARD,forward);onState({x:chassis.position.x,z:chassis.position.z,yaw:Math.atan2(forward.x,forward.z),speed:chassis.velocity.dot(forward),airborne:grounded===0,mode:paused?'paused':mode,destination,near:near(),view});}
  function arrive(){const index=destination;sound.chime();path=[];parked=true;mode='parked';routeLine.visible=false;targetRing.visible=false;travelTime=0;onArrive(index);}
 
+
  // ---------------------------------------------------------------- driving
+ // A five-speed gearbox with a real torque curve, engine braking and aerodynamic drag, so acceleration
+ // tails off with speed and top speed comes from gearing rather than a hard cap.
+ const GEARS=[3.45,2.25,1.62,1.25,1],FINAL=6.2,WHEEL_RADIUS=.62,IDLE_RPM=850,REDLINE=6300,PEAK_TORQUE=200,DRAG=1.9,ROLL_DRAG=9;
+ let gear=0,shiftTime=0,rpm=IDLE_RPM,throttle=0;
+ const torqueAt=revs=>{const t=revs/REDLINE;return Math.max(.3,1.06-Math.pow((t-.6)*2.2,2));};
  function drive(dt){
   chassis.quaternion.vmult(LOCAL_FORWARD,forward);chassis.quaternion.vmult(LOCAL_UP,up);
-  const speed=chassis.velocity.dot(forward),position=chassis.position;let steerTarget=0,rearBrake=null;engine=0;braking=0;
-  if(parked||panelOpen){braking=30;}
+  const speed=chassis.velocity.dot(forward),position=chassis.position;
+  let steerTarget=0,rearBrake=null,demand=0,reverse=false,boost=false;braking=0;
+  if(parked||panelOpen){braking=60;}
   else if(path.length){
    travelTime+=dt;let target=path[0],distance=Math.hypot(target.x-position.x,target.z-position.z);
    // Pass a waypoint once it is close or already behind the car; chasing it would make the car orbit it.
@@ -221,28 +257,54 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
    while(path.length>1&&(distance<5.5||(distance<10&&behind(target)))){path.shift();target=path[0];distance=Math.hypot(target.x-position.x,target.z-position.z);}
    const difference=angleDifference(Math.atan2(target.x-position.x,target.z-position.z),Math.atan2(forward.x,forward.z));
    steerTarget=THREE.MathUtils.clamp(difference*1.5,-.55,.55);
-   const final=path.length===1,cruise=(final?Math.min(14,1.5+distance*1.2):18)*(Math.abs(difference)>1?.45:1);
-   if(speed<cruise)engine=-720;else if(speed>cruise+2)braking=6;
+   const final=path.length===1,cruise=(final?Math.min(9,1+distance*.85):18)*(Math.abs(difference)>1?.45:1);
+   if(speed<cruise)demand=Math.min(1,(cruise-speed)*.5);else if(speed>cruise+2)braking=18;
    if(Math.abs(speed)<.8){stuckTime+=dt;if(stuckTime>2.4){const next=path[0],after=path[1]||next;placeCar(next.x,next.z,after===next?Math.atan2(forward.x,forward.z):Math.atan2(after.x-next.x,after.z-next.z));}}else stuckTime=0;
    // Arrive when close; if the drive is taking far too long (blocked by debris, circling), tow the car the rest of the way.
    const place=destinations[destination];
-   if(final&&(distance<2.8||(distance<5.5&&Math.abs(difference)>1.1))){engine=0;braking=30;arrive();}
-   else if(travelTime>(final&&distance<7?16:120)){placeCar(place.x,place.z,Math.atan2(place.bx-place.x,place.bz-place.z));engine=0;braking=30;arrive();}
+   if(final&&(distance<3.4||(distance<6&&Math.abs(difference)>1.1))){demand=0;braking=60;arrive();}
+   else if(travelTime>(final&&distance<8?20:120)){placeCar(place.x,place.z,Math.atan2(place.bx-place.x,place.bz-place.z));demand=0;braking=60;arrive();}
   }else{
-   const ahead=keys.has('w')||keys.has('arrowup'),back=keys.has('s')||keys.has('arrowdown'),left=keys.has('a')||keys.has('arrowleft'),right=keys.has('d')||keys.has('arrowright'),boost=keys.has('shift');
-   if(ahead&&speed<(boost?36:25))engine=boost?-1050:-760;
-   if(back){if(speed>1.5)braking=8;else if(speed>-9)engine=480;}
-   if(!ahead&&!back)braking=.8;
-   if(keys.has(' '))rearBrake=16;
-   steerTarget=(Number(left)-Number(right))*.52*(1-Math.min(Math.abs(speed)/48,.5));
+   const ahead=keys.has('w')||keys.has('arrowup'),back=keys.has('s')||keys.has('arrowdown'),left=keys.has('a')||keys.has('arrowleft'),right=keys.has('d')||keys.has('arrowright');
+   boost=keys.has('shift');
+   if(ahead)demand=1;
+   if(back){if(speed>1.5)braking=34;else{reverse=true;demand=speed>-9?.75:0;}}
+   if(keys.has(' '))rearBrake=46;
+   steerTarget=(Number(left)-Number(right))*(.5-Math.min(.3,Math.abs(speed)*.011));
   }
-  steer+=(steerTarget-steer)*Math.min(1,dt*9);
-  for(let i=0;i<4;i++){vehicle.applyEngineForce(engine,i);vehicle.setBrake(rearBrake!==null&&i>1?rearBrake:braking,i);}
+  throttle+=(demand-throttle)*Math.min(1,dt*(demand>throttle?9:14));
+  // Gearbox: revs come from wheel speed through the current gear, and it changes up near the redline.
+  const wheelRevs=Math.abs(speed)/(2*Math.PI*WHEEL_RADIUS)*60;
+  shiftTime=Math.max(0,shiftTime-dt);
+  if(!reverse&&!shiftTime){
+   const revsIn=g=>wheelRevs*GEARS[g]*FINAL;
+   if(gear<GEARS.length-1&&revsIn(gear)>REDLINE-250&&throttle>.2){gear++;shiftTime=.26;}
+   else if(gear>0&&revsIn(gear)<2050){gear--;shiftTime=.14;}
+  }
+  if(reverse)gear=0;
+  rpm=THREE.MathUtils.clamp(wheelRevs*GEARS[gear]*FINAL,IDLE_RPM,REDLINE+150);
+  if(shiftTime>0)rpm=Math.max(IDLE_RPM,rpm*.72);
+  const shifting=shiftTime>0;
+  const driveForce=shifting?0:throttle*torqueAt(rpm)*PEAK_TORQUE*GEARS[gear]*FINAL/WHEEL_RADIUS/4*(boost?1.35:1);
+  // Engine braking off the throttle, plus drag and rolling resistance on the body.
+  if(!braking&&!rearBrake&&throttle<.05&&!path.length)braking=3+(4-gear)*1.5;
+  const wind=-DRAG*Math.abs(speed)*speed-ROLL_DRAG*speed;
+  dragForce.set(forward.x*wind,0,forward.z*wind);chassis.applyForce(dragForce,chassis.position);
+  engine=reverse?Math.abs(driveForce)*.55:-driveForce;
+  steer+=(steerTarget-steer)*Math.min(1,dt*8);
+  // Grip: the rear lets go under a bootful at low speed and when the handbrake is on, and comes back.
+  const spinning=throttle>.6&&Math.abs(speed)<7?1:0;
+  for(let i=0;i<4;i++){
+   const wheel=vehicle.wheelInfos[i],rear=i>1;
+   wheel.frictionSlip=rear?(rearBrake?.75:spinning?1.7:2.5):2.7;
+   vehicle.applyEngineForce(engine,i);vehicle.setBrake(rearBrake!==null&&rear?rearBrake:braking,i);
+  }
   vehicle.setSteeringValue(steer,0);vehicle.setSteeringValue(steer,1);
   // Flip recovery and out-of-bounds rescue.
   if(up.y<.35){flipTime+=dt;if(flipTime>1.3)placeCar(position.x,position.z,Math.atan2(forward.x,forward.z),Math.max(GROUND+1.25,position.y+1));}else flipTime=0;
   if(position.y<-6)placeCar(SPAWN.x,SPAWN.z,SPAWN.yaw);
-  headlight.emissiveIntensity=1.3;taillight.emissiveIntensity=braking>5||rearBrake||engine>0?2.4:.5;
+  headlight.emissiveIntensity=1.3;taillight.emissiveIntensity=braking>5||rearBrake||reverse?2.4:.5;
+  soundState={rpm,throttle:shifting?.1:throttle,speed,sliding:0,grounded:grounded>0,shifting};
  }
 
  function animate(now){frame=requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05)||FIXED_STEP;last=now;
@@ -252,9 +314,13 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   dustTimer-=dt;const planar=Math.hypot(chassis.velocity.x,chassis.velocity.z),skidding=vehicle.wheelInfos.some(w=>w.isInContact&&w.skidInfo<.7);
   if(!paused&&grounded>0&&dustTimer<=0&&((engine!==0&&planar<7)||(skidding&&planar>3))){dustTimer=.06;for(const i of [2,3]){const w=vehicle.wheelInfos[i];if(w.isInContact)puff(w.raycastResult.hitPointWorld.x,GROUND+.2,w.raycastResult.hitPointWorld.z,.8);}}
   if(!paused&&wasGrounded===0&&grounded>=2){for(let i=0;i<8;i++)puff(chassis.position.x,GROUND+.2,chassis.position.z,1.6);sound.impact(.5);}
+  // Lay rubber whenever a wheel is sliding.
+  markTimer-=dt;
+  if(!paused&&skidding&&planar>2.5&&markTimer<=0){markTimer=.016;const heading=Math.atan2(forward.x,forward.z);
+   for(const wheel of vehicle.wheelInfos)if(wheel.isInContact&&wheel.skidInfo<.75)layMark(wheel.raycastResult.hitPointWorld.x,wheel.raycastResult.hitPointWorld.z,heading);}
   wasGrounded=grounded;stepDust(dt);
   chassis.quaternion.vmult(LOCAL_FORWARD,forward);
-  sound.update({speed:paused?0:chassis.velocity.dot(forward),throttle:paused?0:-engine/900,sliding:vehicle.wheelInfos.reduce((most,w)=>Math.max(most,w.isInContact?1-Math.min(1,w.skidInfo):0),0),grounded:grounded>0});
+  sound.update(paused?{rpm:850,throttle:0,speed:0,grounded:true}:{...soundState,sliding:skidding?Math.min(1,planar/9):0});
   car.position.copy(chassis.position);car.quaternion.copy(chassis.quaternion);
   for(let i=0;i<wheelMeshes.length;i++){vehicle.updateWheelTransform(i);const t=vehicle.wheelInfos[i].worldTransform;wheelMeshes[i].position.copy(t.position);wheelMeshes[i].quaternion.copy(t.quaternion);}
   for(const item of loose){if(item.body.sleepState!==CANNON.Body.SLEEPING){item.mesh.position.copy(item.body.position);item.mesh.quaternion.copy(item.body.quaternion);}}
