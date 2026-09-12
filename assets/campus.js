@@ -242,7 +242,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  // ---------------------------------------------------------------- driving
  // A five-speed gearbox with a real torque curve, engine braking and aerodynamic drag, so acceleration
  // tails off with speed and top speed comes from gearing rather than a hard cap.
- const GEARS=[3.45,2.25,1.62,1.25,1],FINAL=6.2,WHEEL_RADIUS=.62,IDLE_RPM=850,REDLINE=6300,PEAK_TORQUE=200,DRAG=1.9,ROLL_DRAG=9;
+ const GEARS=[3.45,2.25,1.62,1.25,1],FINAL=6.2,WHEEL_RADIUS=.62,IDLE_RPM=850,REDLINE=6300,PEAK_TORQUE=370,DRAG=1.5,ROLL_DRAG=6;
  let gear=0,shiftTime=0,rpm=IDLE_RPM,throttle=0;
  const torqueAt=revs=>{const t=revs/REDLINE;return Math.max(.3,1.06-Math.pow((t-.6)*2.2,2));};
  function drive(dt){
@@ -257,7 +257,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
    while(path.length>1&&(distance<5.5||(distance<10&&behind(target)))){path.shift();target=path[0];distance=Math.hypot(target.x-position.x,target.z-position.z);}
    const difference=angleDifference(Math.atan2(target.x-position.x,target.z-position.z),Math.atan2(forward.x,forward.z));
    steerTarget=THREE.MathUtils.clamp(difference*1.5,-.55,.55);
-   const final=path.length===1,cruise=(final?Math.min(9,1+distance*.85):18)*(Math.abs(difference)>1?.45:1);
+   const final=path.length===1,cruise=(final?Math.min(10,1+distance*.9):22)*(Math.abs(difference)>1?.45:1);
    if(speed<cruise)demand=Math.min(1,(cruise-speed)*.5);else if(speed>cruise+2)braking=18;
    if(Math.abs(speed)<.8){stuckTime+=dt;if(stuckTime>2.4){const next=path[0],after=path[1]||next;placeCar(next.x,next.z,after===next?Math.atan2(forward.x,forward.z):Math.atan2(after.x-next.x,after.z-next.z));}}else stuckTime=0;
    // Arrive when close; if the drive is taking far too long (blocked by debris, circling), tow the car the rest of the way.
@@ -285,7 +285,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   rpm=THREE.MathUtils.clamp(wheelRevs*GEARS[gear]*FINAL,IDLE_RPM,REDLINE+150);
   if(shiftTime>0)rpm=Math.max(IDLE_RPM,rpm*.72);
   const shifting=shiftTime>0;
-  const driveForce=shifting?0:throttle*torqueAt(rpm)*PEAK_TORQUE*GEARS[gear]*FINAL/WHEEL_RADIUS/4*(boost?1.35:1);
+  const driveForce=shifting?0:throttle*torqueAt(rpm)*PEAK_TORQUE*GEARS[gear]*FINAL/WHEEL_RADIUS/4*(boost?1.6:1);
   // Engine braking off the throttle, plus drag and rolling resistance on the body.
   if(!braking&&!rearBrake&&throttle<.05&&!path.length)braking=3+(4-gear)*1.5;
   const wind=-DRAG*Math.abs(speed)*speed-ROLL_DRAG*speed;
@@ -327,7 +327,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   targetRing.material.opacity=.5+Math.sin(now*.003)*.2;
   const narrow=container.clientWidth<760,carPosition=new THREE.Vector3().copy(chassis.position),camTarget=new THREE.Vector3(),lookTarget=new THREE.Vector3();
   if(view===1){const reach=(WORLD_RADIUS-18)/Math.tan(camera.fov*Math.PI/360)*(narrow?1.45:1)/CAMERA_OFFSET.length();camTarget.copy(CAMERA_OFFSET).multiplyScalar(reach).add(new THREE.Vector3(CENTRE.x,0,CENTRE.z));lookTarget.set(CENTRE.x,0,CENTRE.z);}
-  else{chassis.quaternion.vmult(LOCAL_FORWARD,forward);const zoom=(1+Math.min(chassis.velocity.length(),36)*.011)*(narrow?1.3:1);camTarget.copy(CAMERA_OFFSET).multiplyScalar(zoom).add(carPosition);camTarget.y-=carPosition.y*.6;lookTarget.set(carPosition.x+forward.x*2,carPosition.y*.4,carPosition.z+forward.z*2);if(panelOpen){if(narrow){lookTarget.x+=Math.sin(TOWARD_CAMERA_YAW)*10;lookTarget.z+=Math.cos(TOWARD_CAMERA_YAW)*10;}else{lookTarget.x+=SCREEN_RIGHT.x*7.5;lookTarget.z+=SCREEN_RIGHT.z*7.5;}}}
+  else{chassis.quaternion.vmult(LOCAL_FORWARD,forward);const zoom=(1+Math.min(chassis.velocity.length(),48)*.0105)*(narrow?1.3:1);camTarget.copy(CAMERA_OFFSET).multiplyScalar(zoom).add(carPosition);camTarget.y-=carPosition.y*.6;lookTarget.set(carPosition.x+forward.x*2,carPosition.y*.4,carPosition.z+forward.z*2);if(panelOpen){if(narrow){lookTarget.x+=Math.sin(TOWARD_CAMERA_YAW)*10;lookTarget.z+=Math.cos(TOWARD_CAMERA_YAW)*10;}else{lookTarget.x+=SCREEN_RIGHT.x*7.5;lookTarget.z+=SCREEN_RIGHT.z*7.5;}}}
   camera.position.lerp(camTarget,1-Math.exp(-dt*(view===1?2.1:4)));look.lerp(lookTarget,1-Math.exp(-dt*(view===1?2.6:6)));
   if(impactShake>.01){camera.position.x+=(Math.random()-.5)*impactShake*.7;camera.position.y+=(Math.random()-.5)*impactShake*.7;impactShake*=Math.exp(-dt*7);}
   const shadowCenter=view===1?new THREE.Vector3(0,0,-5):new THREE.Vector3(Math.round(carPosition.x/4)*4,0,Math.round(carPosition.z/4)*4);sun.target.position.copy(shadowCenter);sun.position.copy(shadowCenter).add(SUN_OFFSET);
