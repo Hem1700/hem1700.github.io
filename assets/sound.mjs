@@ -98,6 +98,22 @@ export function createSound(){
      ring.connect(ringGain);ringGain.connect(master);ring.start(start);ring.stop(start+.3);}
    }catch{}
   },
+  /** Water: a broad splash that settles into a gulp. */
+  splash(strength=.6){
+   if(!context||!enabled)return;
+   const level=Math.max(.1,Math.min(1,strength)),start=now();
+   try{
+    const spray=context.createBufferSource();spray.buffer=noiseBuffer(1.2,.6);
+    const sprayFilter=context.createBiquadFilter();sprayFilter.type='bandpass';sprayFilter.Q.value=.7;
+    sprayFilter.frequency.setValueAtTime(2600,start);sprayFilter.frequency.exponentialRampToValueAtTime(420,start+.75);
+    const sprayGain=context.createGain();sprayGain.gain.setValueAtTime(0,start);sprayGain.gain.linearRampToValueAtTime(level*.34,start+.03);sprayGain.gain.exponentialRampToValueAtTime(.0008,start+.85);
+    spray.connect(sprayFilter);sprayFilter.connect(sprayGain);sprayGain.connect(master);spray.start(start);spray.stop(start+1);
+    const gulp=context.createOscillator(),gulpGain=context.createGain();gulp.type='sine';
+    gulp.frequency.setValueAtTime(320,start+.04);gulp.frequency.exponentialRampToValueAtTime(90,start+.4);
+    gulpGain.gain.setValueAtTime(level*.2,start+.04);gulpGain.gain.exponentialRampToValueAtTime(.0008,start+.5);
+    gulp.connect(gulpGain);gulpGain.connect(master);gulp.start(start+.04);gulp.stop(start+.55);
+   }catch{}
+  },
   /** Two soft notes when a place opens. */
   chime(){
    if(!context||!enabled)return;
