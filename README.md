@@ -92,7 +92,7 @@ The homepage is a physics sandbox in the spirit of bruno-simon.com: a chunky 4x4
 - Escape: close content or pause/resume. Any drive key resumes a paused drive, and switching windows never pauses it.
 - Touch driving buttons are available on phones.
 - Sound is synthesised in the browser — no audio files. The engine is a four-cylinder four-stroke whose firing frequency follows the revs, so gear changes drop the note; on top of it sit intake roar, tyre roll and slip, wind, and impacts scaled by how hard you hit. It starts on your first key press or tap, and the Sound button in the header mutes it (the choice is remembered).
-- The car weighs 900kg and drives through a five-speed gearbox with a torque curve, engine braking and aerodynamic drag: about 1.7 seconds to 10m/s, 3.7 to 25m/s, roughly 39m/s flat out (48 on boost), and 31 units to stop from 24m/s. The rear steps out under power and under the handbrake, and lays rubber where it slides.
+- The car weighs 900kg and drives through a five-speed gearbox with a torque curve, engine braking and aerodynamic drag: about 1.5 seconds to 10m/s, 2.8 to 25m/s, roughly 49m/s flat out (61 on boost), and 31 units to stop from 24m/s. The rear steps out under power and under the handbrake, and lays rubber where it slides.
 
 The original homepage is preserved exactly in `profile.html`. Existing résumé pages, writeups, images and documents are unchanged, and content is read directly from those pages. Visitors can use “Read portfolio” without WebGL or JavaScript. GitHub Pages continues serving the repository root with no build step.
 
