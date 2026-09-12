@@ -108,6 +108,14 @@ export function createSound(){
     gain.gain.setValueAtTime(.05,start);gain.gain.exponentialRampToValueAtTime(.0006,start+.14);
     oscillator.connect(gain);gain.connect(master);oscillator.start(start);oscillator.stop(start+.16);}catch{}
   },
+  /** A dry key click, for the boot log. */
+  key(){
+   if(!context||!enabled)return;const start=now();
+   try{const burst=context.createBufferSource();burst.buffer=noiseBuffer(.06,.9);
+    const filter=context.createBiquadFilter();filter.type='bandpass';filter.frequency.value=2400;filter.Q.value=1.6;
+    const gain=context.createGain();gain.gain.setValueAtTime(.05,start);gain.gain.exponentialRampToValueAtTime(.0005,start+.05);
+    burst.connect(filter);filter.connect(gain);gain.connect(master);burst.start(start);burst.stop(start+.08);}catch{}
+  },
   /** Water: a broad splash that settles into a gulp. */
   splash(strength=.6){
    if(!context||!enabled)return;

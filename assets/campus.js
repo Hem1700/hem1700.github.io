@@ -227,6 +227,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBrea
    const rail=new THREE.Mesh(new THREE.BoxGeometry(width,.14,.14),firewallRail);rail.position.y=3.78;group.add(rail);
    firewallPanels.push(group);}}
 
+ let caught=0;
  const PACKET_COLOURS=['#39d5c8','#e0642c','#6f8fe0'];
  const packetGeometry=new RoundedBoxGeometry(.85,.85,.85,1,.12),packets=[];
  for(let i=0;i<24;i++){const mesh=new THREE.Mesh(packetGeometry,new THREE.MeshStandardMaterial({color:PACKET_COLOURS[i%3],emissive:PACKET_COLOURS[i%3],emissiveIntensity:.9,roughness:.35}));mesh.castShadow=true;scene.add(mesh);
@@ -242,7 +243,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBrea
     if(packet.pop<=0){packet.mesh.visible=true;packet.mesh.scale.setScalar(1);packet.t=Math.random();}
     continue;}
    packet.mesh.scale.setScalar(1);
-   if(Math.hypot(packet.mesh.position.x-chassis.position.x,packet.mesh.position.z-chassis.position.z)<2.4&&Math.abs(chassis.position.y-packet.mesh.position.y)<2.6){packet.pop=1;sound.blip();}}}
+   if(Math.hypot(packet.mesh.position.x-chassis.position.x,packet.mesh.position.z-chassis.position.z)<2.4&&Math.abs(chassis.position.y-packet.mesh.position.y)<2.6){packet.pop=1;caught++;sound.blip();}}}
 
  const breaches=[];let patched=0;
  FINDINGS.forEach((finding,index)=>{
@@ -288,6 +289,15 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBrea
  function puff(x,y,z,strength=1){const p=dust[dustCursor++%dust.length];p.mesh.position.set(x+(Math.random()-.5)*.4,y,z+(Math.random()-.5)*.4);p.vx=(Math.random()-.5)*1.4*strength;p.vy=1+Math.random()*1.2*strength;p.vz=(Math.random()-.5)*1.4*strength;p.life=1;p.mesh.visible=true;}
  function stepDust(dt){for(const p of dust){if(p.life<=0)continue;p.life-=dt*1.6;p.mesh.position.x+=p.vx*dt;p.mesh.position.y+=p.vy*dt;p.mesh.position.z+=p.vz*dt;p.vy*=Math.exp(-dt*2);const k=p.life>0?Math.sin(Math.PI*Math.min(1,p.life)):0;p.mesh.scale.setScalar(.3+k*1.4*(1.2-p.life*.6));p.mesh.rotation.y+=dt;if(p.life<=0)p.mesh.visible=false;}}
  let wasGrounded=4,dustTimer=0;
+
+ // The wake ring that sits around the car while it is in the water.
+ const wakeCanvas=document.createElement('canvas');wakeCanvas.width=wakeCanvas.height=128;
+ {const ctx=wakeCanvas.getContext('2d'),gradient=ctx.createRadialGradient(64,64,26,64,64,62);
+  gradient.addColorStop(0,'rgba(255,255,255,0)');gradient.addColorStop(.55,'rgba(220,245,255,.5)');gradient.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=gradient;ctx.fillRect(0,0,128,128);}
+ const wakeTexture=new THREE.CanvasTexture(wakeCanvas);wakeTexture.colorSpace=THREE.SRGBColorSpace;textures.push(wakeTexture);
+ const wake=new THREE.Mesh(new THREE.PlaneGeometry(11,11),new THREE.MeshBasicMaterial({map:wakeTexture,transparent:true,depthWrite:false,opacity:.75}));
+ wake.rotation.x=-Math.PI/2;wake.visible=false;scene.add(wake);
 
  // ---------------------------------------------------------------- day and night
  // No post-processing: the glow is emissive materials plus additive halo sprites, which is cheap and
@@ -362,7 +372,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBrea
  function resize(){camera.aspect=container.clientWidth/container.clientHeight;camera.updateProjectionMatrix();renderer.setSize(container.clientWidth,container.clientHeight);}window.addEventListener('resize',resize);
  const look=new THREE.Vector3(0,0,-5);camera.position.set(94,108,118);
  const near=()=>destinations.findIndex(d=>Math.hypot(d.x-chassis.position.x,d.z-chassis.position.z)<5);
- function emit(){chassis.quaternion.vmult(LOCAL_FORWARD,forward);onState({x:chassis.position.x,z:chassis.position.z,yaw:Math.atan2(forward.x,forward.z),speed:chassis.velocity.dot(forward),airborne:grounded===0&&!swimming,swimming,mode:paused?'paused':mode,destination,near:near(),patched});}
+ function emit(){chassis.quaternion.vmult(LOCAL_FORWARD,forward);onState({x:chassis.position.x,z:chassis.position.z,yaw:Math.atan2(forward.x,forward.z),speed:chassis.velocity.dot(forward),airborne:grounded===0&&!swimming,swimming,mode:paused?'paused':mode,destination,near:near(),patched,gear:gear+1,rpm:Math.round(rpm),caught});}
  function arrive(){const index=destination;sound.chime();path=[];parked=true;mode='parked';routeLine.visible=false;targetRing.visible=false;travelTime=0;onArrive(index);}
 
 
@@ -415,7 +425,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBrea
   const driveForce=shifting?0:throttle*torqueAt(rpm)*PEAK_TORQUE*GEARS[gear]*FINAL/WHEEL_RADIUS/4*(boost?1.8:1);
   // Engine braking off the throttle, plus drag and rolling resistance on the body.
   if(!braking&&!rearBrake&&throttle<.05&&!path.length)braking=3+(4-gear)*1.5;
-  if(!afloat){const wind=-DRAG*Math.abs(speed)*speed-ROLL_DRAG*speed;dragForce.set(forward.x*wind,0,forward.z*wind);chassis.applyForce(dragForce);}
+  if(!afloat){const wind=(-DRAG*Math.abs(speed)*speed-ROLL_DRAG*speed)/chassis.mass;chassis.velocity.x+=forward.x*wind*dt;chassis.velocity.z+=forward.z*wind*dt;}
   engine=reverse?Math.abs(driveForce)*.55:-driveForce;
   steer+=(steerTarget-steer)*Math.min(1,dt*6.5);
   // Grip: the rear lets go under a bootful at low speed and when the handbrake is on, and comes back.
@@ -430,21 +440,26 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBrea
   if(up.y<.35){flipTime+=dt;if(flipTime>1.3)placeCar(position.x,position.z,Math.atan2(forward.x,forward.z),Math.max(GROUND+1.25,position.y+1));}else flipTime=0;
   // In the sea the car floats and paddles: buoyancy holds it at the waterline, the wheels have nothing to
   // grip, and the throttle pushes it along slowly until it climbs back up the beach.
-  const waterline=SEA_LEVEL+waveAt(position.x,position.z),depth=waterline-position.y+.75;
-  if(depth>0){
+  // In the sea the car floats and paddles. Forces are diluted by the physics substepping, so buoyancy and
+  // paddling are integrated into the velocity here instead: the car is held at the waterline by a spring.
+  const waterline=SEA_LEVEL+waveAt(position.x,position.z),depth=waterline+.45-position.y;
+  if(depth>-.35){
    if(!swimming){swimming=true;sound.splash(Math.min(1,Math.abs(speed)*.06+.4));for(let i=0;i<16;i++)puff(position.x+(Math.random()-.5)*3.4,waterline+.3,position.z+(Math.random()-.5)*3.4,2.2);}
-   const mass=chassis.mass,lift=Math.max(0,mass*24*Math.min(depth/.8,1.28)-chassis.velocity.y*mass*2.6);
-   floatForce.set(-chassis.velocity.x*mass*.55+forward.x*throttle*mass*(reverse?-.7:1.7),lift,-chassis.velocity.z*mass*.55+forward.z*throttle*mass*(reverse?-.7:1.7));
-   chassis.applyForce(floatForce);
+   const push=throttle*(reverse?-3.2:9.5);
+   chassis.velocity.y+=(24+THREE.MathUtils.clamp(depth*9,-6,9)-chassis.velocity.y*3.2)*dt;
+   chassis.velocity.x+=(forward.x*push-chassis.velocity.x*1.5)*dt;
+   chassis.velocity.z+=(forward.z*push-chassis.velocity.z*1.5)*dt;
    // Ride the swell: lean with the slope of the wave under the car, and turn slowly like a boat.
    const slopeX=(waveAt(position.x+1.6,position.z)-waveAt(position.x-1.6,position.z))/3.2,slopeZ=(waveAt(position.x,position.z+1.6)-waveAt(position.x,position.z-1.6))/3.2;
-   chassis.angularVelocity.x+=(slopeZ*2.6-chassis.angularVelocity.x*.5)*dt;
-   chassis.angularVelocity.z+=(-slopeX*2.6-chassis.angularVelocity.z*.5)*dt;
-   chassis.angularVelocity.y+=steer*dt*.75;
-   chassis.angularVelocity.scale(Math.exp(-dt*1.1),chassis.angularVelocity);
+   chassis.angularVelocity.x+=(slopeZ*2.6-chassis.angularVelocity.x*.6)*dt;
+   chassis.angularVelocity.z+=(-slopeX*2.6-chassis.angularVelocity.z*.6)*dt;
+   chassis.angularVelocity.y+=steer*dt*1.15;
+   chassis.angularVelocity.scale(Math.exp(-dt*1.2),chassis.angularVelocity);
    engine=0;braking=0;rearBrake=null;
-   if(Math.abs(speed)>1.5&&Math.random()<dt*14)puff(position.x-forward.x*2.4,waterline+.25,position.z-forward.z*2.4,1.1);
-  }else if(swimming&&depth<-.6){swimming=false;sound.splash(.3);}
+   wake.visible=true;wake.position.set(position.x,waterline+.06,position.z);wake.scale.setScalar(1+Math.sin(seaTime*5)*.08+Math.min(Math.abs(speed),8)*.05);
+   if(Math.abs(speed)>1.2&&Math.random()<dt*18)puff(position.x-forward.x*2.6+(Math.random()-.5),waterline+.3,position.z-forward.z*2.6+(Math.random()-.5),1.2);
+  }else{wake.visible=false;if(swimming){swimming=false;sound.splash(.3);}}
+  if(position.y<SEA_LEVEL-9)placeCar(SPAWN.x,SPAWN.z,SPAWN.yaw);
   headlight.emissiveIntensity=1.3;taillight.emissiveIntensity=braking>5||rearBrake||reverse?2.4:.5;
   soundState={rpm,throttle:shifting?.1:throttle,speed,sliding:0,grounded:grounded>0,shifting,swimming};
  }
@@ -501,6 +516,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBrea
   input,
   audio(value){return sound.setEnabled(value);},
   night(value){return setNight(value===undefined?!night:value);},
+  key(){sound.key();},
   dispose(){sound.dispose();cancelAnimationFrame(frame);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);window.removeEventListener('resize',resize);textures.forEach(t=>t.dispose());env.dispose();pmrem.dispose();renderer.dispose();scene.traverse(o=>{if(o.isMesh){o.geometry.dispose();(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());}});renderer.domElement.remove();tags.forEach(t=>t.el.remove());}
  };
 }

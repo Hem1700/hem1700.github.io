@@ -91,6 +91,7 @@ The homepage is a physics sandbox in the spirit of bruno-simon.com: a chunky 4x4
 - R: put the car and every loose object back. The car also rights itself if it lands on its roof.
 - Escape: close content or pause/resume. Any drive key resumes a paused drive, and switching windows never pauses it.
 - Touch driving buttons are available on phones.
+- A telemetry HUD (gear, revs, speed, packets caught, findings patched), CRT scanlines, a boot-time port scan and a terminal-framed reader come with night.
 - **N** switches between night and day. Night is the default: a dark island under stars, a neon grid on the ground, glowing road lines, the name and the firewall lit up, street lamps with halos, headlights that light the road ahead, and the page itself in the same palette.
 - **M** opens the network map: the six places as hosts with addresses and open ports, the roads as links, the car as a probe. Click a host to drive there.
 - A firewall ring stands around the plaza and opens as the car approaches, data packets run the roads and burst when you hit them, and the four real upstream findings block the road to Findings until you drive through each one and patch it.
