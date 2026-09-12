@@ -76,6 +76,10 @@ function toggleMap(open){mapOpen=open===undefined?!mapOpen:open;$('netmap').hidd
  $('camera').textContent=mapOpen?'Close map ✕':'Network map ⌗';$('camera').setAttribute('aria-expanded',String(mapOpen));
  if(!mapOpen)$('world').focus();}
 
+let nightOn=true;try{nightOn=localStorage.getItem('portfolio-night')!=='off';}catch{}
+function paintNight(){document.body.classList.toggle('night',nightOn);$('night').textContent=nightOn?'Night ◐':'Day ☀';$('night').setAttribute('aria-pressed',String(nightOn));}
+$('night').onclick=()=>{nightOn=!nightOn;campus?.night(nightOn);try{localStorage.setItem('portfolio-night',nightOn?'on':'off');}catch{}paintNight();$('world').focus();};
+paintNight();
 let soundOn=true;try{soundOn=localStorage.getItem('portfolio-sound')!=='off';}catch{}
 function paintSound(){$('sound').textContent=soundOn?'Sound ♪':'Muted ♪';$('sound').setAttribute('aria-pressed',String(soundOn));}
 paintSound();$('sound').onclick=()=>{soundOn=!soundOn;campus?.audio(soundOn);try{localStorage.setItem('portfolio-sound',soundOn?'on':'off');}catch{}paintSound();$('world').focus();};
@@ -98,6 +102,6 @@ function patch(finding){markPatched(finding);
  const done=()=>{if($('boot').hidden)return;$('boot').classList.add('gone');setTimeout(()=>{$('boot').hidden=true;},420);};
  setTimeout(step,180);
  window.addEventListener('keydown',done,{once:true});window.addEventListener('pointerdown',done,{once:true});}
-try{const {createCampus}=await import('./campus.js');campus=createCampus($('world'),{onState:update,onArrive:arrive,onSelect:goTo,onDrive:()=>{document.body.classList.add('exploring');setPanel(false);},onMap:()=>toggleMap(),onBreach:patch});campus.setPanel(panelOpen);if(!soundOn)campus.audio(false);}catch(error){$('sound').hidden=true;$('fallback').hidden=false;arrive(0,false);$('camera').disabled=true;$('explore').hidden=true;console.error('3D portfolio unavailable',error);}
+try{const {createCampus}=await import('./campus.js');campus=createCampus($('world'),{onState:update,onArrive:arrive,onSelect:goTo,onDrive:()=>{document.body.classList.add('exploring');setPanel(false);},onMap:()=>toggleMap(),onBreach:patch,onNight:value=>{nightOn=value;try{localStorage.setItem('portfolio-night',value?'on':'off');}catch{}paintNight();}});campus.setPanel(panelOpen);campus.night(nightOn);if(!soundOn)campus.audio(false);}catch(error){$('sound').hidden=true;$('night').hidden=true;$('fallback').hidden=false;arrive(0,false);$('camera').disabled=true;$('explore').hidden=true;console.error('3D portfolio unavailable',error);}
 const lifecycle=new AbortController();if(document.modelContext?.registerTool){try{Promise.resolve(document.modelContext.registerTool({name:'drive_to_portfolio_section',description:'Start driving the portfolio car to a selected place. Its content opens after arrival.',inputSchema:{type:'object',properties:{section:{type:'string',enum:destinations.map(d=>d.id)}},required:['section'],additionalProperties:false},annotations:{readOnlyHint:false},execute(input){const i=destinations.findIndex(d=>d.id===input?.section);if(i<0)throw new Error('Unknown destination');goTo(i);return{destination:destinations[i].title,status:campus?'driving':'content_open'};}},{signal:lifecycle.signal})).catch(()=>{});}catch{}}
 window.addEventListener('pagehide',()=>{lifecycle.abort();campus?.dispose();},{once:true});

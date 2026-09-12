@@ -59,3 +59,75 @@ body{background:#deddd3}.masthead{padding:25px 34px;background:linear-gradient(#
 .reader-bar .eyebrow{font-family:"Courier New",monospace}
 @media(prefers-reduced-motion:reduce){#netmap .links line{animation:none}#glitch.flash{animation:none}}
 @media(max-width:760px){#netmap{padding:72px 12px 132px}#netmap .node .host{font-size:20px}#netmap .node .meta{font-size:16px}#netmap .breach .breach-label{font-size:15px}}
+
+/* ---------------------------------------------------------------- night: the page follows the world */
+body.night{color:#cfe4e6}
+body.night .masthead{background:linear-gradient(#060c18d9,transparent);color:#d8ecec}
+body.night .identity>b{border-color:#5ef2dc40}
+body.night .identity>b span{color:#5ef2dc}
+body.night .identity small{color:#7fa3a8}
+body.night .top-actions button{background:#0b1a2ab8;border-color:#5ef2dc45;color:#d8f4f0}
+body.night .top-actions button:hover{border-color:#5ef2dc}
+body.night .top-actions a{color:#bfe0e2}
+body.night .orientation .eyebrow{color:#5ef2dc}
+body.night .orientation h1{color:#eaf6f4;text-shadow:0 0 26px #ff4f8b5c}
+body.night .orientation h1 span{color:#ff4f8b}
+body.night .orientation p{color:#9fc3c6}
+body.night .orientation small{color:#7fa0a4}
+body.night .orientation #begin-tour{background:#ff4f8b;color:#0b0f1c}
+body.night .orientation #begin-tour:hover{background:#5ef2dc}
+body.night .orientation #tour-findings{color:#8fdfd6}
+body.night .journey-status{background:#08131fd9;border-color:#5ef2dc38;color:#9ff0e2;box-shadow:0 0 22px #05131c66}
+body.night .journey-status i{background:#5ef2dc}
+body.night .journey-status button{color:#9ff0e2;border-color:#5ef2dc33}
+body.night .places{background:#08131fe6;border-color:#5ef2dc30;box-shadow:0 0 26px #04101a80}
+body.night .places-label{color:#6e959a}
+body.night .places button{color:#b8dcdd}
+body.night .places button:hover,body.night .places button.active{background:#5ef2dc1a;border-color:#5ef2dc44;color:#eafffb}
+body.night .drive-help{color:#89b0b4}
+body.night .drive-help button{color:#9ff0e2;border-color:#5ef2dc55}
+body.night kbd{border-color:#5ef2dc3d}
+body.night .world-label{background:#08151fe0;border-color:#5ef2dc42;color:#d6f2f0;box-shadow:0 0 18px #0a1a2688}
+body.night .world-label span{color:#6f9ba0;border-color:#5ef2dc2e}
+body.night .world-label b{color:#ff8ab3}
+body.night .world-label:hover{background:#0c2030;box-shadow:0 0 26px #5ef2dc3d}
+body.night #reader{background:#081520f2;border-color:#5ef2dc33;box-shadow:0 20px 60px #02080f8c}
+body.night .reader-bar{border-bottom-color:#5ef2dc22}
+body.night .reader-bar .eyebrow{color:#5ef2dc}
+body.night .reader-bar h2,body.night #reader-body h1,body.night #reader-body h2,body.night #reader-body h3{color:#e9f7f5}
+body.night .reader-bar button{background:#0e2233;border-color:#5ef2dc33;color:#d6f2f0}
+body.night #reader-body{color:#a9cbcd}
+body.night #reader-body a{color:#8ff0dd}
+body.night #reader-body .lead,body.night #reader-body .finding p,body.night #reader-body .post .t{color:#b7d6d6}
+body.night #reader-body .chips span,body.night #reader-body .stack span{border-color:#5ef2dc2e;background:#0e2130}
+body.night .reader-bottom{border-color:#5ef2dc22}
+body.night .reader-bottom a{color:#89b3b4}
+body.night .reader-bottom button{background:#5ef2dc;color:#062028}
+body.night .reader-bottom button:hover{background:#ff4f8b;color:#12060f}
+body.night #arrival{background:#08151fee;border-color:#5ef2dc44;color:#d6f2f0}
+body.night #arrival button{background:#5ef2dc;color:#062028}
+body.night #netmap{background:#05101b}
+body.night .netmap-bar{color:#9ff0e2}
+body.night .netmap-bar span{color:#6d9498}
+body.night .netmap-bar #netmap-patched{color:#ff8ab3}
+body.night #netmap .grid line{stroke:#5ef2dc14}
+body.night #netmap .perimeter{fill:#0a1a26;stroke:#5ef2dc4d}
+body.night #netmap .edge-label{fill:#5d868c}
+body.night #netmap .ring{stroke:#5ef2dc33}
+body.night #netmap .links line{stroke:#5ef2dcaa}
+body.night #netmap .node circle{fill:#0b1c28;stroke:#5ef2dc}
+body.night #netmap .node.gateway circle{fill:#5ef2dc}
+body.night #netmap .node text{fill:#d3efec}
+body.night #netmap .node .meta{fill:#7ba7a8}
+body.night #netmap .node:hover circle,body.night #netmap .node:focus-visible circle{fill:#ff4f8b;stroke:#ffd3e2}
+body.night #netmap .breach rect{fill:#ff4f8b;stroke:#ffd3e2}
+body.night #netmap .breach.patched rect{fill:#5ef2dc;stroke:#d3fff7}
+body.night #netmap .probe path{fill:#ffb347;stroke:#fff0d2}
+body.night #netmap .probe-label{fill:#c79a5f}
+body.night .netmap-legend{color:#9cc0c1}
+body.night .netmap-legend span{color:#6d9498}
+body.night .netmap-legend i{background:#ff4f8b}
+body.night .netmap-legend li.patched i{background:#5ef2dc}
+body.night .netmap-legend li.patched b{color:#6d9498}
+body.night .touch button{background:#08151fdd;border-color:#5ef2dc44}
+body.night #fallback,body.night .no-script{background:#08151f;color:#d6f2f0}
