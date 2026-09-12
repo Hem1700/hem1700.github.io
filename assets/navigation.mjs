@@ -1,5 +1,6 @@
 // The six places are scattered across the open world, each at the tip of a road that runs out from the middle.
 export const CENTRE={x:-1,z:-3};
+export const ISLAND=262;
 const PLACES=[
  {id:'overview',title:'Overview',file:'profile.html',angle:.52,distance:70,color:'#f3be64',subtitle:'Security engineer. Seattle.'},
  {id:'findings',title:'Findings',file:'findings.html',angle:1.57,distance:118,color:'#8bbaa2',subtitle:'Linux · PyTorch · curl'},

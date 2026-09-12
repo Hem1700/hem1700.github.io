@@ -65,17 +65,18 @@ export function createSound(){
   resume(){build();if(!context)return;if(context.state==='suspended')context.resume().catch(()=>{});ignition();},
   setEnabled(value){enabled=value;if(!value){if(master)ramp(master.gain,0,.05);}else{build();if(master)ramp(master.gain,VOLUME,.05);if(context&&context.state==='suspended')context.resume().catch(()=>{});}return enabled;},
   /** rpm from the gearbox, throttle 0..1, speed in m/s, sliding 0..1, grounded false in the air. */
-  update({rpm=800,throttle=0,speed=0,sliding=0,grounded=true,shifting=false}={}){
+  update({rpm=800,throttle=0,speed=0,sliding=0,grounded=true,shifting=false,swimming=false}={}){
    if(!context||!enabled)return;
    const pace=Math.abs(speed),firing=Math.max(11,rpm/30),load=shifting?.12:throttle;
+   const muffle=swimming?.35:1;
    for(const voice of voices)ramp(voice.oscillator.frequency,firing*voice.ratio,.045);
-   ramp(engineFilter.frequency,360+rpm*.12+load*1500+(grounded?0:300),.07);
-   ramp(engineGain.gain,.042+load*.1+Math.min(rpm,6500)*.000012,.07);
+   ramp(engineFilter.frequency,(360+rpm*.12+load*1500+(grounded?0:300))*muffle,.07);
+   ramp(engineGain.gain,(.042+load*.1+Math.min(rpm,6500)*.000012)*(swimming?.55:1),.07);
    ramp(intakeFilter.frequency,520+rpm*.16,.08);
    ramp(intakeGain.gain,load*.05+(rpm>5200?.02:0),.08);
    // Road roar only while a wheel is actually on the ground.
-   ramp(rollFilter.frequency,260+pace*22,.12);
-   ramp(rollGain.gain,grounded?Math.min(.07,pace*.0042):0,.1);
+   ramp(rollFilter.frequency,swimming?170+pace*12:260+pace*22,.12);
+   ramp(rollGain.gain,swimming?Math.min(.06,.02+pace*.006):grounded?Math.min(.07,pace*.0042):0,.1);
    ramp(skidGain.gain,Math.min(.14,sliding*.14),.05);
    ramp(windGain.gain,.012+Math.min(pace*pace,1300)*.00007,.2);
   },
@@ -97,6 +98,15 @@ export function createSound(){
      ringGain.gain.setValueAtTime(level*.06/(index+1),start);ringGain.gain.exponentialRampToValueAtTime(.0006,start+.18+index*.05);
      ring.connect(ringGain);ringGain.connect(master);ring.start(start);ring.stop(start+.3);}
    }catch{}
+  },
+  /** A short bright ping: a packet caught, a finding patched. */
+  blip(){
+   if(!context||!enabled)return;
+   const start=now();
+   try{const oscillator=context.createOscillator(),gain=context.createGain();oscillator.type='square';
+    oscillator.frequency.setValueAtTime(880,start);oscillator.frequency.exponentialRampToValueAtTime(1760,start+.07);
+    gain.gain.setValueAtTime(.05,start);gain.gain.exponentialRampToValueAtTime(.0006,start+.14);
+    oscillator.connect(gain);gain.connect(master);oscillator.start(start);oscillator.stop(start+.16);}catch{}
   },
   /** Water: a broad splash that settles into a gulp. */
   splash(strength=.6){

@@ -91,11 +91,14 @@ The homepage is a physics sandbox in the spirit of bruno-simon.com: a chunky 4x4
 - R: put the car and every loose object back. The car also rights itself if it lands on its roof.
 - Escape: close content or pause/resume. Any drive key resumes a paused drive, and switching windows never pauses it.
 - Touch driving buttons are available on phones.
+- **M** opens the network map: the six places as hosts with addresses and open ports, the roads as links, the car as a probe. Click a host to drive there.
+- A firewall ring stands around the plaza and opens as the car approaches, data packets run the roads and burst when you hit them, and the four real upstream findings block the road to Findings until you drive through each one and patch it.
+- Drive off the beach and the car floats: buoyancy holds it at the waterline, the throttle paddles it along, and it climbs back up the sand under its own power.
 - Sound is synthesised in the browser — no audio files. The engine is a four-cylinder four-stroke whose firing frequency follows the revs, so gear changes drop the note; on top of it sit intake roar, tyre roll and slip, wind, and impacts scaled by how hard you hit. It starts on your first key press or tap, and the Sound button in the header mutes it (the choice is remembered).
 - The car weighs 900kg and drives through a five-speed gearbox with a torque curve, engine braking and aerodynamic drag: about 1.5 seconds to 10m/s, 2.8 to 25m/s, roughly 49m/s flat out (61 on boost), and 31 units to stop from 24m/s. The rear steps out under power and under the handbrake, and lays rubber where it slides.
 
 The original homepage is preserved exactly in `profile.html`. Existing résumé pages, writeups, images and documents are unchanged, and content is read directly from those pages. Visitors can use “Read portfolio” without WebGL or JavaScript. GitHub Pages continues serving the repository root with no build step.
 
-`assets/campus.js` builds the world, the car and the physics, `assets/navigation.mjs` plans routes between places, `assets/sound.mjs` synthesises the audio, and `assets/portfolio.js` connects driving to the original content. Three.js (MIT) and cannon-es 0.20.0 (MIT) are vendored in `assets/vendor/` with their licenses.
+`assets/campus.js` builds the world, the car and the physics, `assets/navigation.mjs` lays out the island and plans routes, `assets/security.mjs` holds the findings and host details shared by the world and the map, `assets/sound.mjs` synthesises the audio, and `assets/portfolio.js` connects driving to the original content. Three.js (MIT) and cannon-es 0.20.0 (MIT) are vendored in `assets/vendor/` with their licenses.
 
 Run `python3 -m http.server 8000` for a local preview.

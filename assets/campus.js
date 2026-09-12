@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import * as CANNON from './vendor/cannon-es.js';
 import {RoundedBoxGeometry} from './vendor/geometries/RoundedBoxGeometry.js';
-import {destinations,roadPoints,roadSegments,createRoute,angleDifference,CENTRE,WORLD_RADIUS,RING} from './navigation.mjs';
+import {destinations,roadPoints,roadSegments,createRoute,angleDifference,CENTRE,WORLD_RADIUS,RING,ISLAND} from './navigation.mjs';
+import {FINDINGS,breachAt} from './security.mjs';
 import {createSound} from './sound.mjs';
 
 // World conventions: +Y is up, a heading (yaw) of 0 faces +Z, and a body's local +X is its left side.
-const GROUND=.15,FIXED_STEP=1/60,ISLAND=262,SEA_LEVEL=-1.1;
+const GROUND=.15,FIXED_STEP=1/60,SEA_LEVEL=-1.1;
 const CAMERA_OFFSET=new THREE.Vector3(13,17,16);
 const TOWARD_CAMERA_YAW=Math.atan2(CAMERA_OFFSET.x,CAMERA_OFFSET.z);
 const UP_SCREEN_YAW=Math.atan2(-CAMERA_OFFSET.x,-CAMERA_OFFSET.z);
@@ -15,7 +16,7 @@ const SPAWN={x:NAME_CENTER.x+Math.sin(TOWARD_CAMERA_YAW)*10,z:NAME_CENTER.z+Math
 const PIXEL_FONT={H:['1.1','1.1','111','1.1','1.1'],E:['111','1..','11.','1..','111'],M:['1...1','11.11','1.1.1','1...1','1...1'],P:['11.','1.1','11.','1..','1..'],A:['.1.','1.1','111','1.1','1.1'],R:['11.','1.1','11.','1.1','1.1'],K:['1.1','1.1','11.','1.1','1.1'],'.':['.','.','.','.','1']};
 const DRIVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','shift'];
 
-export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
+export function createCampus(container,{onState,onArrive,onSelect,onDrive,onBreach,onMap}){
  const scene=new THREE.Scene();scene.background=new THREE.Color('#dfe3da');const fog=new THREE.Fog('#dfe3da',300,940);scene.fog=fog;
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(container.clientWidth,container.clientHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;container.append(renderer.domElement);
  const camera=new THREE.PerspectiveCamera(37,container.clientWidth/container.clientHeight,.1,4000);
@@ -47,7 +48,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  function solid(shape,x,y,z,yaw=0,pitch=0){const body=new CANNON.Body({mass:0});body.addShape(shape);body.position.set(x,y,z);body.quaternion.setFromEuler(pitch,yaw,0,'YXZ');world.addBody(body);return body;}
  // Endless ground and no boundary walls: drive as far as you like. A box, not a CANNON.Plane, because cannon-es
  // computes a rotated plane's bounds wrongly, which makes wheel rays miss half the world.
- solid(new CANNON.Cylinder(ISLAND,ISLAND,1.2,22),0,GROUND-.6,0);
+ solid(new CANNON.Cylinder(ISLAND,ISLAND+13,2.4,26),0,.13-1.2,0);
 
  // ---------------------------------------------------------------- ground, roads and street furniture
  const paving=new THREE.MeshStandardMaterial({color:'#ffffff',map:pavingTexture,roughness:.92,envMapIntensity:.5});
@@ -63,6 +64,8 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  const sea=new THREE.Mesh(seaGeometry,new THREE.MeshStandardMaterial({color:'#2c5d6a',roughness:.34,metalness:.04,envMapIntensity:.35}));
  sea.position.y=SEA_LEVEL;sea.receiveShadow=true;scene.add(sea);
  const seaRest=Float32Array.from(seaGeometry.attributes.position.array);
+ let seaTime=0;
+ const waveAt=(x,z)=>Math.sin(x*.035+seaTime*.9)*.34+Math.sin(z*.052+seaTime*1.25)*.26+Math.sin((x+z)*.014-seaTime*.6)*.2;
  function ribbon(points,closed,width,y,surface){const vertices=[],uvs=[],indices=[],count=points.length;let travelled=0;
   for(let i=0;i<count;i++){const p=points[i],before=points[closed?(i+count-1)%count:Math.max(0,i-1)],after=points[closed?(i+1)%count:Math.min(count-1,i+1)];
    const dx=after.x-before.x,dz=after.z-before.z,l=Math.hypot(dx,dz)||1;
@@ -195,6 +198,58 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   else for(let k=0;k<6;k++)addProp('barrel',x+Math.sin(k)*3,z+Math.cos(k)*3);
   for(let k=0;k<5;k++)addProp('cone',x+Math.sin(a+k)*7,z+Math.cos(a+k)*7);}
 
+
+ // ---------------------------------------------------------------- the security layer
+ // A firewall ring around the plaza that opens as you approach, packets running the roads, and each of
+ // Hem's real upstream findings standing in the way as an unpatched barrier until the car drives through it.
+ function panelTexture(lines,{background='#10201f',border='#7fe3d6',heading='#d7fff6'}={}){
+  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=512;const ctx=canvas.getContext('2d');
+  ctx.fillStyle=background;ctx.fillRect(0,0,1024,512);
+  ctx.strokeStyle=border;ctx.lineWidth=10;ctx.strokeRect(14,14,996,484);
+  ctx.globalAlpha=.16;ctx.fillStyle=border;for(let y=26;y<498;y+=8)ctx.fillRect(24,y,976,2);ctx.globalAlpha=1;
+  lines.forEach((line,index)=>{ctx.fillStyle=line.colour||(index?'#bfe9e2':heading);ctx.font=`${line.weight||''} ${line.size||44}px "Courier New",monospace`.trim();ctx.fillText(line.text,54,120+index*72,916);});
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);return texture;}
+
+ const FIREWALL=RING-7.5,firewallPanels=[];
+ const panelSurface=()=>new THREE.MeshBasicMaterial({map:panelTexture([{text:'FIREWALL',size:52,weight:'bold'},{text:'default deny'},{text:'inbound 0/0'}]),transparent:true,opacity:.34,side:THREE.DoubleSide,depthWrite:false});
+ const firewallSurface=panelSurface();
+ for(let i=0;i<destinations.length;i++){
+  const from=destinations[i].rotation+.19,to=destinations[(i+1)%destinations.length].rotation+(i===destinations.length-1?Math.PI*2:0)-.19;
+  const count=Math.max(2,Math.round((to-from)/.13));
+  for(let k=0;k<count;k++){const a=from+(to-from)*(k+.5)/count,width=FIREWALL*(to-from)/count*.94;
+   const group=new THREE.Group();group.position.set(NAME_CENTER.x+Math.sin(a)*FIREWALL,0,NAME_CENTER.z+Math.cos(a)*FIREWALL);group.rotation.y=a;scene.add(group);
+   const pane=new THREE.Mesh(new THREE.PlaneGeometry(width,3.6),firewallSurface);pane.position.y=1.95;group.add(pane);
+   const rail=new THREE.Mesh(new THREE.BoxGeometry(width,.14,.14),new THREE.MeshStandardMaterial({color:'#7fe3d6',emissive:'#49c9bb',emissiveIntensity:1.2,roughness:.4}));rail.position.y=3.78;group.add(rail);
+   firewallPanels.push(group);}}
+
+ const PACKET_COLOURS=['#39d5c8','#e0642c','#6f8fe0'];
+ const packetGeometry=new RoundedBoxGeometry(.85,.85,.85,1,.12),packets=[];
+ for(let i=0;i<24;i++){const mesh=new THREE.Mesh(packetGeometry,new THREE.MeshStandardMaterial({color:PACKET_COLOURS[i%3],emissive:PACKET_COLOURS[i%3],emissiveIntensity:.9,roughness:.35}));mesh.castShadow=true;scene.add(mesh);
+  packets.push({mesh,segment:i%roadSegments.length,t:Math.random(),pace:.055+Math.random()*.06,pop:0});}
+ function stepPackets(dt,now){
+  for(const packet of packets){
+   const points=roadSegments[packet.segment].points,span=points.length-(roadSegments[packet.segment].closed?0:1);
+   packet.t+=packet.pace*dt;if(packet.t>=1){packet.t-=1;packet.segment=(packet.segment+1)%roadSegments.length;}
+   const place=packet.t*span,index=Math.floor(place),blend=place-index,from=points[index%points.length],to=points[(index+1)%points.length];
+   packet.mesh.position.set(from.x+(to.x-from.x)*blend,GROUND+1.15+Math.sin(now*.004+packet.t*12)*.18,from.z+(to.z-from.z)*blend);
+   packet.mesh.rotation.set(now*.0016,now*.0021,now*.0013);
+   if(packet.pop>0){packet.pop-=dt*3;packet.mesh.scale.setScalar(Math.max(.01,1+ (1-packet.pop)*2));packet.mesh.visible=packet.pop>0;
+    if(packet.pop<=0){packet.mesh.visible=true;packet.mesh.scale.setScalar(1);packet.t=Math.random();}
+    continue;}
+   packet.mesh.scale.setScalar(1);
+   if(Math.hypot(packet.mesh.position.x-chassis.position.x,packet.mesh.position.z-chassis.position.z)<2.4&&Math.abs(chassis.position.y-packet.mesh.position.y)<2.6){packet.pop=1;sound.blip();}}}
+
+ const breaches=[];let patched=0;
+ FINDINGS.forEach((finding,index)=>{
+  const spot=breachAt(index);
+  const group=new THREE.Group();group.position.set(spot.x,0,spot.z);group.rotation.y=spot.bearing;scene.add(group);
+  const locked=panelTexture([{text:'UNPATCHED',size:58,weight:'bold',colour:'#ffb4a6'},{text:finding.host},{text:finding.detail,size:36},{text:finding.status,size:32,colour:'#e7a08f'}],{background:'#2a1512',border:'#e0705a',heading:'#ffd8cf'});
+  const cleared=panelTexture([{text:'PATCHED ✓',size:58,weight:'bold',colour:'#cdf5b6'},{text:finding.host},{text:finding.detail,size:36},{text:finding.status,size:32,colour:'#a8d79a'}],{background:'#14251a',border:'#8edc8a',heading:'#e4ffd8'});
+  const pane=new THREE.Mesh(new THREE.PlaneGeometry(10.5,4.4),new THREE.MeshBasicMaterial({map:locked,transparent:true,opacity:.82,side:THREE.DoubleSide,depthWrite:false}));
+  pane.position.y=2.6;group.add(pane);
+  for(const side of [-1,1]){const post=cylinder(group,.16,5,side*5.4,2.5,0,metal,10);post.castShadow=true;}
+  breaches.push({group,pane,locked,cleared,finding,open:false,drop:0});});
+
  // ---------------------------------------------------------------- the car: a chunky 4x4 on raycast suspension
  const chassis=new CANNON.Body({mass:900,allowSleep:false});chassis.addShape(new CANNON.Box(half(1.05,.45,2.15)),new CANNON.Vec3(0,.3,0));chassis.angularDamping=.28;chassis.linearDamping=.01;
  const vehicle=new CANNON.RaycastVehicle({chassisBody:chassis,indexRightAxis:0,indexUpAxis:1,indexForwardAxis:2});
@@ -229,19 +284,14 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  function stepDust(dt){for(const p of dust){if(p.life<=0)continue;p.life-=dt*1.6;p.mesh.position.x+=p.vx*dt;p.mesh.position.y+=p.vy*dt;p.mesh.position.z+=p.vz*dt;p.vy*=Math.exp(-dt*2);const k=p.life>0?Math.sin(Math.PI*Math.min(1,p.life)):0;p.mesh.scale.setScalar(.3+k*1.4*(1.2-p.life*.6));p.mesh.rotation.y+=dt;if(p.life<=0)p.mesh.visible=false;}}
  let wasGrounded=4,dustTimer=0;
 
- // In map view the car is a speck, so it gets a marker: a ring and an arrow pointing where it faces.
- const marker=new THREE.Group();marker.visible=false;scene.add(marker);
- const markerRing=new THREE.Mesh(new THREE.RingGeometry(3.4,4.6,40),new THREE.MeshBasicMaterial({color:'#e0642c',transparent:true,opacity:.95,depthTest:false}));markerRing.rotation.x=-Math.PI/2;markerRing.renderOrder=5;marker.add(markerRing);
- const markerArrow=new THREE.Mesh(new THREE.ConeGeometry(2.6,6,3),new THREE.MeshBasicMaterial({color:'#e0642c',depthTest:false}));markerArrow.rotation.x=Math.PI/2;markerArrow.position.z=6.4;markerArrow.renderOrder=5;marker.add(markerArrow);
-
  // ---------------------------------------------------------------- navigation aids
  const targetRing=new THREE.Mesh(new THREE.RingGeometry(3.2,3.35,64),new THREE.MeshBasicMaterial({color:'#d37642',transparent:true,opacity:.8}));targetRing.rotation.x=-Math.PI/2;targetRing.position.y=.3;targetRing.visible=false;scene.add(targetRing);
  const routeLine=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineDashedMaterial({color:'#edb465',dashSize:1.1,gapSize:.75,transparent:true,opacity:.95,depthTest:false}));routeLine.renderOrder=4;scene.add(routeLine);
 
  // ---------------------------------------------------------------- state and input
- let path=[],destination=null,parked=false,mode='manual',view=1,paused=false,panelOpen=false,frame,last=0,send=0;
- let grounded=4,seaTime=0,seaNormals=0,steer=0,engine=0,soundState={},braking=0,impactShake=0,flipTime=0,stuckTime=0,travelTime=0;const keys=new Set();
- const forward=new CANNON.Vec3(),up=new CANNON.Vec3(),dragForce=new CANNON.Vec3(),LOCAL_FORWARD=new CANNON.Vec3(0,0,1),LOCAL_UP=new CANNON.Vec3(0,1,0);
+ let path=[],destination=null,parked=false,mode='manual',paused=false,panelOpen=false,frame,last=0,send=0;
+ let grounded=4,seaNormals=0,swimming=false,steer=0,engine=0,soundState={},braking=0,impactShake=0,flipTime=0,stuckTime=0,travelTime=0;const keys=new Set();
+ const forward=new CANNON.Vec3(),up=new CANNON.Vec3(),dragForce=new CANNON.Vec3(),floatForce=new CANNON.Vec3(),LOCAL_FORWARD=new CANNON.Vec3(0,0,1),LOCAL_UP=new CANNON.Vec3(0,1,0);
  function placeCar(x,z,yaw,y=GROUND+1.25){chassis.position.set(x,y,z);chassis.quaternion.setFromEuler(0,yaw,0);chassis.velocity.setZero();chassis.angularVelocity.setZero();steer=0;flipTime=0;stuckTime=0;}
  placeCar(SPAWN.x,SPAWN.z,SPAWN.yaw);
  chassis.addEventListener('collide',event=>{const hit=Math.abs(event.contact.getImpactVelocityAlongNormal());if(hit>3){impactShake=Math.min(1,Math.max(impactShake,hit*.07));sound.impact(Math.min(1,hit*.075));}});
@@ -249,13 +299,13 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;
  renderer.domElement.addEventListener('pointerdown',e=>{sound.resume();down={x:e.clientX,y:e.clientY};});renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)return;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(interactive)[0];if(hit)onSelect(hit.object.userData.destination);});
  // Any drive key takes the wheel: it resumes a paused drive and cancels automatic navigation (unless the reader is open).
- function input(k,value){if(value){sound.resume();if(panelOpen){onDrive?.();panelOpen=false;}paused=false;parked=false;keys.add(k);path=[];destination=null;routeLine.visible=false;targetRing.visible=false;mode='manual';view=0;}else keys.delete(k);}
- function keydown(e){const target=e.target instanceof Element?e.target:document.body;const k=e.key.toLowerCase();if(target.closest('input,textarea,select'))return;if(target.closest('#reader')&&!['w','a','s','d','shift'].includes(k))return;if(target.closest('button,a')&&(k===' '||k==='enter'))return;if(DRIVE_KEYS.includes(k)){if(k!=='shift')e.preventDefault();input(k,true);}if(k==='c'&&!e.repeat){view=1-view;emit();}}
+ function input(k,value){if(value){sound.resume();if(panelOpen){onDrive?.();panelOpen=false;}paused=false;parked=false;keys.add(k);path=[];destination=null;routeLine.visible=false;targetRing.visible=false;mode='manual';}else keys.delete(k);}
+ function keydown(e){const target=e.target instanceof Element?e.target:document.body;const k=e.key.toLowerCase();if(target.closest('input,textarea,select'))return;if(target.closest('#reader')&&!['w','a','s','d','shift'].includes(k))return;if(target.closest('button,a')&&(k===' '||k==='enter'))return;if(DRIVE_KEYS.includes(k)){if(k!=='shift')e.preventDefault();input(k,true);}if(k==='m'&&!e.repeat)onMap?.();}
  function keyup(e){keys.delete(e.key.toLowerCase());}const blur=()=>{keys.clear();};window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);window.addEventListener('blur',blur);
  function resize(){camera.aspect=container.clientWidth/container.clientHeight;camera.updateProjectionMatrix();renderer.setSize(container.clientWidth,container.clientHeight);}window.addEventListener('resize',resize);
  const look=new THREE.Vector3(0,0,-5);camera.position.set(94,108,118);
  const near=()=>destinations.findIndex(d=>Math.hypot(d.x-chassis.position.x,d.z-chassis.position.z)<5);
- function emit(){chassis.quaternion.vmult(LOCAL_FORWARD,forward);onState({x:chassis.position.x,z:chassis.position.z,yaw:Math.atan2(forward.x,forward.z),speed:chassis.velocity.dot(forward),airborne:grounded===0,mode:paused?'paused':mode,destination,near:near(),view});}
+ function emit(){chassis.quaternion.vmult(LOCAL_FORWARD,forward);onState({x:chassis.position.x,z:chassis.position.z,yaw:Math.atan2(forward.x,forward.z),speed:chassis.velocity.dot(forward),airborne:grounded===0&&!swimming,swimming,mode:paused?'paused':mode,destination,near:near(),patched});}
  function arrive(){const index=destination;sound.chime();path=[];parked=true;mode='parked';routeLine.visible=false;targetRing.visible=false;travelTime=0;onArrive(index);}
 
 
@@ -268,7 +318,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  function drive(dt){
   chassis.quaternion.vmult(LOCAL_FORWARD,forward);chassis.quaternion.vmult(LOCAL_UP,up);
   const speed=chassis.velocity.dot(forward),position=chassis.position;
-  let steerTarget=0,rearBrake=null,demand=0,reverse=false,boost=false;braking=0;
+  let steerTarget=0,rearBrake=null,demand=0,reverse=false,boost=false;braking=0;const afloat=swimming;
   if(parked||panelOpen){braking=60;}
   else if(path.length){
    travelTime+=dt;let target=path[0],distance=Math.hypot(target.x-position.x,target.z-position.z);
@@ -308,8 +358,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   const driveForce=shifting?0:throttle*torqueAt(rpm)*PEAK_TORQUE*GEARS[gear]*FINAL/WHEEL_RADIUS/4*(boost?1.8:1);
   // Engine braking off the throttle, plus drag and rolling resistance on the body.
   if(!braking&&!rearBrake&&throttle<.05&&!path.length)braking=3+(4-gear)*1.5;
-  const wind=-DRAG*Math.abs(speed)*speed-ROLL_DRAG*speed;
-  dragForce.set(forward.x*wind,0,forward.z*wind);chassis.applyForce(dragForce,chassis.position);
+  if(!afloat){const wind=-DRAG*Math.abs(speed)*speed-ROLL_DRAG*speed;dragForce.set(forward.x*wind,0,forward.z*wind);chassis.applyForce(dragForce);}
   engine=reverse?Math.abs(driveForce)*.55:-driveForce;
   steer+=(steerTarget-steer)*Math.min(1,dt*8);
   // Grip: the rear lets go under a bootful at low speed and when the handbrake is on, and comes back.
@@ -322,12 +371,20 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   vehicle.setSteeringValue(steer,0);vehicle.setSteeringValue(steer,1);
   // Flip recovery and out-of-bounds rescue.
   if(up.y<.35){flipTime+=dt;if(flipTime>1.3)placeCar(position.x,position.z,Math.atan2(forward.x,forward.z),Math.max(GROUND+1.25,position.y+1));}else flipTime=0;
-  // Drive off the beach and you end up in the sea; a moment later you are back on the sand.
-  if(position.y<SEA_LEVEL+.4){const distance=Math.hypot(position.x,position.z)||1;sound.splash(Math.min(1,Math.abs(speed)*.05+.35));
-   for(let i=0;i<14;i++)puff(position.x+(Math.random()-.5)*3,SEA_LEVEL+.4,position.z+(Math.random()-.5)*3,2);
-   const shore=Math.min(distance,ISLAND-14);placeCar(position.x/distance*shore,position.z/distance*shore,Math.atan2(-position.x,-position.z));}
+  // In the sea the car floats and paddles: buoyancy holds it at the waterline, the wheels have nothing to
+  // grip, and the throttle pushes it along slowly until it climbs back up the beach.
+  const waterline=SEA_LEVEL+waveAt(position.x,position.z),depth=waterline-position.y+.75;
+  if(depth>0){
+   if(!swimming){swimming=true;sound.splash(Math.min(1,Math.abs(speed)*.06+.4));for(let i=0;i<16;i++)puff(position.x+(Math.random()-.5)*3.4,waterline+.3,position.z+(Math.random()-.5)*3.4,2.2);}
+   const mass=chassis.mass,lift=Math.max(0,mass*24*Math.min(depth/.75,1.35)-chassis.velocity.y*mass*4);
+   floatForce.set(-chassis.velocity.x*mass*1.25+forward.x*throttle*mass*(reverse?-1.1:2.6),lift,-chassis.velocity.z*mass*1.25+forward.z*throttle*mass*(reverse?-1.1:2.6));
+   chassis.applyForce(floatForce);
+   chassis.angularVelocity.y+=steer*dt*.9;chassis.angularVelocity.scale(Math.exp(-dt*2.2),chassis.angularVelocity);
+   engine=0;braking=0;rearBrake=null;
+   if(Math.abs(speed)>1.5&&Math.random()<dt*14)puff(position.x-forward.x*2.4,waterline+.25,position.z-forward.z*2.4,1.1);
+  }else if(swimming&&depth<-.6){swimming=false;sound.splash(.3);}
   headlight.emissiveIntensity=1.3;taillight.emissiveIntensity=braking>5||rearBrake||reverse?2.4:.5;
-  soundState={rpm,throttle:shifting?.1:throttle,speed,sliding:0,grounded:grounded>0,shifting};
+  soundState={rpm,throttle:shifting?.1:throttle,speed,sliding:0,grounded:grounded>0,shifting,swimming};
  }
 
  function animate(now){frame=requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05)||FIXED_STEP;last=now;
@@ -343,8 +400,18 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
    for(const wheel of vehicle.wheelInfos)if(wheel.isInContact&&wheel.skidInfo<.75)layMark(wheel.raycastResult.hitPointWorld.x,wheel.raycastResult.hitPointWorld.z,heading);}
   // Swell: the sea surface rolls in two directions at once.
   if(!paused){seaTime+=dt;const positions=seaGeometry.attributes.position.array;
-   for(let i=1;i<positions.length;i+=3){const x=seaRest[i-1],z=seaRest[i+1];positions[i]=Math.sin(x*.035+seaTime*.9)*.34+Math.sin(z*.052+seaTime*1.25)*.26+Math.sin((x+z)*.014-seaTime*.6)*.2;}
+   for(let i=1;i<positions.length;i+=3)positions[i]=waveAt(seaRest[i-1],seaRest[i+1]);
    seaGeometry.attributes.position.needsUpdate=true;if(now-seaNormals>400){seaGeometry.computeVertexNormals();seaNormals=now;}}
+  // Firewall opens for the car, packets run the roads, findings get patched by driving through them.
+  if(!paused){
+   for(const panel of firewallPanels){const near=Math.hypot(panel.position.x-chassis.position.x,panel.position.z-chassis.position.z)<17;panel.position.y+=((near?-4.2:0)-panel.position.y)*Math.min(1,dt*4);}
+   stepPackets(dt,now);
+   for(const breach of breaches){
+    if(!breach.open){
+     const offset=Math.hypot(breach.group.position.x-chassis.position.x,breach.group.position.z-chassis.position.z);
+     if(offset<5.4&&Math.abs(chassis.position.y-GROUND)<3){breach.open=true;patched++;breach.pane.material.map=breach.cleared;breach.pane.material.needsUpdate=true;sound.impact(.55);sound.blip();onBreach?.({...breach.finding,index:breaches.indexOf(breach),patched,total:breaches.length});}
+    }else if(breach.drop<1){breach.drop=Math.min(1,breach.drop+dt*.8);breach.pane.position.y=2.6-breach.drop*2.2;breach.pane.material.opacity=.82-breach.drop*.45;breach.group.rotation.z=breach.drop*.12;}}
+  }
   wasGrounded=grounded;stepDust(dt);
   chassis.quaternion.vmult(LOCAL_FORWARD,forward);
   sound.update(paused?{rpm:850,throttle:0,speed:0,grounded:true}:{...soundState,sliding:skidding?Math.min(1,planar/9):0});
@@ -352,30 +419,23 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   for(let i=0;i<wheelMeshes.length;i++){vehicle.updateWheelTransform(i);const t=vehicle.wheelInfos[i].worldTransform;wheelMeshes[i].position.copy(t.position);wheelMeshes[i].quaternion.copy(t.quaternion);}
   for(const item of loose){if(item.body.sleepState!==CANNON.Body.SLEEPING){item.mesh.position.copy(item.body.position);item.mesh.quaternion.copy(item.body.quaternion);}}
   targetRing.material.opacity=.5+Math.sin(now*.003)*.2;
-  marker.visible=view===1;if(view===1){marker.position.set(chassis.position.x,GROUND+.5,chassis.position.z);marker.rotation.y=Math.atan2(forward.x,forward.z);marker.scale.setScalar(1+Math.sin(now*.004)*.08);}
   const narrow=container.clientWidth<760,carPosition=new THREE.Vector3().copy(chassis.position),camTarget=new THREE.Vector3(),lookTarget=new THREE.Vector3();
-  if(view===1){
-   // Map view looks down on the whole island from the same corner as the driving camera, framed to fit.
-   const reach=(WORLD_RADIUS+26)/Math.tan(camera.fov*Math.PI/360)*(narrow?1.5:1);
-   camTarget.set(CENTRE.x+reach*.34,reach*.9,CENTRE.z+reach*.42);lookTarget.set(CENTRE.x,0,CENTRE.z);}
-  else{chassis.quaternion.vmult(LOCAL_FORWARD,forward);const zoom=(1+Math.min(chassis.velocity.length(),62)*.0095)*(narrow?1.3:1);camTarget.copy(CAMERA_OFFSET).multiplyScalar(zoom).add(carPosition);camTarget.y-=carPosition.y*.6;lookTarget.set(carPosition.x+forward.x*2,carPosition.y*.4,carPosition.z+forward.z*2);if(panelOpen){if(narrow){lookTarget.x+=Math.sin(TOWARD_CAMERA_YAW)*10;lookTarget.z+=Math.cos(TOWARD_CAMERA_YAW)*10;}else{lookTarget.x+=SCREEN_RIGHT.x*7.5;lookTarget.z+=SCREEN_RIGHT.z*7.5;}}}
-  camera.position.lerp(camTarget,1-Math.exp(-dt*(view===1?2.1:4)));look.lerp(lookTarget,1-Math.exp(-dt*(view===1?2.6:6)));
+  {chassis.quaternion.vmult(LOCAL_FORWARD,forward);const zoom=(1+Math.min(chassis.velocity.length(),62)*.0095)*(narrow?1.3:1);camTarget.copy(CAMERA_OFFSET).multiplyScalar(zoom).add(carPosition);camTarget.y-=carPosition.y*.6;lookTarget.set(carPosition.x+forward.x*2,carPosition.y*.4,carPosition.z+forward.z*2);if(panelOpen){if(narrow){lookTarget.x+=Math.sin(TOWARD_CAMERA_YAW)*10;lookTarget.z+=Math.cos(TOWARD_CAMERA_YAW)*10;}else{lookTarget.x+=SCREEN_RIGHT.x*7.5;lookTarget.z+=SCREEN_RIGHT.z*7.5;}}}
+  camera.position.lerp(camTarget,1-Math.exp(-dt*4));look.lerp(lookTarget,1-Math.exp(-dt*6));
   if(impactShake>.01){camera.position.x+=(Math.random()-.5)*impactShake*.7;camera.position.y+=(Math.random()-.5)*impactShake*.7;impactShake*=Math.exp(-dt*7);}
-  const shadowCenter=view===1?new THREE.Vector3(0,0,-5):new THREE.Vector3(Math.round(carPosition.x/4)*4,0,Math.round(carPosition.z/4)*4);sun.target.position.copy(shadowCenter);sun.position.copy(shadowCenter).add(SUN_OFFSET);
-  fog.near=view===1?1400:300;fog.far=view===1?4200:940;
+  const shadowCenter=new THREE.Vector3(Math.round(carPosition.x/4)*4,0,Math.round(carPosition.z/4)*4);sun.target.position.copy(shadowCenter);sun.position.copy(shadowCenter).add(SUN_OFFSET);
   camera.lookAt(look);camera.updateMatrixWorld();
-  for(const tag of tags){const p=new THREE.Vector3(tag.x,tag.y,tag.z).project(camera);const dist=Math.hypot(tag.x-carPosition.x,tag.z-carPosition.z);tag.el.hidden=p.z>=1||Math.abs(p.x)>1.08||Math.abs(p.y)>1.02||(view===0&&dist>37);tag.el.classList.toggle('compact',view===0);tag.el.style.left=((p.x+1)/2*container.clientWidth)+'px';tag.el.style.top=((-p.y+1)/2*container.clientHeight)+'px';}
+  for(const tag of tags){const p=new THREE.Vector3(tag.x,tag.y,tag.z).project(camera);const dist=Math.hypot(tag.x-carPosition.x,tag.z-carPosition.z);tag.el.hidden=p.z>=1||Math.abs(p.x)>1.08||Math.abs(p.y)>1.02||dist>44;tag.el.classList.add('compact');tag.el.style.left=((p.x+1)/2*container.clientWidth)+'px';tag.el.style.top=((-p.y+1)/2*container.clientHeight)+'px';}
   renderer.render(scene,camera);if(now-send>80){emit();send=now;}
  }
  frame=requestAnimationFrame(animate);
 
  return{
   reset(){placeCar(SPAWN.x,SPAWN.z,SPAWN.yaw);path=[];destination=null;parked=false;paused=false;mode='manual';travelTime=0;routeLine.visible=false;targetRing.visible=false;keys.clear();for(const item of loose){item.body.position.copy(item.homePosition);item.body.quaternion.copy(item.homeQuaternion);item.body.velocity.setZero();item.body.angularVelocity.setZero();item.mesh.position.copy(item.homePosition);item.mesh.quaternion.copy(item.homeQuaternion);item.body.sleep();}emit();},
-  goTo(index){if(!destinations[index])throw new Error('Unknown destination');const route=createRoute({x:chassis.position.x,z:chassis.position.z},destinations[index]);keys.clear();destination=index;path=route;parked=false;paused=false;view=0;panelOpen=false;mode='travelling';travelTime=0;stuckTime=0;targetRing.position.set(destinations[index].x,.3,destinations[index].z);targetRing.visible=true;routeLine.geometry.dispose();routeLine.geometry=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(chassis.position.x,.42,chassis.position.z),...route.map(p=>new THREE.Vector3(p.x,.42,p.z))]);routeLine.computeLineDistances();routeLine.visible=true;emit();},
-  explore(){path=[];destination=null;routeLine.visible=false;targetRing.visible=false;parked=false;paused=false;panelOpen=false;view=0;mode='manual';keys.clear();emit();},
+  goTo(index){if(!destinations[index])throw new Error('Unknown destination');const route=createRoute({x:chassis.position.x,z:chassis.position.z},destinations[index]);keys.clear();destination=index;path=route;parked=false;paused=false;panelOpen=false;mode='travelling';travelTime=0;stuckTime=0;targetRing.position.set(destinations[index].x,.3,destinations[index].z);targetRing.visible=true;routeLine.geometry.dispose();routeLine.geometry=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(chassis.position.x,.42,chassis.position.z),...route.map(p=>new THREE.Vector3(p.x,.42,p.z))]);routeLine.computeLineDistances();routeLine.visible=true;emit();},
+  explore(){path=[];destination=null;routeLine.visible=false;targetRing.visible=false;parked=false;paused=false;panelOpen=false;mode='manual';keys.clear();emit();},
   setPanel(value){panelOpen=value;if(value){parked=true;keys.clear();}},
   pause(){paused=!paused;keys.clear();emit();},
-  camera(){view=1-view;return view;},
   input,
   audio(value){return sound.setEnabled(value);},
   dispose(){sound.dispose();cancelAnimationFrame(frame);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);window.removeEventListener('resize',resize);textures.forEach(t=>t.dispose());env.dispose();pmrem.dispose();renderer.dispose();scene.traverse(o=>{if(o.isMesh){o.geometry.dispose();(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());}});renderer.domElement.remove();tags.forEach(t=>t.el.remove());}
