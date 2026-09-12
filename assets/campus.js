@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as CANNON from './vendor/cannon-es.js';
 import {RoundedBoxGeometry} from './vendor/geometries/RoundedBoxGeometry.js';
-import {destinations,roadPoints,createRoute,angleDifference} from './navigation.mjs';
+import {destinations,roadPoints,createRoute,angleDifference,CENTRE,WORLD_RADIUS} from './navigation.mjs';
 
 // World conventions: +Y is up, a heading (yaw) of 0 faces +Z, and a body's local +X is its left side.
 const GROUND=.15,FIXED_STEP=1/60;
@@ -9,15 +9,15 @@ const CAMERA_OFFSET=new THREE.Vector3(13,17,16);
 const TOWARD_CAMERA_YAW=Math.atan2(CAMERA_OFFSET.x,CAMERA_OFFSET.z);
 const UP_SCREEN_YAW=Math.atan2(-CAMERA_OFFSET.x,-CAMERA_OFFSET.z);
 const SCREEN_RIGHT={x:Math.cos(TOWARD_CAMERA_YAW),z:-Math.sin(TOWARD_CAMERA_YAW)};
-const NAME_CENTER={x:-1,z:-3};
+const NAME_CENTER=CENTRE;
 const SPAWN={x:NAME_CENTER.x+Math.sin(TOWARD_CAMERA_YAW)*10,z:NAME_CENTER.z+Math.cos(TOWARD_CAMERA_YAW)*10,yaw:UP_SCREEN_YAW};
 const PIXEL_FONT={H:['1.1','1.1','111','1.1','1.1'],E:['111','1..','11.','1..','111'],M:['1...1','11.11','1.1.1','1...1','1...1'],P:['11.','1.1','11.','1..','1..'],A:['.1.','1.1','111','1.1','1.1'],R:['11.','1.1','11.','1.1','1.1'],K:['1.1','1.1','11.','1.1','1.1'],'.':['.','.','.','.','1']};
 const DRIVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','shift'];
 
 export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
- const scene=new THREE.Scene();scene.background=new THREE.Color('#deddd3');scene.fog=new THREE.Fog('#deddd3',190,400);
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#deddd3');const fog=new THREE.Fog('#deddd3',190,430);scene.fog=fog;
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(container.clientWidth,container.clientHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;container.append(renderer.domElement);
- const camera=new THREE.PerspectiveCamera(37,container.clientWidth/container.clientHeight,.1,600);
+ const camera=new THREE.PerspectiveCamera(37,container.clientWidth/container.clientHeight,.1,4000);
  const sun=new THREE.DirectionalLight('#fff0d2',4);sun.position.set(-65,90,35);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-82,right:82,top:82,bottom:-82,far:250});sun.shadow.bias=-.0003;sun.shadow.normalBias=.08;const SUN_OFFSET=sun.position.clone();scene.add(sun,sun.target,new THREE.HemisphereLight('#eef4ff','#b29972',2.4));
  const environment=new THREE.Scene();environment.background=new THREE.Color('#cad9de');const ceiling=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshBasicMaterial({color:'#fff9e9',side:THREE.DoubleSide}));ceiling.position.y=70;ceiling.rotation.x=Math.PI/2;environment.add(ceiling);const fill=new THREE.Mesh(new THREE.PlaneGeometry(70,120),new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide}));fill.position.set(-40,20,-40);fill.rotation.y=.7;environment.add(fill);const pmrem=new THREE.PMREMGenerator(renderer),env=pmrem.fromScene(environment,.03);scene.environment=env.texture;
  const material=(color,roughness=.8,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
@@ -49,7 +49,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  // ---------------------------------------------------------------- portfolio exhibits
  const tags=[];
  destinations.forEach((d,i)=>{
- const exhibit=new THREE.Group();exhibit.position.set(d.bx,0,d.bz);exhibit.rotation.y=d.rotation;scene.add(exhibit);box(exhibit,20,.55,14,0,.45,0,cream,.6);const tint=material(d.color);let labelHeight=9;
+ const exhibit=new THREE.Group();exhibit.position.set(d.bx,0,d.bz);exhibit.rotation.y=d.rotation;scene.add(exhibit);box(exhibit,38,.1,34,0,.09,-6,paper,.04);box(exhibit,20,.55,14,0,.45,0,cream,.6);const tint=material(d.color);let labelHeight=9;
  // The platform is a low step the car can climb onto; only the built structures on it are solid.
  const footprint=new CANNON.Body({mass:0});footprint.position.set(d.bx,0,d.bz);footprint.quaternion.setFromEuler(0,d.rotation,0);world.addBody(footprint);
  const part=(shape,x,y,z)=>footprint.addShape(shape,new CANNON.Vec3(x,y,z)),post=(r,h,x,y,z)=>part(new CANNON.Cylinder(r,r,h,10),x,y,z);
@@ -145,10 +145,18 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  // Trees, kept clear of roads, exhibits, the name, the wall and the ramps.
  const reserved=[{x:NAME_CENTER.x,z:NAME_CENTER.z,r:18},{x:WALL.x,z:WALL.z,r:9},{x:42,z:-9,r:6},...ramps.map(r=>({x:r.x,z:r.z,r:9}))];
  let seed=71;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
- for(let i=0;i<36;i++){const x=-59+random()*117,z=-54+random()*94;if(roadPoints.some(p=>Math.hypot(p.x-x,p.z-z)<7)||destinations.some(d=>Math.hypot(d.bx-x,d.bz-z)<12)||reserved.some(r=>Math.hypot(r.x-x,r.z-z)<r.r))continue;cylinder(scene,.25,3,x,1.6,z,cream,8);const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(2.4,1),moss);crown.position.set(x,4,z);crown.scale.y=1.4;crown.castShadow=true;scene.add(crown);solid(new CANNON.Cylinder(.45,.45,6,8),x,3,z);}
-
- for(let i=0;i<70;i++){const a=random()*Math.PI*2,r=90+random()*150,x=Math.sin(a)*r,z=Math.cos(a)*r,size=1.6+random()*1.6;cylinder(scene,.25*size/2,3*size/2.2,x,1.6*size/2.2,z,cream,8);const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(size,1),moss);crown.position.set(x,size*1.9,z);crown.scale.y=1.4;crown.castShadow=true;scene.add(crown);solid(new CANNON.Cylinder(.4,.4,5,8),x,2.5,z);}
- for(let i=0;i<8;i++){const a=i/8*Math.PI*2+.3,r=110+(i%3)*30,x=Math.sin(a)*r,z=Math.cos(a)*r;for(const [row,count] of [[0,3],[1,2],[2,1]])for(let k=0;k<count;k++)addProp('crate',x+(k-(count-1)/2)*1.72,z,row*1.66);for(let k=0;k<5;k++)addProp('cone',x+Math.sin(a+k)*6,z+Math.cos(a+k)*6);}
+ const clear=(x,z,pad=0)=>!roadPoints.some(p=>Math.hypot(p.x-x,p.z-z)<8+pad)&&!destinations.some(d=>Math.hypot(d.bx-x,d.bz-z)<24+pad||Math.hypot(d.x-x,d.z-z)<12+pad)&&!reserved.some(r=>Math.hypot(r.x-x,r.z-z)<r.r+pad);
+ // Trees come in groves rather than an even sprinkle.
+ const spots=[];
+ for(let g=0;g<46;g++){const ga=random()*Math.PI*2,gr=22+random()*(WORLD_RADIUS+60),count=2+Math.floor(random()*6);for(let k=0;k<count;k++){const sa=random()*Math.PI*2,sr=random()*14;spots.push({x:NAME_CENTER.x+Math.sin(ga)*gr+Math.sin(sa)*sr,z:NAME_CENTER.z+Math.cos(ga)*gr+Math.cos(sa)*sr});}}
+ for(let g=0;g<60;g++){const a=random()*Math.PI*2,r=22+random()*(WORLD_RADIUS+60);spots.push({x:NAME_CENTER.x+Math.sin(a)*r,z:NAME_CENTER.z+Math.cos(a)*r});}
+ for(const spot of spots){const x=spot.x,z=spot.z;if(!clear(x,z))continue;const r=Math.hypot(x-NAME_CENTER.x,z-NAME_CENTER.z),size=r<60?.85+random()*.3:1.2+random()*1.3;
+  cylinder(scene,.25*size,3*size,x,1.6*size,z,cream,8);const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(2.4*size,1),moss);crown.position.set(x,4*size,z);crown.scale.y=1.4;crown.castShadow=true;scene.add(crown);solid(new CANNON.Cylinder(.4*size,.4*size,6*size,8),x,3*size,z);}
+ // Something to crash into out along every road.
+ for(let i=0;i<14;i++){const a=i/14*Math.PI*2+.42,r=45+(i%5)*26,x=NAME_CENTER.x+Math.sin(a)*r,z=NAME_CENTER.z+Math.cos(a)*r;if(!clear(x,z,6))continue;
+  if(i%2)for(const [row,count] of [[0,3],[1,2],[2,1]])for(let k=0;k<count;k++)addProp('crate',x+(k-(count-1)/2)*1.72,z,row*1.66);
+  else for(let k=0;k<6;k++)addProp('barrel',x+Math.sin(k)*3,z+Math.cos(k)*3);
+  for(let k=0;k<5;k++)addProp('cone',x+Math.sin(a+k)*7,z+Math.cos(a+k)*7);}
 
  // ---------------------------------------------------------------- the car: a chunky 4x4 on raycast suspension
  const chassis=new CANNON.Body({mass:150,allowSleep:false});chassis.addShape(new CANNON.Box(half(1.05,.45,2.15)),new CANNON.Vec3(0,.3,0));chassis.angularDamping=.35;chassis.linearDamping=.04;
@@ -211,13 +219,13 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
    while(path.length>1&&(distance<5.5||(distance<10&&behind(target)))){path.shift();target=path[0];distance=Math.hypot(target.x-position.x,target.z-position.z);}
    const difference=angleDifference(Math.atan2(target.x-position.x,target.z-position.z),Math.atan2(forward.x,forward.z));
    steerTarget=THREE.MathUtils.clamp(difference*1.5,-.55,.55);
-   const final=path.length===1,cruise=(final?Math.min(13,1.5+distance*1.2):13)*(Math.abs(difference)>1?.45:1);
-   if(speed<cruise)engine=-620;else if(speed>cruise+2)braking=6;
+   const final=path.length===1,cruise=(final?Math.min(14,1.5+distance*1.2):18)*(Math.abs(difference)>1?.45:1);
+   if(speed<cruise)engine=-720;else if(speed>cruise+2)braking=6;
    if(Math.abs(speed)<.8){stuckTime+=dt;if(stuckTime>2.4){const next=path[0],after=path[1]||next;placeCar(next.x,next.z,after===next?Math.atan2(forward.x,forward.z):Math.atan2(after.x-next.x,after.z-next.z));}}else stuckTime=0;
    // Arrive when close; if the drive is taking far too long (blocked by debris, circling), tow the car the rest of the way.
    const place=destinations[destination];
    if(final&&(distance<2.8||(distance<5.5&&Math.abs(difference)>1.1))){engine=0;braking=30;arrive();}
-   else if(travelTime>(final&&distance<7?14:30)){placeCar(place.x,place.z,Math.atan2(place.bx-place.x,place.bz-place.z));engine=0;braking=30;arrive();}
+   else if(travelTime>(final&&distance<7?16:120)){placeCar(place.x,place.z,Math.atan2(place.bx-place.x,place.bz-place.z));engine=0;braking=30;arrive();}
   }else{
    const ahead=keys.has('w')||keys.has('arrowup'),back=keys.has('s')||keys.has('arrowdown'),left=keys.has('a')||keys.has('arrowleft'),right=keys.has('d')||keys.has('arrowright'),boost=keys.has('shift');
    if(ahead&&speed<(boost?36:25))engine=boost?-1050:-760;
@@ -248,11 +256,12 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   for(const item of loose){if(item.body.sleepState!==CANNON.Body.SLEEPING){item.mesh.position.copy(item.body.position);item.mesh.quaternion.copy(item.body.quaternion);}}
   targetRing.material.opacity=.5+Math.sin(now*.003)*.2;
   const narrow=container.clientWidth<760,carPosition=new THREE.Vector3().copy(chassis.position),camTarget=new THREE.Vector3(),lookTarget=new THREE.Vector3();
-  if(view===1){camTarget.set(narrow?100:89,narrow?140:108,narrow?148:115);lookTarget.set(narrow?0:-9,0,-5);}
+  if(view===1){const reach=(WORLD_RADIUS-18)/Math.tan(camera.fov*Math.PI/360)*(narrow?1.45:1)/CAMERA_OFFSET.length();camTarget.copy(CAMERA_OFFSET).multiplyScalar(reach).add(new THREE.Vector3(CENTRE.x,0,CENTRE.z));lookTarget.set(CENTRE.x,0,CENTRE.z);}
   else{chassis.quaternion.vmult(LOCAL_FORWARD,forward);const zoom=(1+Math.min(chassis.velocity.length(),36)*.011)*(narrow?1.3:1);camTarget.copy(CAMERA_OFFSET).multiplyScalar(zoom).add(carPosition);camTarget.y-=carPosition.y*.6;lookTarget.set(carPosition.x+forward.x*2,carPosition.y*.4,carPosition.z+forward.z*2);if(panelOpen){if(narrow){lookTarget.x+=Math.sin(TOWARD_CAMERA_YAW)*10;lookTarget.z+=Math.cos(TOWARD_CAMERA_YAW)*10;}else{lookTarget.x+=SCREEN_RIGHT.x*7.5;lookTarget.z+=SCREEN_RIGHT.z*7.5;}}}
   camera.position.lerp(camTarget,1-Math.exp(-dt*(view===1?2.1:4)));look.lerp(lookTarget,1-Math.exp(-dt*(view===1?2.6:6)));
   if(impactShake>.01){camera.position.x+=(Math.random()-.5)*impactShake*.7;camera.position.y+=(Math.random()-.5)*impactShake*.7;impactShake*=Math.exp(-dt*7);}
   const shadowCenter=view===1?new THREE.Vector3(0,0,-5):new THREE.Vector3(Math.round(carPosition.x/4)*4,0,Math.round(carPosition.z/4)*4);sun.target.position.copy(shadowCenter);sun.position.copy(shadowCenter).add(SUN_OFFSET);
+  scene.fog=view===1?null:fog;
   camera.lookAt(look);camera.updateMatrixWorld();
   for(const tag of tags){const p=new THREE.Vector3(tag.x,tag.y,tag.z).project(camera);const dist=Math.hypot(tag.x-carPosition.x,tag.z-carPosition.z);tag.el.hidden=p.z>=1||Math.abs(p.x)>1.05||Math.abs(p.y)>1||(view===0&&dist>37);tag.el.classList.toggle('compact',view===0);tag.el.style.left=((p.x+1)/2*container.clientWidth)+'px';tag.el.style.top=((-p.y+1)/2*container.clientHeight)+'px';}
   renderer.render(scene,camera);if(now-send>80){emit();send=now;}

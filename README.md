@@ -85,7 +85,7 @@ MIT — see [LICENSE](LICENSE).
 
 ## Driveable portfolio playground
 
-The homepage is a physics sandbox in the spirit of bruno-simon.com: a chunky 4x4 on real raycast suspension, your name in giant pixel letters to crash through, a brick wall, jump ramps, and cones, crates and barrels that tumble. There are no walls: the ground runs on forever, exhibit platforms can be driven onto, and street lamps fall over when you hit them. Portfolio exhibits sit around the island; drive up to one and press E, or pick a place and the car drives itself there and opens the original content. Taking the wheel always works, even with a page open: the reader closes and you drive off.
+The homepage is a physics sandbox in the spirit of bruno-simon.com: a chunky 4x4 on real raycast suspension, your name in giant pixel letters to crash through, a brick wall, jump ramps, and cones, crates and barrels that tumble. The six places are spread far across the open world — up to 160 units out from the middle, each at the end of its own road — so you drive out and find them. There are no walls: the ground runs on forever, exhibit platforms can be driven onto, and street lamps fall over when you hit them. Portfolio exhibits sit around the island; drive up to one and press E, or pick a place and the car drives itself there and opens the original content. Taking the wheel always works, even with a page open: the reader closes and you drive off.
 
 - W A S D / arrows: drive and steer. Shift: boost. Space: handbrake. C: change camera.
 - R: put the car and every loose object back. The car also rights itself if it lands on its roof.
