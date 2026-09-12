@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import * as CANNON from './vendor/cannon-es.js';
 import {RoundedBoxGeometry} from './vendor/geometries/RoundedBoxGeometry.js';
 import {destinations,roadPoints,createRoute,angleDifference,CENTRE,WORLD_RADIUS} from './navigation.mjs';
+import {createSound} from './sound.mjs';
 
 // World conventions: +Y is up, a heading (yaw) of 0 faces +Z, and a body's local +X is its left side.
 const GROUND=.15,FIXED_STEP=1/60;
@@ -194,18 +195,19 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
  const forward=new CANNON.Vec3(),up=new CANNON.Vec3(),LOCAL_FORWARD=new CANNON.Vec3(0,0,1),LOCAL_UP=new CANNON.Vec3(0,1,0);
  function placeCar(x,z,yaw,y=GROUND+1.25){chassis.position.set(x,y,z);chassis.quaternion.setFromEuler(0,yaw,0);chassis.velocity.setZero();chassis.angularVelocity.setZero();steer=0;flipTime=0;stuckTime=0;}
  placeCar(SPAWN.x,SPAWN.z,SPAWN.yaw);
- chassis.addEventListener('collide',event=>{const hit=Math.abs(event.contact.getImpactVelocityAlongNormal());if(hit>3)impactShake=Math.min(1,Math.max(impactShake,hit*.07));});
+ chassis.addEventListener('collide',event=>{const hit=Math.abs(event.contact.getImpactVelocityAlongNormal());if(hit>3){impactShake=Math.min(1,Math.max(impactShake,hit*.07));sound.impact(Math.min(1,hit*.075));}});
+ const sound=createSound();
  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;
- renderer.domElement.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)return;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(interactive)[0];if(hit)onSelect(hit.object.userData.destination);});
+ renderer.domElement.addEventListener('pointerdown',e=>{sound.resume();down={x:e.clientX,y:e.clientY};});renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)return;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(interactive)[0];if(hit)onSelect(hit.object.userData.destination);});
  // Any drive key takes the wheel: it resumes a paused drive and cancels automatic navigation (unless the reader is open).
- function input(k,value){if(value){if(panelOpen){onDrive?.();panelOpen=false;}paused=false;parked=false;keys.add(k);path=[];destination=null;routeLine.visible=false;targetRing.visible=false;mode='manual';view=0;}else keys.delete(k);}
+ function input(k,value){if(value){sound.resume();if(panelOpen){onDrive?.();panelOpen=false;}paused=false;parked=false;keys.add(k);path=[];destination=null;routeLine.visible=false;targetRing.visible=false;mode='manual';view=0;}else keys.delete(k);}
  function keydown(e){const target=e.target instanceof Element?e.target:document.body;const k=e.key.toLowerCase();if(target.closest('input,textarea,select'))return;if(target.closest('#reader')&&!['w','a','s','d','shift'].includes(k))return;if(target.closest('button,a')&&(k===' '||k==='enter'))return;if(DRIVE_KEYS.includes(k)){if(k!=='shift')e.preventDefault();input(k,true);}if(k==='c'&&!e.repeat){view=1-view;emit();}}
  function keyup(e){keys.delete(e.key.toLowerCase());}const blur=()=>{keys.clear();};window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);window.addEventListener('blur',blur);
  function resize(){camera.aspect=container.clientWidth/container.clientHeight;camera.updateProjectionMatrix();renderer.setSize(container.clientWidth,container.clientHeight);}window.addEventListener('resize',resize);
  const look=new THREE.Vector3(0,0,-5);camera.position.set(94,108,118);
  const near=()=>destinations.findIndex(d=>Math.hypot(d.x-chassis.position.x,d.z-chassis.position.z)<5);
  function emit(){chassis.quaternion.vmult(LOCAL_FORWARD,forward);onState({x:chassis.position.x,z:chassis.position.z,yaw:Math.atan2(forward.x,forward.z),speed:chassis.velocity.dot(forward),airborne:grounded===0,mode:paused?'paused':mode,destination,near:near(),view});}
- function arrive(){const index=destination;path=[];parked=true;mode='parked';routeLine.visible=false;targetRing.visible=false;travelTime=0;onArrive(index);}
+ function arrive(){const index=destination;sound.chime();path=[];parked=true;mode='parked';routeLine.visible=false;targetRing.visible=false;travelTime=0;onArrive(index);}
 
  // ---------------------------------------------------------------- driving
  function drive(dt){
@@ -249,8 +251,10 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   // Kick up dust from the rear wheels when spinning up, skidding or landing.
   dustTimer-=dt;const planar=Math.hypot(chassis.velocity.x,chassis.velocity.z),skidding=vehicle.wheelInfos.some(w=>w.isInContact&&w.skidInfo<.7);
   if(!paused&&grounded>0&&dustTimer<=0&&((engine!==0&&planar<7)||(skidding&&planar>3))){dustTimer=.06;for(const i of [2,3]){const w=vehicle.wheelInfos[i];if(w.isInContact)puff(w.raycastResult.hitPointWorld.x,GROUND+.2,w.raycastResult.hitPointWorld.z,.8);}}
-  if(!paused&&wasGrounded===0&&grounded>=2)for(let i=0;i<8;i++)puff(chassis.position.x,GROUND+.2,chassis.position.z,1.6);
+  if(!paused&&wasGrounded===0&&grounded>=2){for(let i=0;i<8;i++)puff(chassis.position.x,GROUND+.2,chassis.position.z,1.6);sound.impact(.5);}
   wasGrounded=grounded;stepDust(dt);
+  chassis.quaternion.vmult(LOCAL_FORWARD,forward);
+  sound.update({speed:paused?0:chassis.velocity.dot(forward),throttle:paused?0:-engine/900,sliding:vehicle.wheelInfos.reduce((most,w)=>Math.max(most,w.isInContact?1-Math.min(1,w.skidInfo):0),0),grounded:grounded>0});
   car.position.copy(chassis.position);car.quaternion.copy(chassis.quaternion);
   for(let i=0;i<wheelMeshes.length;i++){vehicle.updateWheelTransform(i);const t=vehicle.wheelInfos[i].worldTransform;wheelMeshes[i].position.copy(t.position);wheelMeshes[i].quaternion.copy(t.quaternion);}
   for(const item of loose){if(item.body.sleepState!==CANNON.Body.SLEEPING){item.mesh.position.copy(item.body.position);item.mesh.quaternion.copy(item.body.quaternion);}}
@@ -276,6 +280,7 @@ export function createCampus(container,{onState,onArrive,onSelect,onDrive}){
   pause(){paused=!paused;keys.clear();emit();},
   camera(){view=1-view;return view;},
   input,
-  dispose(){cancelAnimationFrame(frame);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);window.removeEventListener('resize',resize);textures.forEach(t=>t.dispose());env.dispose();pmrem.dispose();renderer.dispose();scene.traverse(o=>{if(o.isMesh){o.geometry.dispose();(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());}});renderer.domElement.remove();tags.forEach(t=>t.el.remove());}
+  audio(value){return sound.setEnabled(value);},
+  dispose(){sound.dispose();cancelAnimationFrame(frame);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);window.removeEventListener('resize',resize);textures.forEach(t=>t.dispose());env.dispose();pmrem.dispose();renderer.dispose();scene.traverse(o=>{if(o.isMesh){o.geometry.dispose();(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());}});renderer.domElement.remove();tags.forEach(t=>t.el.remove());}
  };
 }

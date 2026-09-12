@@ -91,9 +91,10 @@ The homepage is a physics sandbox in the spirit of bruno-simon.com: a chunky 4x4
 - R: put the car and every loose object back. The car also rights itself if it lands on its roof.
 - Escape: close content or pause/resume. Any drive key resumes a paused drive, and switching windows never pauses it.
 - Touch driving buttons are available on phones.
+- Engine, tyre, crash and arrival sounds are synthesised in the browser — no audio files. They start on your first key press or tap, and the Sound button in the header mutes them (the choice is remembered).
 
 The original homepage is preserved exactly in `profile.html`. Existing résumé pages, writeups, images and documents are unchanged, and content is read directly from those pages. Visitors can use “Read portfolio” without WebGL or JavaScript. GitHub Pages continues serving the repository root with no build step.
 
-`assets/campus.js` builds the world, the car and the physics, `assets/navigation.mjs` plans routes between places, and `assets/portfolio.js` connects driving to the original content. Three.js (MIT) and cannon-es 0.20.0 (MIT) are vendored in `assets/vendor/` with their licenses.
+`assets/campus.js` builds the world, the car and the physics, `assets/navigation.mjs` plans routes between places, `assets/sound.mjs` synthesises the audio, and `assets/portfolio.js` connects driving to the original content. Three.js (MIT) and cannon-es 0.20.0 (MIT) are vendored in `assets/vendor/` with their licenses.
 
 Run `python3 -m http.server 8000` for a local preview.
