@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Crown Jewel: reconstructing a full attack chain from PCAP and Splunk — Hem Parekh</title>
+<meta name="description" content="A TryHackMe DFIR room worked end to end: ARP-spoofing MITM, plaintext credential theft, a Jira RCE, a reverse-shell C2 callback, and DNS-tunneling exfiltration, reconstructed from a raw pcap and a Splunk index." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+      <a href="../drive.html" class="game">Drive ▸</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">Research</div>
+  <h1>The Crown Jewel: reconstructing a full attack chain from PCAP and Splunk</h1>
+  <div class="ameta">Sep 19, 2026 &middot; 9 min read</div>
+  <div class="prose">
+<blockquote>
+<p>Reverse Shell Outbound Connection Detected — severity: High.</p>
+</blockquote>
+<p>Most of what ends up on this page is source-level: a missing check, an unchecked index, a sanitizer catching what review didn't. This one's the other half of the job. Given only network telemetry &mdash; a raw pcap and a Splunk index, nothing else &mdash; reconstruct what an attacker actually did, in order, and prove it with evidence instead of assumptions. No source, no stack trace, just packets and logs, and the discipline of not skipping a step because it seems obvious.</p>
+<p>This is a writeup of TryHackMe's <strong>The Crown Jewel</strong>, a DFIR/network-forensics room built around exactly that: one High-severity alert, and two artifacts to work from &mdash; <code>challenge.pcap</code> and Splunk's <code>index=network_logs</code>. The job is to go from &ldquo;something phoned home&rdquo; to a complete, evidenced kill chain, and identify exactly what was taken.</p>
+<hr/>
+<h2>1. Method: work both sources in parallel</h2>
+<p>Wireshark is faster for &ldquo;what does this one packet actually say.&rdquo; Splunk is faster for &ldquo;how many times did this happen, and when.&rdquo; Bouncing between the two turned out to be the efficient path: use Splunk to find the anomaly, then Wireshark to read the raw bytes behind it.</p>
+<p>Splunk's <code>network_logs</code> index holds five multiplexed log types under one sourcetype, distinguished by a <code>log_type</code> field: <code>arp</code>, <code>dns</code>, <code>http</code>, <code>ids</code>, and <code>netflow</code>. All tagged <code>host=lab</code> at the Splunk metadata level, with the real per-service hostname (<code>jira</code>, etc.) nested inside the JSON body &mdash; worth knowing up front, since a naive <code>host=jira</code> filter silently returns nothing.</p>
+<pre><code class="language-sql">index="network_logs" | stats count by log_type, host</code></pre>
+<pre><code class="language-text">log_type   host   count
+arp        lab    90
+dns        lab    1733
+http        lab    1802
+ids        lab    1      &lt;-- one event. that's the alert itself.
+netflow    lab    1435</code></pre>
+<p>That single <code>ids</code> event became the whole investigation's anchor point.</p>
+<hr/>
+<h2>2. Reconnaissance: subnet sweep</h2>
+<p>Wireshark's TCP conversation list showed a single host issuing hundreds of one-packet, 54-byte connections across <code>10.10.10.0/24</code>, exclusively on ports 22/80/443 &mdash; SYN, RST, nothing else. No payload, no banner grab, just presence-checking. Textbook <code>T1595 &mdash; Active Scanning</code>: map what's alive and what's listening before touching anything.</p>
+<hr/>
+<h2>3. ARP spoofing: inserting a man in the middle</h2>
+<p>Pulling the <code>ids</code> event directly gave the anchor for everything downstream:</p>
+<pre><code class="language-json">{
+  "msg": "Reverse Shell Outbound Connection Detected",
+  "src_ip": "10.10.10.100",
+  "dest_ip": "1.1.1.1",
+  "dest_port": 8080,
+  "proto": "TCP",
+  "severity": "High",
+  "sid": "SID:2100498"
+}</code></pre>
+<p><code>src_ip</code> was tagged <code>host: jira</code> &mdash; the Jira server was the one that got popped and called home. But before that, the ARP log told a quieter, earlier story:</p>
+<pre><code class="language-sql">index="network_logs" log_type="arp" "event.sender_mac"="00:0c:29:11:22:33"
+| stats count by "event.sender_ip"</code></pre>
+<pre><code class="language-text">event.sender_ip   count
+10.10.10.1         45
+10.10.10.150        45</code></pre>
+<p>One MAC, <code>00:0c:29:11:22:33</code> &mdash; a VMware OUI, so an attacker VM rather than a physical router &mdash; sent 90 gratuitous ARP replies split evenly across two identities. It told <code>10.10.10.150</code> &ldquo;I'm the gateway,&rdquo; and told the real gateway &ldquo;I'm <code>10.10.10.150</code>.&rdquo; Classic bidirectional poisoning (<code>T1557.002</code>): every packet between that host and the network now transits the attacker first, in both directions, without either side observing a routing anomaly.</p>
+<hr/>
+<h2>4. Credential theft: MITM only pays off without TLS</h2>
+<p>Splunk's parsed HTTP fields didn't carry POST bodies, so this part went back to Wireshark &mdash; find the one &ldquo;HTML Form URL Encoded&rdquo; packet the protocol hierarchy had already flagged as the sole occurrence of that content type in the whole capture.</p>
+<pre><code class="language-text">Edit &rarr; Find Packet &rarr; Packet bytes &rarr; "password"</code></pre>
+<p>That landed on frame 4891 &mdash; <code>10.10.10.150 &rarr; 10.10.10.1</code>, <code>POST /login.php</code>. Following the TCP stream:</p>
+<pre><code class="language-http">POST /login.php HTTP/1.1
+Host: internal.login.local
+Content-Type: application/x-www-form-urlencoded
+
+username=dev_user&amp;password=SecretPassword!</code></pre>
+<p>Plaintext, because the internal login endpoint never enforced HTTPS. ARP spoofing alone doesn't hand you credentials &mdash; it hands you a front-row seat. It's the missing TLS that turns that seat into a payday. That combination &mdash; spoofed routing <em>and</em> an unencrypted internal login form &mdash; is the actual vulnerability here, not either piece alone.</p>
+<hr/>
+<h2>5. Exploitation: a signature that gives itself away</h2>
+<pre><code class="language-sql">index="network_logs" log_type="http" extracted_host="jira"
+| stats count by "event.agent"</code></pre>
+<pre><code class="language-text">event.agent                                          count
+CVE-202X-EXPLOIT                                       1
+curl/7.68.0                                            393
+Python-requests/2.25.1                                 360
+Mozilla/5.0 (Windows NT 10.0; ...) Chrome/100...        363
+Mozilla/5.0 (Macintosh; ...) Safari/605.1.15            350
+Go-http-client/1.1                                      335</code></pre>
+<p>One request out of 1,802 carried a User-Agent that names its own CVE. It hit <code>/vulnerable_endpoint?cmd=RCE</code> on the Jira host &mdash; <code>T1190, Exploit Public-Facing Application</code>. This is the foothold that the IDS alert's <code>src_ip</code> (<code>10.10.10.100</code>) traces back to.</p>
+<hr/>
+<h2>6. Command and control</h2>
+<p>The IDS event already gave this one directly: <code>10.10.10.100 &rarr; 1.1.1.1:8080</code>, TCP. Following that stream in Wireshark showed only a handful of small packets &mdash; the shell was either short-lived or caught fast &mdash; but the callback itself is <code>T1071</code>, and it's what tripped the original detection that started this whole investigation.</p>
+<hr/>
+<h2>7. Exfiltration: DNS as a covert channel</h2>
+<pre><code class="language-sql">index="network_logs" log_type="dns" | stats count by "event.query"</code></pre>
+<p>Hundreds of rows, each a unique, high-entropy subdomain, <code>count=1</code> every time, all under one parent:</p>
+<pre><code class="language-text">0c1ms56uqp9hqy2ga89jzyjv9otv5fbn.exfil-domain.xyz
+0f9o4zqvsf4yr7b9z32b162s6sageuv2.exfil-domain.xyz
+0ghn16cpuv3nl8okquiytww39eofi4xg.exfil-domain.xyz
+...</code></pre>
+<p><code>exfil-domain.xyz</code> &mdash; attacker-owned, and the subdomain labels aren't lookups, they're payload: the &ldquo;Crown Jewel&rdquo; data (GitLab/Jira proprietary source) chunked and smuggled out one DNS query at a time. <code>T1048.003</code>. DNS is close to universally permitted outbound even on networks that lock down everything else, which is precisely why this works.</p>
+<hr/>
+<h2>Indicators of compromise</h2>
+<table>
+<thead><tr><th>Type</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>ARP-spoofing MAC</td><td><code>00:0c:29:11:22:33</code></td></tr>
+<tr><td>MITM victim</td><td><code>10.10.10.150</code></td></tr>
+<tr><td>Compromised host</td><td><code>10.10.10.100</code> (Jira)</td></tr>
+<tr><td>C2</td><td><code>1.1.1.1:8080</code> (TCP)</td></tr>
+<tr><td>Exploited endpoint</td><td><code>/vulnerable_endpoint?cmd=RCE</code></td></tr>
+<tr><td>Malicious User-Agent</td><td><code>CVE-202X-EXPLOIT</code></td></tr>
+<tr><td>Stolen credentials</td><td><code>dev_user:SecretPassword!</code></td></tr>
+<tr><td>Exfil domain</td><td><code>exfil-domain.xyz</code></td></tr>
+<tr><td>Exfil channel</td><td>DNS tunneling</td></tr>
+</tbody>
+</table>
+<h2>What actually stops each stage</h2>
+<table>
+<thead><tr><th>Stage</th><th>Failure</th><th>Control that closes it</th></tr></thead>
+<tbody>
+<tr><td>ARP spoofing</td><td>No port security on switches</td><td>Dynamic ARP Inspection, static ARP for critical hosts</td></tr>
+<tr><td>Credential theft</td><td>Internal login served over plain HTTP</td><td>TLS everywhere &mdash; &ldquo;internal&rdquo; is not a trust boundary</td></tr>
+<tr><td>Jira RCE</td><td>Known CVE, unpatched</td><td>Patch SLA, WAF virtual-patching as a bridge</td></tr>
+<tr><td>Reverse shell</td><td>No egress restriction</td><td>Default-deny outbound, alert on new destination + port pairs</td></tr>
+<tr><td>DNS exfil</td><td>DNS traffic unmonitored</td><td>Query logging, entropy/volume anomaly detection, DNS firewalling</td></tr>
+</tbody>
+</table>
+<hr/>
+<h2>Takeaway</h2>
+<p>None of these six steps is exotic on its own: a scan, a spoofed ARP entry, a plaintext form, a known CVE, a shell, a DNS query. What makes it a real incident is that each weak link fed the next one cleanly, and no single control caught the chain in the middle. That's the same lesson as reviewing code for the missing bounds check: the interesting bug is rarely the one nobody thought about &mdash; it's the one invariant that held everywhere except here.</p>
+<p><em>Tools: Wireshark, Splunk (<code>index=network_logs</code>). Full IOC list above.</em></p>
+  </div>
+  <a class="back" style="margin-top:48px;display:inline-block" href="../writing.html">← All writing</a>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
