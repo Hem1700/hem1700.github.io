@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TShark Challenge I and II: Directory — Hem Parekh</title>
+<meta name="description" content="Two short TryHackMe DFIR rooms worked with tshark and VirusTotal: a typosquatted PayPal phishing page that harvested real credentials, and an open directory listing that dropped a Blubot backdoor." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a href="../index.html" class="name">hem parekh</a>
+    <div class="links">
+      <a href="../findings.html">Findings</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../about.html">About</a>
+      <a href="mailto:hemparekh1596@gmail.com">Contact</a>
+      <a href="../drive.html" class="game">Drive ▸</a>
+    </div>
+  </div>
+</nav>
+<article class="article wrap">
+  <a class="back" href="../writing.html">← Writing</a>
+  <div class="amTag">Research</div>
+  <h1>TShark Challenge I and II: Directory</h1>
+  <div class="ameta">Sep 21, 2026 &middot; 7 min read</div>
+  <div class="prose">
+<blockquote>
+<p>A user came across a poor file index, and their curiosity led to problems.</p>
+</blockquote>
+<p>Two TryHackMe rooms, back to back &mdash; <strong>TShark Challenge I: Teamwork</strong> and <strong>TShark Challenge II: Directory</strong> &mdash; both built around the same discipline: read a pcap with the command line, not a GUI, and pivot every suspicious indicator through VirusTotal until it's an evidenced verdict instead of a hunch. No Wireshark clicking, just <code>tshark -Y</code> filters and field extraction, which is closer to how this actually goes when you're working a case over SSH with no X11 forwarding.</p>
+<p>Two small cases, two different endings: one victim who typed a password into a spoofed login form, and one who double-clicked an executable sitting in a wide-open Apache directory listing.</p>
+<hr/>
+<h2>Case 1: the PayPal page that wasn't</h2>
+<p>Start every pcap the same way &mdash; what did it try to resolve:</p>
+<pre><code class="language-bash">tshark -r teamwork.pcap -Y "dns.flags.response==0" -T fields -e dns.qry.name | sort -u</code></pre>
+<pre><code class="language-text">toolbarqueries.google.com
+wittyserver.hsd1.md.comcast.net
+www.paypal.com4uswebappsresetaccountrecovery.timeseaways.com</code></pre>
+<p>One entry doesn't belong. <code>www.paypal.com4uswebappsresetaccountrecovery.timeseaways.com</code> puts <code>paypal.com</code> right at the front where a skimming eye lands, but the actual registrable domain &mdash; the part a browser's address bar and a WHOIS lookup both care about &mdash; is <code>timeseaways.com</code>. Everything in front of it is attacker-chosen subdomain, free of charge, no registration needed.</p>
+<p>Pulling the request paths confirms it's a full kit, not just a landing page:</p>
+<pre><code class="language-bash">tshark -r teamwork.pcap -Y 'http.host contains "timeseaways"' -T fields -e http.host -e http.request.uri</code></pre>
+<pre><code class="language-text">/
+/inc/login.php
+/inc/visit.php
+/inc/suspicious.php
+/img/shield.png
+/font/PayPalSansSmall-Medium.woff2
+/js/jquery.creditCardValidator.min.js?_=1492480834539
+/img/logo_ccVisa.gif
+...</code></pre>
+<p>PayPal's actual web font, a credit-card validator script, brand icons &mdash; this is a cloned account-recovery flow, not a one-page lure.</p>
+<h3>VirusTotal: confirm, then split root from subdomain</h3>
+<p>Searching the full URL on VirusTotal gives a verdict (2/90 malicious) and a first-submission date of <strong>2017-04-17 22:52:53 UTC</strong> &mdash; this kit has been sitting around, previously caught, for years. But the interesting split shows up when you search the bare registrable domain instead of the phishing subdomain: <code>timeseaways.com</code> comes back <strong>clean, 0/89</strong>, registered on GoDaddy roughly 22 years ago, category "travel," with legitimate-looking MX records pointing at Google. That's not a domain someone bought to phish with &mdash; that's a real travel site whose DNS or hosting got abused to host a subdomain its owner probably never knew existed. The distinction matters operationally: takedown and remediation for "compromised legitimate domain" looks completely different from "attacker-registered domain."</p>
+<p>The phishing subdomain's own passive DNS record (VirusTotal's Relations tab) resolves it to <code>184.154.127.226</code>, dated the same day as the first submission &mdash; one consistent timeline, not a coincidence.</p>
+<h3>Reading the harvest straight off the wire</h3>
+<p>Splunk or VirusTotal won't have this part &mdash; it's only in the pcap. The phishing kit's own login endpoint:</p>
+<pre><code class="language-bash">tshark -r teamwork.pcap -Y 'http.request.method=="POST" and http.host contains "timeseaways"' -T fields -e http.host -e http.request.uri -e urlencoded-form.value</code></pre>
+<pre><code class="language-text">/inc/login.php   johnny5alive@gmail.com,johnny5alive,Mozilla FireFox v43,Linux,Desktop Platform,
+                 Mon Apr 17 2017 22:00:35 GMT-0400 (EDT),Computer: 1920x1080,en-US</code></pre>
+<p>Plaintext email, plaintext password, browser fingerprint, timestamp &mdash; all POSTed in the clear, and all matching the VirusTotal submission timestamp to the minute. Whoever ran this kit had the victim's real credentials the moment the form submitted.</p>
+<h2>Case 1 &mdash; indicators</h2>
+<table>
+<thead><tr><th>Type</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Phishing URL</td><td><code>hxxp[://]www[.]paypal[.]com4uswebappsresetaccountrecovery[.]timeseaways[.]com/</code></td></tr>
+<tr><td>Impersonated service</td><td>PayPal</td></tr>
+<tr><td>First seen (VT)</td><td>2017-04-17 22:52:53 UTC</td></tr>
+<tr><td>Resolved IP</td><td><code>184[.]154[.]127[.]226</code></td></tr>
+<tr><td>Harvested credential</td><td><code>johnny5alive[at]gmail[.]com</code></td></tr>
+<tr><td>Abused parent domain</td><td><code>timeseaways[.]com</code> (clean, legitimate, compromised)</td></tr>
+</tbody>
+</table>
+<hr/>
+<h2>Case 2: the directory listing nobody should have left on</h2>
+<p>Same opening move, different capture:</p>
+<pre><code class="language-bash">tshark -r directory-curiosity.pcap -Y "dns.flags.response==0" -T fields -e dns.qry.name | sort -u</code></pre>
+<pre><code class="language-text">api.bing.com
+tecvlist.microsoft.com
+jx2-bavuong.com          &larr; odd one out
+ocsp.digicert.com
+r20swj13mr.microsoft.com
+www.bing.com</code></pre>
+<p>Everything else here is Windows/Bing/DigiCert telemetry &mdash; background noise any machine generates. <code>jx2-bavuong.com</code> has no brand, no recognizable pattern, and it's the one VirusTotal flags: <strong>4/89</strong>, tagged "known infection source" and malicious by alphaMountain.ai.</p>
+<p>Fourteen HTTP requests went to it over the capture:</p>
+<pre><code class="language-bash">tshark -r directory-curiosity.pcap -Y 'http.request and http.host contains "jx2-bavuong"' -T fields -e frame.number | wc -l</code></pre>
+<p>and every response carried the same fingerprint &mdash; worth grabbing on its own, since a stale, versioned web stack is itself a signal:</p>
+<pre><code class="language-text">Apache/2.2.11 (Win32) DAV/2 mod_ssl/2.2.11 OpenSSL/0.9.8i PHP/5.2.9</code></pre>
+<p>One useful lesson from this step: VirusTotal's domain report shows whatever it <em>currently</em> resolves to, which won't necessarily match what the traffic in your capture actually hit. Pulling the IP straight from the HTTP conversation in the pcap instead:</p>
+<pre><code class="language-bash">tshark -r directory-curiosity.pcap -Y 'http.host contains "jx2-bavuong"' -T fields -e ip.dst -e ip.src | sort -u</code></pre>
+<pre><code class="language-text">141.164.41.174    192.168.100.116</code></pre>
+<p><code>192.168.100.116</code> is the victim (RFC1918, obviously local); <code>141.164.41.174</code> is the real server this capture actually talked to &mdash; not whatever VirusTotal's passive DNS shows today.</p>
+<h3>Following the stream: an actual "Index of /"</h3>
+<pre><code class="language-bash">tshark -r directory-curiosity.pcap -Y "tcp.stream==0" -q -z follow,tcp,ascii,0</code></pre>
+<p>buried in the ASCII is a plain Apache autoindex page:</p>
+<pre><code class="language-html">&lt;h1&gt;Index of /&lt;/h1&gt;
+123.php       12-Jul-2020 08:43    1
+vlauto.exe    06-May-2020 23:32   40K
+vlauto.php    10-Jul-2020 23:25   93</code></pre>
+<p>Three files, no <code>index.html</code> to hide the listing, and a 40K Windows executable sitting right next to two small PHP scripts &mdash; a dropper page and probably a companion controller script. This is the entire premise of the alert: a user browsed to a bare directory index and clicked the one file that looked interesting.</p>
+<h3>Pulling and hashing the payload</h3>
+<pre><code class="language-bash">tshark -r directory-curiosity.pcap --export-objects http,./http_objects
+sha256sum ./http_objects/vlauto.exe</code></pre>
+<pre><code class="language-text">b4851333efaf399889456f78eac0fd532e9d8791b23a86a19402c1164aed20de</code></pre>
+<p>(Four identical copies got exported &mdash; the same 41315-byte file, fetched across several connections in the capture, all hashing the same.)</p>
+<p>That hash on VirusTotal isn't ambiguous: <strong>40+ of 89 engines</strong> flag it, mostly clustering around one family &mdash; <code>Backdoor:Win32/Blubot</code>, <code>MSIL/Agent.PJE</code>, <code>Gen:Variant.Jalapeno</code> &mdash; and the dynamic engine agrees: <strong>Lastline Sandbox classifies it as <code>MALWARE TROJAN</code></strong>. Static signatures and a sandboxed detonation landing on the same answer is about as close to certainty as this kind of triage gets.</p>
+<p>The rest of the capture backs that up nicely. After the download, the host starts polling a set of bot-panel-shaped endpoints on the same server:</p>
+<pre><code class="language-text">GET /newbot/proxy
+GET /newbot/blog
+GET /newbot/target
+GET /newbot/target.method
+GET /newbot/target.ip
+GET /newbot/target.port
+GET /newbot/botlogger.php</code></pre>
+<p>All 404. Read together with the "Blubot" family name in the AV signatures, this looks like exactly what it sounds like &mdash; a bot checking in with its command-and-control panel for a target to attack, on a panel that's since been taken down or was never fully configured. The malware is still trying to phone home; there's just nobody answering anymore.</p>
+<h2>Case 2 &mdash; indicators</h2>
+<table>
+<thead><tr><th>Type</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Malicious domain</td><td><code>jx2-bavuong[.]com</code></td></tr>
+<tr><td>HTTP requests observed</td><td>14</td></tr>
+<tr><td>Server IP (from pcap)</td><td><code>141[.]164[.]41[.]174</code></td></tr>
+<tr><td>Server banner</td><td>Apache/2.2.11 (Win32) DAV/2 mod_ssl/2.2.11 OpenSSL/0.9.8i PHP/5.2.9</td></tr>
+<tr><td>Files listed</td><td>3 &mdash; first: <code>123[.]php</code></td></tr>
+<tr><td>Dropped executable</td><td><code>vlauto[.]exe</code> (41315 bytes)</td></tr>
+<tr><td>SHA256</td><td><code>b4851333efaf399889456f78eac0fd532e9d8791b23a86a19402c1164aed20de</code></td></tr>
+<tr><td>AV consensus</td><td>Backdoor/Trojan &mdash; Blubot family</td></tr>
+<tr><td>Lastline Sandbox</td><td><code>MALWARE TROJAN</code></td></tr>
+<tr><td>Post-infection behavior</td><td>Repeated 404s to <code>/newbot/*</code> &mdash; bot checking in with a dead C2 panel</td></tr>
+</tbody>
+</table>
+<hr/>
+<h2>Takeaway</h2>
+<p>Neither case needed anything clever &mdash; both fell out of the same two-line habit: dump every DNS query the host made, and eyeball which one doesn't belong. A domain with a brand name jammed into its subdomain, or a domain with no brand at all, both stand out from real infrastructure the instant you sort the list. Everything after that is confirmation: VirusTotal to turn suspicion into a verdict, <code>--export-objects</code> and a hash to turn a suspicious download into a named, cross-checked malware family. The tooling barely matters. The habit of listing every domain a host talked to, before deciding any of them are boring, is the actual control here &mdash; the same discipline as diffing a function against its siblings before deciding it's fine.</p>
+  </div>
+  <a class="back" style="margin-top:48px;display:inline-block" href="../writing.html">← All writing</a>
+</article>
+<footer class="wrap">
+  <h2>Have a bug, a role, or a hard parser to read? Get in touch.</h2>
+  <div class="links">
+    <a href="mailto:hemparekh1596@gmail.com">hemparekh1596@gmail.com</a>
+    <a href="https://github.com/Hem1700" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/hem-parekh" target="_blank" rel="noopener">linkedin</a>
+  </div>
+  <div class="fine">&copy; 2026 Hem Parekh</div>
+</footer>
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

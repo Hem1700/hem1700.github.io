@@ -16,7 +16,7 @@ security findings, then projects, writing, and background. No build step, no fra
 | `drive.html` | Game mode — the driveable island |
 | `findings.html` | Upstream vulnerability findings (ksmbd, PyTorch, curl, NTFS) with links to the patches |
 | `projects.html` | FORGE, mcp-tool-poisoning-scanner, bug-hunter, CRIP, RAVEN, PatchProbe, ShellScribe, SITA/CETAS |
-| `writing.html` | Index of all 19 writeups |
+| `writing.html` | Index of all 20 writeups |
 | `posts/*.html` | One page per writeup, full content in the site's typography |
 | `about.html` | Experience, education, focus areas, tooling, certifications |
 | `404.html` | Styled not-found page |
@@ -43,7 +43,7 @@ security findings, then projects, writing, and background. No build step, no fra
 ├── about.html
 ├── 404.html
 ├── style.css               # shared stylesheet for every page
-└── posts/                  # one HTML page per writeup (19)
+└── posts/                  # one HTML page per writeup (20)
 ```
 
 ---
